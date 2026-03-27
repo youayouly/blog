@@ -1,0 +1,310 @@
+// ── Navbar ───────────────────────────────────────────────────────────────────
+.vp-navbar {
+  background: rgba(74, 144, 217, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.vp-navbar-logo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #4a90d9;
+  object-fit: cover;
+}
+
+// ── Per-page gradient backgrounds ────────────────────────────────────────────
+// Home — sky blue fade
+.page-home {
+  background: linear-gradient(160deg, #dbeafe 0%, #e0f2fe 40%, #f8faff 100%);
+  min-height: 100vh;
+}
+
+// About — blue-violet
+.page-about {
+  background: linear-gradient(150deg, #e0e7ff 0%, #dbeafe 50%, #f0f9ff 100%);
+  min-height: 100vh;
+}
+
+// Projects — emerald green
+.page-projects {
+  background: linear-gradient(150deg, #d1fae5 0%, #e0f2fe 100%);
+  min-height: 100vh;
+}
+
+// Study Abroad — ocean blue
+.page-study {
+  background: linear-gradient(150deg, #bfdbfe 0%, #ddd6fe 100%);
+  min-height: 100vh;
+}
+
+// Check-ins — warm amber
+.page-travel {
+  background: linear-gradient(150deg, #fef3c7 0%, #fed7aa 100%);
+  min-height: 100vh;
+}
+
+// Daily moments — soft rose-purple
+.page-daily {
+  background: linear-gradient(150deg, #fce7f3 0%, #ede9fe 100%);
+  min-height: 100vh;
+}
+
+// ── About Page — Two-column layout ───────────────────────────────────────────
+.about-profile {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 40px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.about-avatar-large {
+  width: 160px;
+  height: 160px;
+  border-radius: 18px;
+  border: 3px solid #4a90d9;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(74, 144, 217, 0.28);
+
+  &:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 40px rgba(74, 144, 217, 0.45);
+  }
+}
+
+.about-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.about-subtitle {
+  font-size: 13px;
+  color: #4a90d9;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(74, 144, 217, 0.1);
+  padding: 3px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.4px;
+}
+
+.about-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.about-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(74, 144, 217, 0.08);
+  color: #4a90d9;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(74, 144, 217, 0.2);
+}
+
+.about-right h2 {
+  margin-top: 0 !important;
+  font-size: 24px;
+}
+
+.about-right p {
+  line-height: 1.7;
+  color: var(--vp-c-text-2);
+}
+
+.about-contact {
+  margin-top: 18px;
+  padding: 12px 16px;
+  background: rgba(74, 144, 217, 0.06);
+  border: 1px solid rgba(74, 144, 217, 0.15);
+  border-radius: 12px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.about-contact a {
+  color: #4a90d9 !important;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── WeChat Moments ────────────────────────────────────────────────────────────
+.wm-app {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #f7f7f7;
+  min-height: 80vh;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.wm-header {
+  position: relative;
+  height: 200px;
+  background: linear-gradient(135deg, #4a90d9 0%, #764ba2 100%);
+  overflow: hidden;
+}
+
+.wm-cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.35));
+}
+
+.wm-profile-row {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wm-profile-name {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.wm-profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  border: 2px solid #fff;
+  object-fit: cover;
+}
+
+.wm-feed {
+  padding-top: 4px;
+}
+
+.wm-post {
+  display: flex;
+  padding: 14px 16px;
+  background: #fff;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.wm-post-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.wm-post-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.wm-post-author {
+  color: #576b95;
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.wm-post-text {
+  color: #191919;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 8px !important;
+  word-break: break-word;
+}
+
+.wm-photo-grid {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 8px;
+
+  &.cols-1 {
+    grid-template-columns: 1fr;
+    max-width: 200px;
+  }
+
+  &.cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 200px;
+  }
+
+  &.cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 210px;
+  }
+
+  &.cols-4 {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 210px;
+  }
+
+  img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+  }
+}
+
+.wm-post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.wm-post-location {
+  font-size: 12px;
+  color: #576b95;
+}
+
+.wm-post-time {
+  font-size: 12px;
+  color: #aeaeae;
+}
+
+.wm-post-reactions {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.wm-reaction {
+  font-size: 13px;
+  color: #576b95;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

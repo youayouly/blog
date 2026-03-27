@@ -1,34 +1,30 @@
 ---
-home: true  # 启用默认首页布局（包含英雄区、功能列表等）
+home: true
+title: Home
+pageClass: page-home
+comment: false
 hero:
-  name: 我的博客
-  text: 记录学习与项目
-  tagline: 欢迎来到我的个人博客
-  image: /hero.png  # 可选：添加英雄图片（放在 public 文件夹）
+  name: Hi, I'm Luke 👋
+  text: Incoming HKU ECIC Student
+  tagline: Tech · Study Abroad · Travel · Daily Life
   actions:
     - theme: brand
-      text: 开始阅读
-      link: /guide/
+      text: About Me →
+      link: /about
     - theme: alt
-      text: 在 GitHub 上查看
-      link: https://github.com/your-username/your-repo
+      text: Daily
+      link: /moments/
 features:
-  - title: 简洁
-    details: 基于 VuePress 的简单配置。
-  - title: 响应式
-    details: 支持移动端。
-  - title: 中文
-    details: 随时修改
-
-# footer: MIT Licensed | Copyright © 2025 Your Name  # 可选
+  - title: 💻 Projects
+    details: Engineering & coding projects — embedded systems, frontend, and more.
+    link: /tech/
+  - title: 🎓 Study Abroad
+    details: My notes on applying to HK, UK, and Singapore universities.
+    link: /study/
+  - title: 📍 Check-ins
+    details: Places I've been — cities, landmarks, and hidden gems.
+    link: /travel/
+  - title: 📱 Daily
+    details: WeChat Moments–style daily updates and life snapshots.
+    link: /moments/
 ---
-
-# 欢迎来到我的博客  # 正文从这里开始
-
-## **1 常见注意点**
-
-1. YAML 缩进严格：每层缩进一般 2 个空格
-2. 数组元素必须与 `-` 对齐，不能多缩进
-3. Hero / Features 数据由主题模板渲染成 HTML
-4. 左右排列是 **主题默认行为**，无需额外配置
-5. `tagline` = 简短口号 / 标语，通常在 Hero 区标题下方显示
