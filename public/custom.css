@@ -1,0 +1,13 @@
+/* 针对 navbar logo img：圆形 + 边框 */
+.vp-navbar-logo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ff6b6b;
+  object-fit: cover;  /* 防图片变形 */
+}
+
+/* 测试：navbar 背景变粉红 */
+.vp-navbar {
+  background: rgba(255, 107, 107, 0.2);
+}
