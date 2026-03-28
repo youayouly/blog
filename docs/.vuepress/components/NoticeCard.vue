@@ -7,10 +7,6 @@
         <span class="lk-notice__text"><strong>框架核心：</strong>VuePress 2</span>
       </li>
       <li class="lk-notice__item">
-        <span class="lk-notice__icon" aria-hidden="true">🕹️</span>
-        <span class="lk-notice__text"><strong>界面设计：</strong>vuepress-theme-hope · 自定义动漫风首页</span>
-      </li>
-      <li class="lk-notice__item">
         <span class="lk-notice__icon" aria-hidden="true">🛡️</span>
         <span class="lk-notice__text"><strong>安全保障：</strong>HTTPS</span>
       </li>
@@ -53,7 +49,10 @@ defineProps({
 }
 
 .lk-notice--embedded {
-  max-width: none;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   border-radius: 16px;
   padding: 12px 14px;

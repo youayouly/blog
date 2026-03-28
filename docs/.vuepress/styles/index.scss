@@ -9,19 +9,17 @@
     }
   }
 
-  // White title (override the gradient clip trick)
+  // White title（具体阴影由下方全屏 Hero 块统一控制，避免叠加重影）
   #main-title {
     background: none !important;
     -webkit-text-fill-color: white !important;
     color: white !important;
-    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
   }
 
   // White typewriter text
   #main-description,
   .home-typewriter-tagline {
     color: rgba(255, 255, 255, 0.92) !important;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
   }
 
   // Keep primary button, ghost-ify the default one
@@ -46,60 +44,190 @@
     }
   }
 
-  /* ── Hero 向下箭头：纯白加粗、强发光、循环弹跳 ───────────────────────── */
+  /* ── Hero 向下箭头：#2c3e50，在既有样式基础上约 2.5×，无白色光晕，bounce 循环 ── */
   .vp-hero-slide-down-button {
     left: 50% !important;
-    width: 88px;
-    height: 88px;
-    padding: 6px;
-    transform: translateX(-50%);
+    width: 270px !important;
+    height: 270px !important;
+    padding: 20px !important;
+    transform: translateX(-50%) !important;
+    z-index: 10;
 
     .slide-down-icon {
-      width: 52px !important;
-      margin: -20px 0 !important;
-      color: #ffffff !important;
-      opacity: 1 !important;
-      fill: currentColor !important;
-      stroke: #ffffff;
-      stroke-width: 1.5px;
-      filter:
-        drop-shadow(0 0 14px rgba(255, 255, 255, 1))
-        drop-shadow(0 4px 20px rgba(125, 211, 252, 0.9))
-        drop-shadow(0 0 32px rgba(255, 255, 255, 0.6));
-      animation: lk-hero-arrow-bounce 1.5s ease-in-out infinite !important;
+      width: 140px !important;
+      height: auto !important;
+      margin: -55px 0 !important;
+      color: #2c3e50 !important;
+      fill: #2c3e50 !important;
+      stroke: #2c3e50 !important;
+      stroke-width: 2px !important;
+      filter: none !important;
+      animation: bounce 1.2s ease-in-out infinite !important;
     }
 
-    .slide-down-icon:first-child,
+    .slide-down-icon:first-child {
+      color: #2c3e50 !important;
+      fill: #2c3e50 !important;
+      opacity: 0.65 !important;
+    }
+
     .slide-down-icon:last-child {
-      color: #ffffff !important;
+      color: #2c3e50 !important;
+      fill: #2c3e50 !important;
+      opacity: 1 !important;
     }
   }
 }
 
-@keyframes lk-hero-arrow-bounce {
-  0%, 100% {
+@keyframes bounce {
+  0%,
+  100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(18px);
   }
 }
 
-// ── Home: hero 全宽；个人卡仅在下方「任务列表」区域左侧 ───────────────────────
-.page-home .vp-hero-info {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+// ── Home: 全屏 Hero 文案居左 ────────────────────────────────────────────────
+// 核心：.vp-hero-mask 是 position:absolute;inset:0，永远全铺背景，不可移动。
+// 正确做法：.vp-hero-info flex-start；文案区固定为视口左侧 1/4（25vw），与背景图角色无关。
+
+// 左侧加深覆层，让文案白字清晰可读；右侧减淡，透出动漫人物
+.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.46) 35%,
+    rgba(0, 0, 0, 0.22) 58%,
+    rgba(0, 0, 0, 0.08) 100%
+  ) !important;
 }
 
-@media (max-width: 719px) {
-  .page-home .vp-hero-info {
-    flex-direction: column;
+// 关键：首页 Hero 文本区强制贴左（不依赖 .hero-fullscreen，避免类名未挂上时不生效）
+.page-home .vp-hero-info-wrapper .vp-hero-info {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding-inline: 0 !important;
+  text-align: left !important;
+  box-sizing: border-box;
+}
+
+// 文案区：固定占用视口左侧 1/4，换角色/构图也不压脸
+.page-home .vp-hero-info-wrapper .vp-hero-infos {
+  flex: 0 0 25vw !important;
+  width: 25vw !important;
+  max-width: 25vw !important;
+  margin: 0 !important;
+  margin-inline: 0 !important;
+  padding-left: max(1rem, env(safe-area-inset-left)) !important;
+  padding-right: 0.75rem !important;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: left !important;
+}
+
+// 标题 / 副文案：桌面端一律左对齐（全屏时再叠白字与轻阴影）
+.page-home .vp-hero-info-wrapper #main-title {
+  text-align: left !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.page-home .vp-hero-info-wrapper.hero-fullscreen #main-title {
+  background: none !important;
+  -webkit-text-fill-color: white !important;
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45) !important;
+}
+
+.page-home .vp-hero-info-wrapper #main-description,
+.page-home .vp-hero-info-wrapper .home-typewriter-tagline {
+  margin: 1.25rem 0 !important;
+  margin-inline: 0 !important;
+  text-align: left !important;
+}
+
+.page-home .vp-hero-info-wrapper.hero-fullscreen #main-description,
+.page-home .vp-hero-info-wrapper.hero-fullscreen .home-typewriter-tagline {
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35) !important;
+}
+
+.page-home .vp-hero-info-wrapper.hero-fullscreen .home-typewriter-tagline__cursor {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+// 按钮区：贴左，无自动 margin
+.page-home .vp-hero-info-wrapper .vp-hero-actions {
+  margin: 1.25rem 0 0 !important;
+  margin-inline: 0 !important;
+  text-align: left !important;
+}
+
+.page-home .vp-hero-info-wrapper .vp-hero-action {
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0.5rem !important;
+}
+
+// Daily 按钮：半透明白色（深色背景上）
+.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-action.default {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: white !important;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
   }
 }
+
+// ── Mobile (≤768px)：恢复居中，背景均匀覆层 ─────────────────────────────────
+@media (max-width: 768px) {
+  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
+    background: rgba(0, 0, 0, 0.42) !important;
+  }
+
+  .page-home .vp-hero-info-wrapper .vp-hero-info {
+    justify-content: center !important;
+    align-items: center !important;
+    flex-direction: column !important;
+    padding-inline: 1.5rem !important;
+    text-align: center !important;
+  }
+
+  .page-home .vp-hero-info-wrapper .vp-hero-infos {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: center !important;
+  }
+
+  .page-home .vp-hero-info-wrapper #main-title {
+    text-align: center !important;
+  }
+
+  .page-home .vp-hero-info-wrapper #main-description,
+  .page-home .vp-hero-info-wrapper .home-typewriter-tagline {
+    text-align: center !important;
+    margin-inline: auto !important;
+  }
+
+  .page-home .vp-hero-info-wrapper .vp-hero-actions {
+    text-align: center !important;
+    margin-inline: auto !important;
+  }
+
+  .page-home .vp-hero-info-wrapper .vp-hero-action {
+    margin-inline: 0.35rem !important;
+  }
+}
+
+// 非首页或非 .vp-hero-info-wrapper：仍用主题默认；首页桌面左对齐、≤768px 由上方案恢复居中
 
 // ── Home：主内容区加宽；左 1/4 · 右 3/4 ─────────────────────────────────────
 .page-home main.vp-page.vp-project-home.lk-home-dual,
@@ -209,9 +337,10 @@ main.vp-project-home.lk-home-dual {
   position: sticky !important;
   top: calc(var(--navbar-height, 3.5rem) + 20px) !important;
   align-self: start !important;
-  justify-self: stretch !important;
+  justify-self: start !important;
   width: 100% !important;
-  max-width: 100% !important;
+  max-width: min(320px, 100%) !important;
+  min-width: 0 !important;
 }
 
 // Mobile: collapse to single column.

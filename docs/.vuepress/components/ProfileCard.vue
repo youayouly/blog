@@ -145,7 +145,8 @@ function onQrError(e) {
 
 .lk-card--embedded {
   min-height: 0;
-  max-width: none;
+  max-width: 100%;
+  width: 100%;
   padding: 12px 12px 14px;
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.72);
