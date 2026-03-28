@@ -3,17 +3,20 @@ home: true
 title: Home
 pageClass: page-home
 comment: false
-hero:
-  name: Hi, I'm Luke 👋
-  text: Incoming HKU ECIC Student
-  tagline: Tech · Study Abroad · Travel · Daily Life
-  actions:
-    - theme: brand
-      text: About Me →
-      link: /about
-    - theme: alt
-      text: Daily
-      link: /moments/
+heroText: Hi, I'm Luke 👋
+tagline: Welcome to my blog
+heroFullScreen: true
+bgImage: https://cdn.jsdelivr.net/gh/Dreamer-Paul/Anime-Wallpaper@master/1.jpg
+bgImageStyle:
+  background-size: cover
+  background-position: center
+actions:
+  - text: About Me →
+    link: /about
+    type: primary
+  - text: Daily
+    link: /moments/
+    type: default
 features:
   - title: 💻 Projects
     details: Engineering & coding projects — embedded systems, frontend, and more.

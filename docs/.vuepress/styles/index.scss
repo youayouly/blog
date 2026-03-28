@@ -1,3 +1,75 @@
+// ── Hero fullscreen: dark overlay so text is readable over anime image ───────
+.page-home {
+  // The ::after of .vp-hero-mask acts as the darkening overlay
+  .vp-hero-mask {
+    overflow: hidden; // clip scaled-up blur without leaking
+
+    &::after {
+      background: rgba(0, 0, 0, 0.38) !important;
+    }
+  }
+
+  // White title (override the gradient clip trick)
+  #main-title {
+    background: none !important;
+    -webkit-text-fill-color: white !important;
+    color: white !important;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  // White typewriter text
+  #main-description,
+  .home-typewriter-tagline {
+    color: rgba(255, 255, 255, 0.92) !important;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  // Keep primary button, ghost-ify the default one
+  .vp-hero-action.default {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.55) !important;
+    color: white !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28) !important;
+    }
+  }
+
+  // Translucent navbar over the hero image
+  .vp-navbar {
+    background: rgba(0, 0, 0, 0.18) !important;
+    backdrop-filter: blur(12px);
+
+    .vp-navbar-item a,
+    .vp-navbar-site-name {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+  }
+}
+
+// ── Profile card layout in hero section ──────────────────────────────────────
+.vp-hero-info {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.lk-card-mount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 719px) {
+  .vp-hero-info {
+    flex-direction: column;
+    gap: 28px;
+  }
+}
+
 // ── Navbar ───────────────────────────────────────────────────────────────────
 .vp-navbar {
   background: rgba(74, 144, 217, 0.1);
@@ -5,11 +77,12 @@
 }
 
 .vp-navbar-logo img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #4a90d9;
-  object-fit: cover;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  border: 2px solid rgba(167, 139, 250, 0.7) !important;
+  object-fit: cover !important;
+  overflow: hidden !important;
 }
 
 // ── Per-page gradient backgrounds ────────────────────────────────────────────
