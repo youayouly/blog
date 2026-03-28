@@ -1,6 +1,5 @@
 <template>
-  <aside class="lk-card">
-
+  <aside class="lk-card" :class="{ 'lk-card--embedded': embedded }">
     <!-- Avatar — click/hover rotates clockwise; release reverses counter-clockwise -->
     <div class="lk-card__avatar-wrap">
       <img class="lk-card__avatar" src="/avatar.jpg" alt="Luke · 陆毅" />
@@ -92,6 +91,11 @@
 <script setup>
 import { ref } from 'vue'
 
+defineProps({
+  /** 嵌入侧栏控制面板时：去大阴影与 min-height，占满所在列 */
+  embedded: { type: Boolean, default: false },
+})
+
 // Put your WeChat QR image at docs/.vuepress/public/wechat-qr.jpg
 const qrSrc = ref('/wechat-qr.jpg')
 const qrFailed = ref(false)
@@ -108,12 +112,13 @@ function onQrError(e) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 224px;
-  padding: 28px 20px 20px;
+  width: 100%;
+  padding: 10px 18px 20px;
+  box-sizing: border-box;
   background: linear-gradient(
     160deg,
     rgba(12, 18, 52, 0.82) 0%,
-    rgba(48, 18, 72, 0.80) 100%
+    rgba(48, 18, 72, 0.8) 100%
   );
   backdrop-filter: blur(22px) saturate(1.6);
   -webkit-backdrop-filter: blur(22px) saturate(1.6);
@@ -126,17 +131,114 @@ function onQrError(e) {
   color: white;
 }
 
-/* ── Avatar — circle + clockwise spin on hover ─────────────────── */
+.lk-card:not(.lk-card--embedded) {
+  max-width: 260px;
+  min-height: 420px;
+}
+
+@media (min-width: 1440px) {
+  .lk-card:not(.lk-card--embedded) {
+    min-height: 460px;
+    padding-top: 6px;
+  }
+}
+
+.lk-card--embedded {
+  min-height: 0;
+  max-width: none;
+  padding: 12px 12px 14px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  color: #0f172a;
+}
+
+.lk-card--embedded .lk-card__avatar-wrap {
+  margin-bottom: 10px;
+}
+
+.lk-card--embedded .lk-card__sub {
+  margin-bottom: 8px;
+}
+
+.lk-card--embedded .lk-card__tags {
+  margin-bottom: 10px;
+}
+
+.lk-card--embedded .lk-card__divider {
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.45), transparent);
+}
+
+.lk-card--embedded .lk-card__avatar-wrap {
+  width: 82px;
+  height: 82px;
+}
+
+.lk-card--embedded .lk-card__dock {
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 4px;
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.lk-card--embedded .lk-card__name {
+  background: none;
+  -webkit-text-fill-color: unset;
+  color: #312e81;
+  filter: none;
+}
+
+.lk-card--embedded .lk-card__sub {
+  color: #475569;
+}
+
+.lk-card--embedded .lk-card__tag {
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.28);
+}
+
+.lk-card--embedded .lk-card__dock-btn {
+  color: #4338ca;
+}
+
+.lk-card--embedded .lk-card__dock-btn:hover {
+  color: #1e1b4b;
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.lk-card--embedded .lk-card__dock-sep {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+.lk-card--embedded .lk-card__divider {
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.45), transparent);
+}
+
+/* ── Avatar — circle + clockwise spin on hover（头像 crop 偏上显眼部）── */
 .lk-card__avatar-wrap {
   width: 96px;
   height: 96px;
-  border-radius: 50%;                               /* circle border */
+  border-radius: 50%;
   padding: 3px;
   background: linear-gradient(135deg, #7dd3fc, #a78bfa, #f472b6);
+  margin-top: 0;
   margin-bottom: 14px;
   box-shadow: 0 4px 20px rgba(167, 139, 250, 0.45);
   cursor: pointer;
   transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+@media (min-width: 1440px) {
+  .lk-card__avatar-wrap {
+    margin-top: 2px;
+  }
 }
 
 .lk-card__avatar-wrap:hover {
@@ -148,6 +250,7 @@ function onQrError(e) {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  object-position: 50% 22%;
   display: block;
 }
 

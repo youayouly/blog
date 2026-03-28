@@ -45,28 +45,186 @@
       color: rgba(255, 255, 255, 0.9) !important;
     }
   }
+
+  /* ── Hero 向下箭头：纯白加粗、强发光、循环弹跳 ───────────────────────── */
+  .vp-hero-slide-down-button {
+    left: 50% !important;
+    width: 88px;
+    height: 88px;
+    padding: 6px;
+    transform: translateX(-50%);
+
+    .slide-down-icon {
+      width: 52px !important;
+      margin: -20px 0 !important;
+      color: #ffffff !important;
+      opacity: 1 !important;
+      fill: currentColor !important;
+      stroke: #ffffff;
+      stroke-width: 1.5px;
+      filter:
+        drop-shadow(0 0 14px rgba(255, 255, 255, 1))
+        drop-shadow(0 4px 20px rgba(125, 211, 252, 0.9))
+        drop-shadow(0 0 32px rgba(255, 255, 255, 0.6));
+      animation: lk-hero-arrow-bounce 1.5s ease-in-out infinite !important;
+    }
+
+    .slide-down-icon:first-child,
+    .slide-down-icon:last-child {
+      color: #ffffff !important;
+    }
+  }
 }
 
-// ── Profile card layout in hero section ──────────────────────────────────────
-.vp-hero-info {
+@keyframes lk-hero-arrow-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(18px);
+  }
+}
+
+// ── Home: hero 全宽；个人卡仅在下方「任务列表」区域左侧 ───────────────────────
+.page-home .vp-hero-info {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  gap: 60px;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-.lk-card-mount {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+@media (max-width: 719px) {
+  .page-home .vp-hero-info {
+    flex-direction: column;
+  }
 }
 
+// ── Home：主内容区加宽；左 1/4 · 右 3/4 ─────────────────────────────────────
+.page-home main.vp-page.vp-project-home.lk-home-dual,
+main.vp-project-home.lk-home-dual {
+  max-width: min(1680px, 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: max(1.25rem, env(safe-area-inset-left)) !important;
+  padding-right: max(1.25rem, env(safe-area-inset-right)) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Standalone selector – works even if .page-home ancestor is absent
+.lk-home-body-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) !important;
+  gap: 1.25rem 1.5rem !important;
+  align-items: start !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Extra specificity for good measure
+.page-home .lk-home-body-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) !important;
+}
+
+.lk-home-main-col,
+.page-home .lk-home-main-col {
+  min-width: 0;
+  padding-top: 0;
+}
+
+/* 首页功能卡：纵向一列，贴齐主列左缘，顶对齐左侧栏第一张卡 */
+.page-home .lk-home-main-col .vp-feature {
+  margin-inline: 0;
+  padding: 0 0 1rem;
+  text-align: left;
+}
+
+.page-home .lk-home-main-col .vp-features {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  margin: 0;
+  padding-top: 0;
+}
+
+.page-home .lk-home-main-col .vp-feature-item {
+  flex: none !important;
+  flex-basis: auto !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0.4rem 0 !important;
+  box-sizing: border-box;
+  min-height: 90px;
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(18px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 4px 24px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  padding: 1.1rem 1.4rem !important;
+  transition: background 0.22s, box-shadow 0.22s, transform 0.22s !important;
+}
+
+.page-home .lk-home-main-col .vp-feature-item:hover {
+  background: rgba(255, 255, 255, 0.82) !important;
+  box-shadow:
+    0 8px 36px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-2px) !important;
+}
+
+.page-home .lk-home-main-col .vp-feature-item.link:hover::before {
+  float: none;
+  display: inline;
+  margin-left: 0.35rem;
+}
+
+/* Feature card tag — no wrap, yellow pill badge */
+.page-home .lk-home-main-col .vp-feature-item .vp-badge,
+.page-home .lk-home-main-col .vp-feature-item [class*="badge"],
+.page-home .lk-home-main-col .vp-feature-header .vp-badge {
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+/* Feature title brightness */
+.page-home .lk-home-main-col .vp-feature-title {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+/* Feature details text */
+.page-home .lk-home-main-col .vp-feature-details {
+  color: #334155 !important;
+}
+
+.lk-home-profile-col,
+.page-home .lk-home-profile-col {
+  position: sticky !important;
+  top: calc(var(--navbar-height, 3.5rem) + 20px) !important;
+  align-self: start !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+// Mobile: collapse to single column.
+// Using !important so it overrides the inline styles set by JavaScript.
 @media (max-width: 719px) {
-  .vp-hero-info {
-    flex-direction: column;
-    gap: 28px;
+  .lk-home-body-grid,
+  .page-home .lk-home-body-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lk-home-profile-col,
+  .page-home .lk-home-profile-col {
+    position: static !important;
   }
 }
 
@@ -110,7 +268,7 @@
   min-height: 100vh;
 }
 
-// Check-ins — warm amber
+// Album (travel) — warm amber
 .page-travel {
   background: linear-gradient(150deg, #fef3c7 0%, #fed7aa 100%);
   min-height: 100vh;

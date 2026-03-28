@@ -11,6 +11,10 @@ index: true
 
 ---
 
+<ProjectNineGrid />
+
+---
+
 ## 项目列表
 
 ### 🔧 项目一：个人博客搭建

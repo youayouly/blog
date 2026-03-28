@@ -1,5 +1,5 @@
 ---
-title: Check-ins
+title: Album
 pageClass: page-travel
 comment: false
 index: true
@@ -8,6 +8,12 @@ index: true
 # ✈️ 旅游地点
 
 记录走过的地方，分享旅行故事与目的地灵感。
+
+---
+
+## 相册 Album
+
+<AlbumFeed />
 
 ---
 

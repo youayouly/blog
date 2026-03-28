@@ -21,13 +21,17 @@ features:
   - title: 💻 Projects
     details: Engineering & coding projects — embedded systems, frontend, and more.
     link: /tech/
+    tag: 精选项目
   - title: 🎓 Study Abroad
     details: My notes on applying to HK, UK, and Singapore universities.
     link: /study/
-  - title: 📍 Check-ins
-    details: Places I've been — cities, landmarks, and hidden gems.
+    tag: 海外留学
+  - title: 📷 Album
+    details: Photo albums by place — travel snapshots in a 3×3 grid.
     link: /travel/
+    tag: 旅行相册
   - title: 📱 Daily
     details: WeChat Moments–style daily updates and life snapshots.
     link: /moments/
+    tag: 日常动态
 ---
