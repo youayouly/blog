@@ -62,6 +62,40 @@
 
 }
 
+// 首页 Hero：抵消 main.lk-home-dual 的左右 padding，整块贴视口左缘；文案与「发现更多惊喜」只留 safe-area
+.page-home main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
+main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
+  margin-left: calc(-1 * max(1.25rem, env(safe-area-inset-left)));
+  width: calc(100% + max(1.25rem, env(safe-area-inset-left)));
+  box-sizing: border-box;
+}
+
+.page-home .vp-hero-info-wrapper {
+  /* 略靠右 + 不小于安全区：标题 / 欢迎语 / 按钮 / 「发现更多惊喜」共一条左垂线 */
+  --lk-hero-content-inset: max(
+    calc(1.35rem + 1.35vw),
+    env(safe-area-inset-left, 0px)
+  );
+}
+
+.page-home .vp-hero-info-wrapper .vp-hero-info {
+  padding-left: var(--lk-hero-content-inset) !important;
+}
+
+/* 与主列左缘一致，避免主题在标题/副文案上多出一层缩进 */
+.page-home .vp-hero-info-wrapper .vp-hero-info #main-title,
+.page-home .vp-hero-info-wrapper .vp-hero-info #main-description,
+.page-home .vp-hero-info-wrapper .vp-hero-info .vp-hero-infos,
+.page-home .vp-hero-info-wrapper .vp-hero-info .vp-hero-actions {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
+  left: var(--lk-hero-content-inset) !important;
+  right: auto !important;
+}
+
 @keyframes bounce {
 
   0%,
@@ -202,25 +236,25 @@
     margin-inline-end: 1rem !important;
   }
 
-  // 磨砂玻璃引导气泡：与 .vp-hero-info 的 padding-left: 12vw 对齐（Hope 不用 pageClass，须同时匹配 main.vp-project-home）
-  main.vp-page.vp-project-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-slide-down-button,
-  .theme-container.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-slide-down-button,
-  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-slide-down-button {
-    left: 12vw !important;
+  // 磨砂玻璃引导气泡：left 由全局 --lk-hero-content-inset（与欢迎文案同垂线）
+  main.vp-page.vp-project-home .vp-hero-info-wrapper .vp-hero-slide-down-button,
+  .theme-container.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button,
+  .page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
+    left: var(--lk-hero-content-inset) !important;
     right: auto !important;
     bottom: clamp(1.25rem, 4vh, 3.25rem) !important;
     width: auto !important;
     height: auto !important;
     min-width: 0 !important;
     max-width: min(92vw, 320px) !important;
-    padding: 13px 28px 11px !important;
+    padding: 13px 26px 11px 20px !important;
     margin: 0 !important;
     transform: translate3d(0, 0, 0) !important;
     z-index: 10 !important;
 
     display: inline-flex !important;
     flex-direction: column !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
     gap: 0 !important;
 
