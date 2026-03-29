@@ -8,7 +8,7 @@
     role="region"
     aria-label="网站信息"
   >
-    <div class="lk-stats__head">
+    <div class="lk-stats__head" :class="{ 'lk-stats__head--band': embedded }">
       <svg class="lk-stats__head-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         <path d="M4 14l4-4 4 3 4-6 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -16,7 +16,7 @@
       <span class="lk-stats__title">网站信息</span>
     </div>
 
-    <ul class="lk-stats__list">
+    <ul class="lk-stats__list" :class="{ 'lk-stats__list--embedded': embedded }">
       <li class="lk-stats__row">
         <span class="lk-stats__key">文章数目</span>
         <span class="lk-stats__val">{{ articleCount }}</span>
@@ -77,12 +77,12 @@ onMounted(() => {
   padding: 18px 16px 16px;
   background: linear-gradient(
     160deg,
-    rgba(12, 18, 52, 0.82) 0%,
-    rgba(48, 18, 72, 0.8) 100%
+    rgba(14, 28, 48, 0.85) 0%,
+    rgba(22, 42, 68, 0.82) 100%
   );
-  backdrop-filter: blur(22px) saturate(1.6);
-  -webkit-backdrop-filter: blur(22px) saturate(1.6);
-  border: 1px solid rgba(180, 140, 255, 0.28);
+  backdrop-filter: blur(22px) saturate(1.45);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+  border: 1px solid rgba(120, 165, 210, 0.32);
   border-radius: 24px;
   color: rgba(230, 235, 255, 0.92);
 }
@@ -92,47 +92,74 @@ onMounted(() => {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  border-radius: 16px;
-  padding: 12px 14px;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  color: #0f172a;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--lk-text);
 }
 
-.lk-stats--embedded .lk-stats__head {
-  border-bottom-color: rgba(148, 163, 184, 0.35);
+.lk-stats--embedded .lk-stats__head:not(.lk-stats__head--band) {
+  border-bottom-color: var(--lk-border);
 }
 
 .lk-stats--embedded .lk-stats__head-icon {
-  color: #4a90d9;
+  color: var(--lk-primary);
 }
 
 .lk-stats--embedded .lk-stats__title {
-  color: #0f172a;
+  color: var(--lk-text);
+}
+
+/* 嵌入：顶栏浅黄、图标与标题水平居中 */
+.lk-stats__head--band {
+  justify-content: center;
+  margin: 0;
+  padding: 10px 12px;
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  background: #fff4d4;
+}
+
+.lk-stats__head--band .lk-stats__head-icon {
+  color: #b45309;
+}
+
+.lk-stats__head--band .lk-stats__title {
+  color: #78350f;
+  font-size: 0.8rem;
+}
+
+.lk-stats--embedded .lk-stats__list--embedded {
+  padding: 8px 12px 10px;
+}
+
+.lk-stats--embedded .lk-stats__row {
+  padding: 5px 0;
 }
 
 .lk-stats--embedded .lk-stats__row + .lk-stats__row {
-  border-top-color: rgba(148, 163, 184, 0.25);
+  border-top-color: var(--lk-border);
 }
 
 .lk-stats--embedded .lk-stats__key {
-  color: #64748b;
+  color: var(--lk-text-muted);
 }
 
 .lk-stats--embedded .lk-stats__val {
-  color: #0f172a;
+  color: var(--lk-text);
 }
 
 .lk-stats--embedded .lk-stats__val--muted {
-  color: #475569;
+  color: var(--lk-text-body);
 }
 
 .lk-stats--embedded .lk-stats__spin {
-  border-color: rgba(74, 144, 217, 0.35);
-  border-top-color: #4a90d9;
+  border-color: var(--lk-primary-soft);
+  border-top-color: var(--lk-primary);
 }
 
 .lk-stats__head {
@@ -141,11 +168,16 @@ onMounted(() => {
   gap: 8px;
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(180, 140, 255, 0.22);
+  border-bottom: 1px solid rgba(120, 165, 210, 0.28);
+}
+
+.lk-stats--embedded .lk-stats__head--band {
+  margin-bottom: 0;
+  padding-bottom: 10px;
 }
 
 .lk-stats__head-icon {
-  color: #93c5fd;
+  color: color-mix(in srgb, var(--lk-primary) 85%, #fff);
   flex-shrink: 0;
 }
 
@@ -176,11 +208,11 @@ onMounted(() => {
 }
 
 .lk-stats__row + .lk-stats__row {
-  border-top: 1px solid rgba(180, 140, 255, 0.14);
+  border-top: 1px solid rgba(120, 165, 210, 0.18);
 }
 
 .lk-stats__key {
-  color: rgba(196, 181, 253, 0.85);
+  color: rgba(184, 206, 232, 0.88);
   font-weight: 500;
 }
 
@@ -200,7 +232,7 @@ onMounted(() => {
 
 .lk-stats__val--muted {
   font-weight: 500;
-  color: rgba(200, 210, 255, 0.78);
+  color: rgba(198, 214, 236, 0.82);
   font-size: 0.78rem;
   line-height: 1.4;
 }
@@ -209,8 +241,8 @@ onMounted(() => {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(147, 197, 253, 0.35);
-  border-top-color: #93c5fd;
+  border: 2px solid var(--lk-primary-soft);
+  border-top-color: color-mix(in srgb, var(--lk-primary) 85%, #fff);
   border-radius: 50%;
   animation: lk-stats-spin 0.7s linear infinite;
 }
@@ -227,27 +259,28 @@ onMounted(() => {
   width: auto;
   margin: 0;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: color-mix(in srgb, var(--lk-card) 92%, transparent);
+  border: 1px solid var(--lk-border);
   border-radius: 12px;
-  color: #334155;
+  color: var(--lk-text-body);
   box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
 
 .lk-stats--footer .lk-stats__head {
-  border-bottom-color: rgba(15, 23, 42, 0.08);
+  border-bottom-color: var(--lk-border);
   margin-bottom: 8px;
   padding-bottom: 8px;
 }
 
 .lk-stats--footer .lk-stats__head-icon {
-  color: #4a90d9;
+  color: var(--lk-primary);
 }
 
 .lk-stats--footer .lk-stats__title {
-  color: #1e293b;
+  color: var(--lk-text);
   font-size: 0.82rem;
 }
 
@@ -261,11 +294,11 @@ onMounted(() => {
 }
 
 .lk-stats--footer .lk-stats__row + .lk-stats__row {
-  border-top-color: rgba(15, 23, 42, 0.06);
+  border-top-color: var(--lk-border);
 }
 
 .lk-stats--footer .lk-stats__key {
-  color: #64748b;
+  color: var(--lk-text-muted);
   font-size: 0.72rem;
 }
 
@@ -274,20 +307,34 @@ onMounted(() => {
 }
 
 .lk-stats--footer .lk-stats__val {
-  color: #0f172a;
+  color: var(--lk-text);
   font-size: 0.8rem;
   justify-content: flex-end;
 }
 
 .lk-stats--footer .lk-stats__val--muted {
-  color: #475569;
+  color: var(--lk-text-body);
   font-size: 0.72rem;
   text-align: right;
   max-width: 100%;
 }
 
 .lk-stats--footer .lk-stats__spin {
-  border-color: rgba(74, 144, 217, 0.35);
-  border-top-color: #4a90d9;
+  border-color: var(--lk-primary-soft);
+  border-top-color: var(--lk-primary);
+}
+</style>
+
+<style>
+[data-theme='dark'] .lk-stats__head--band {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+[data-theme='dark'] .lk-stats__head--band .lk-stats__head-icon {
+  color: #fcd34d;
+}
+
+[data-theme='dark'] .lk-stats__head--band .lk-stats__title {
+  color: #fef3c7;
 }
 </style>

@@ -30,10 +30,11 @@ const year = new Date().getFullYear()
 }
 
 .lk-footer__meta-bar {
-  background: #4aa8d8;
-  color: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(92deg, var(--lk-primary) 0%, var(--lk-accent) 100%);
+  color: rgba(255, 255, 255, 0.94);
   padding: 8px 20px;
   text-align: center;
+  transition: filter 0.35s ease;
 }
 
 .lk-footer__meta-text {

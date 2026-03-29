@@ -1,7 +1,13 @@
 <template>
   <aside class="lk-card" :class="{ 'lk-card--embedded': embedded }">
-    <!-- Avatar — click/hover rotates clockwise; release reverses counter-clockwise -->
-    <div class="lk-card__avatar-wrap">
+    <!-- 侧栏嵌入：顶栏渐变 + 头像压住顶栏下缘 -->
+    <div v-if="embedded" class="lk-card__embed-top">
+      <div class="lk-card__header-band" aria-hidden="true" />
+      <div class="lk-card__avatar-wrap">
+        <img class="lk-card__avatar" src="/avatar.jpg" alt="Luke · 陆毅" />
+      </div>
+    </div>
+    <div v-else class="lk-card__avatar-wrap">
       <img class="lk-card__avatar" src="/avatar.jpg" alt="Luke · 陆毅" />
     </div>
 
@@ -117,12 +123,12 @@ function onQrError(e) {
   box-sizing: border-box;
   background: linear-gradient(
     160deg,
-    rgba(12, 18, 52, 0.82) 0%,
-    rgba(48, 18, 72, 0.8) 100%
+    rgba(14, 28, 48, 0.85) 0%,
+    rgba(22, 42, 68, 0.82) 100%
   );
-  backdrop-filter: blur(22px) saturate(1.6);
-  -webkit-backdrop-filter: blur(22px) saturate(1.6);
-  border: 1px solid rgba(180, 140, 255, 0.28);
+  backdrop-filter: blur(22px) saturate(1.45);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+  border: 1px solid rgba(120, 165, 210, 0.32);
   border-radius: 24px;
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.42),
@@ -147,17 +153,39 @@ function onQrError(e) {
   min-height: 0;
   max-width: 100%;
   width: 100%;
-  padding: 12px 12px 14px;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  color: #0f172a;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--lk-text);
 }
 
-.lk-card--embedded .lk-card__avatar-wrap {
+.lk-card__embed-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.lk-card__header-band {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, #ede9fe 0%, #e9d5ff 22%, #dbeafe 62%, #bae6fd 100%);
+  flex-shrink: 0;
+}
+
+.lk-card--embedded .lk-card__embed-top .lk-card__avatar-wrap {
+  margin-top: -32px;
   margin-bottom: 10px;
+  width: 76px;
+  height: 76px;
+  padding: 2px;
+  background: #fff;
+  border: 2px solid #7dd3fc;
+  box-shadow: 0 4px 16px rgba(30, 58, 95, 0.12);
 }
 
 .lk-card--embedded .lk-card__sub {
@@ -166,59 +194,96 @@ function onQrError(e) {
 
 .lk-card--embedded .lk-card__tags {
   margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
 .lk-card--embedded .lk-card__divider {
   margin-bottom: 10px;
-  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.45), transparent);
+  background: linear-gradient(90deg, transparent, var(--lk-border-strong), transparent);
 }
 
-.lk-card--embedded .lk-card__avatar-wrap {
-  width: 82px;
-  height: 82px;
+.lk-card--embedded > .lk-card__name,
+.lk-card--embedded > .lk-card__sub,
+.lk-card--embedded > .lk-card__tags,
+.lk-card--embedded > .lk-card__divider {
+  padding-left: 14px;
+  padding-right: 14px;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: center;
+}
+
+.lk-card--embedded > .lk-card__name {
+  margin-top: 2px;
+}
+
+.lk-card--embedded > .lk-card__dock {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px;
+  align-self: center;
+  width: fit-content;
+  max-width: calc(100% - 24px);
 }
 
 .lk-card--embedded .lk-card__dock {
   flex-wrap: wrap;
   justify-content: center;
   row-gap: 4px;
-  max-width: 100%;
-  background: rgba(255, 255, 255, 0.45);
-  border-color: rgba(148, 163, 184, 0.35);
+  padding: 8px 14px;
+  background: #1e3a5f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 100px;
+  box-shadow: 0 2px 10px rgba(30, 58, 95, 0.18);
 }
 
 .lk-card--embedded .lk-card__name {
   background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
   -webkit-text-fill-color: unset;
-  color: #312e81;
+  color: #131c2e;
   filter: none;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .lk-card--embedded .lk-card__sub {
-  color: #475569;
+  color: #5a6b82;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .lk-card--embedded .lk-card__tag {
-  color: #4338ca;
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.28);
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-weight: 600;
+  padding: 3px 10px;
 }
 
 .lk-card--embedded .lk-card__dock-btn {
-  color: #4338ca;
+  color: #dbeafe;
 }
 
 .lk-card--embedded .lk-card__dock-btn:hover {
-  color: #1e1b4b;
-  background: rgba(99, 102, 241, 0.15);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .lk-card--embedded .lk-card__dock-sep {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .lk-card--embedded .lk-card__divider {
-  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.45), transparent);
+  background: linear-gradient(90deg, transparent, var(--lk-border), transparent);
 }
 
 /* ── Avatar — circle + clockwise spin on hover（头像 crop 偏上显眼部）── */
@@ -227,10 +292,10 @@ function onQrError(e) {
   height: 96px;
   border-radius: 50%;
   padding: 3px;
-  background: linear-gradient(135deg, #7dd3fc, #a78bfa, #f472b6);
+  background: linear-gradient(135deg, var(--lk-primary), var(--lk-accent), var(--lk-primary-hover));
   margin-top: 0;
   margin-bottom: 14px;
-  box-shadow: 0 4px 20px rgba(167, 139, 250, 0.45);
+  box-shadow: 0 4px 20px var(--lk-primary-soft);
   cursor: pointer;
   transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
@@ -261,7 +326,7 @@ function onQrError(e) {
   font-weight: 700;
   letter-spacing: 0.01em;
   margin-bottom: 4px;
-  background: linear-gradient(90deg, #93c5fd, #c4b5fd, #f9a8d4);
+  background: linear-gradient(90deg, var(--lk-primary), var(--lk-accent), var(--lk-primary-hover));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -270,7 +335,7 @@ function onQrError(e) {
 
 .lk-card__sub {
   font-size: 0.78rem;
-  color: rgba(200, 210, 255, 0.82);
+  color: rgba(198, 214, 236, 0.85);
   margin-bottom: 12px;
 }
 
@@ -286,9 +351,9 @@ function onQrError(e) {
 .lk-card__tag {
   font-size: 0.68rem;
   font-weight: 500;
-  color: #c4b5fd;
-  background: rgba(167, 139, 250, 0.18);
-  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: #b8d4f0;
+  background: rgba(120, 165, 210, 0.2);
+  border: 1px solid rgba(120, 165, 210, 0.38);
   border-radius: 100px;
   padding: 2px 9px;
 }
@@ -297,7 +362,7 @@ function onQrError(e) {
 .lk-card__divider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(180, 140, 255, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(120, 165, 210, 0.42), transparent);
   margin-bottom: 14px;
 }
 
@@ -308,7 +373,7 @@ function onQrError(e) {
   gap: 2px;
   background: rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(180, 140, 255, 0.22);
+  border: 1px solid rgba(120, 165, 210, 0.26);
   border-radius: 100px;
   padding: 7px 12px;
 }
@@ -320,7 +385,7 @@ function onQrError(e) {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  color: rgba(200, 210, 255, 0.85);
+  color: rgba(210, 224, 244, 0.9);
   transition: color 0.18s, background 0.18s;
   text-decoration: none;
   background: none;
@@ -331,7 +396,7 @@ function onQrError(e) {
 
 .lk-card__dock-btn:hover {
   color: #fff;
-  background: rgba(167, 139, 250, 0.28);
+  background: rgba(120, 165, 210, 0.3);
 }
 
 .lk-card__dock-btn svg {
@@ -343,7 +408,7 @@ function onQrError(e) {
   display: inline-block;
   width: 1px;
   height: 18px;
-  background: rgba(180, 140, 255, 0.35);
+  background: rgba(120, 165, 210, 0.38);
   margin: 0 3px;
 }
 
@@ -396,9 +461,9 @@ function onQrError(e) {
   justify-content: center;
   width: 134px;
   height: 134px;
-  background: #f3f4f6;
+  background: var(--vp-c-bg-alt, #f3f4f6);
   border-radius: 8px;
-  color: #9ca3af;
+  color: var(--lk-text-muted);
   font-size: 0.7rem;
   gap: 6px;
   text-align: center;
@@ -412,7 +477,7 @@ function onQrError(e) {
 
 .lk-card__wechat-label {
   font-size: 0.72rem;
-  color: #4b5563;
+  color: var(--lk-text-body);
   margin: 0;
 }
 
@@ -427,5 +492,40 @@ function onQrError(e) {
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 8px solid rgba(255, 255, 255, 0.96);
+}
+</style>
+
+<style>
+[data-theme='dark'] .lk-card__header-band {
+  background: linear-gradient(
+    90deg,
+    rgba(167, 139, 250, 0.3) 0%,
+    rgba(96, 165, 250, 0.28) 100%
+  );
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__name {
+  color: var(--lk-text);
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__sub {
+  color: var(--lk-text-body);
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__tag {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__embed-top .lk-card__avatar-wrap {
+  background: var(--lk-card);
+  border-color: #38bdf8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__dock {
+  background: #152a45;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 </style>

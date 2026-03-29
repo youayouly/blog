@@ -35,71 +35,42 @@ import SiteStatsCard from './SiteStatsCard.vue'
   min-width: 0;
   margin-inline: auto;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
-/* 明亮毛玻璃控制面板（与右侧内容区顶对齐） */
+/* 透明外壳：仅堆叠卡片，无二次玻璃框 */
 .lk-home-side-panel__shell {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 10px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  padding: 12px 14px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(28px) saturate(1.8);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
-  box-shadow:
-    0 8px 40px rgba(15, 23, 42, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
 
+/* 白卡片：无左侧色条；内边距由各模块标题栏 + 正文区自行控制 */
 .lk-home-side-panel__block {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border-radius: 14px;
+  background: var(--lk-card) !important;
+  border: 1px solid var(--lk-border) !important;
+  box-shadow:
+    0 1px 2px var(--lk-shadow-soft),
+    0 6px 18px var(--lk-shadow-soft) !important;
   box-sizing: border-box;
-}
-
-/* 四块柔和区分：顶边色 + 极淡背景渐变（不抢背景人物） */
-:deep(.lk-home-side-panel__block--welcome) {
-  border-top: 3px solid rgba(125, 211, 252, 0.85) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgba(186, 230, 253, 0.35) 0%,
-    rgba(255, 255, 255, 0.72) 45%
-  ) !important;
-}
-
-:deep(.lk-home-side-panel__block--profile) {
-  border-top: 3px solid rgba(167, 139, 250, 0.8) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgba(221, 214, 254, 0.32) 0%,
-    rgba(255, 255, 255, 0.72) 48%
-  ) !important;
-}
-
-:deep(.lk-home-side-panel__block--notice) {
-  border-top: 3px solid rgba(244, 114, 182, 0.75) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgba(252, 231, 243, 0.38) 0%,
-    rgba(255, 255, 255, 0.72) 48%
-  ) !important;
-}
-
-:deep(.lk-home-side-panel__block--stats) {
-  border-top: 3px solid rgba(251, 191, 36, 0.82) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgba(254, 243, 199, 0.4) 0%,
-    rgba(255, 255, 255, 0.72) 48%
-  ) !important;
+  transition:
+    box-shadow 0.3s ease,
+    background-color 0.35s ease,
+    border-color 0.35s ease;
 }
 </style>

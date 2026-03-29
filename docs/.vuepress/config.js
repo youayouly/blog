@@ -47,13 +47,14 @@ export default defineUserConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/jpeg', href: '/avatar.jpg' }],
-    ['meta', { name: 'theme-color', content: '#4a90d9' }],
+    ['meta', { name: 'theme-color', content: '#4A7AB8' }],
   ],
 
   theme: hopeTheme({
+    themeColor: '#4A7AB8',
     logo: '/avatar.jpg',
-    colorMode: 'auto',
-    colorModeSwitch: true,
+    /** Light ↔ dark only; navbar shows theme toggle when enabled */
+    darkmode: 'toggle',
 
     navbar: [
       { text: 'Home', link: '/' },

@@ -1,9 +1,11 @@
 <template>
   <section class="lk-welcome" aria-label="欢迎来访者">
-    <h2 class="lk-welcome__title">
-      <span class="lk-welcome__icon" aria-hidden="true">👤</span>
-      欢迎来访者！
-    </h2>
+    <div class="lk-welcome__head">
+      <h2 class="lk-welcome__title">
+        <span class="lk-welcome__icon" aria-hidden="true">👤</span>
+        <span class="lk-welcome__title-text">欢迎来访者！</span>
+      </h2>
+    </div>
     <div class="lk-welcome__body" aria-live="polite">
       <p class="lk-welcome__line">{{ visitor.placeLine }}</p>
       <p class="lk-welcome__line">IP：{{ visitor.ip }}</p>
@@ -42,49 +44,83 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 外层卡片皮肤由 HomeSidePanel 统一提供 */
 .lk-welcome {
   margin: 0;
-  padding: 12px 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  color: #0f172a;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  color: var(--lk-text);
   min-width: 0;
   align-self: stretch;
 }
 
+/* 图 1：顶栏粉彩蓝、圆角与卡片顶一致，图标与标题同一行居中 */
+.lk-welcome__head {
+  padding: 10px 12px;
+  margin: 0;
+  background: #d6ebff;
+  border-radius: 14px 14px 0 0;
+}
+
 .lk-welcome__title {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  margin: 0 0 10px;
-  font-size: 0.82rem;
+  margin: 0;
+  width: 100%;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #1e3a5f;
   letter-spacing: 0.02em;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.lk-welcome__title-text {
+  white-space: nowrap;
 }
 
 .lk-welcome__icon {
   font-size: 0.95rem;
   line-height: 1;
+  flex-shrink: 0;
+}
+
+.lk-welcome__body {
+  padding: 10px 12px 12px;
 }
 
 .lk-welcome__line {
-  margin: 0 0 5px;
-  font-size: 0.65rem;
+  margin: 0 0 4px;
+  font-size: 0.66rem;
   line-height: 1.45;
-  color: #334155;
+  color: var(--lk-text-body);
   word-break: break-word;
 }
 
 .lk-welcome__tip {
-  margin: 8px 0 0;
-  font-size: 0.63rem;
+  margin: 6px 0 0;
+  font-size: 0.62rem;
   line-height: 1.4;
-  color: #5b21b6;
+  color: var(--lk-text-muted);
   font-style: italic;
+}
+</style>
+
+<style>
+[data-theme='dark'] .lk-welcome__head {
+  background: rgba(56, 130, 210, 0.28);
+}
+
+[data-theme='dark'] .lk-welcome__title {
+  color: var(--lk-text);
 }
 </style>

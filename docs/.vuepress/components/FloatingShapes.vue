@@ -1,29 +1,168 @@
 <template>
   <div class="lk-shapes" aria-hidden="true">
-    <div v-for="s in shapes" :key="s.id"
+    <div
+      v-for="s in shapes"
+      :key="s.id"
       class="lk-shape"
-      :class="`lk-shape--${s.type} lk-shape--${s.side}`"
+      :class="[`lk-shape--${s.type}`, s.depthClass, s.motionClass].filter(Boolean)"
       :style="s.style"
     />
   </div>
 </template>
 
 <script setup>
+/**
+ * 首页 Hero 左侧/底部装饰：浅蓝圆环、小三角、淡紫多边形 — 散布 + 轻微景深（blur/opacity）
+ * 仅占据读区一侧，不抢右侧人物。
+ */
 const shapes = [
-  // left side
-  { id: 1,  type: 'circle',   side: 'left',  style: { width: '60px',  height: '60px',  top: '12%',  left: '2%',   animationDelay: '0s',   animationDuration: '7s'  } },
-  { id: 2,  type: 'ring',     side: 'left',  style: { width: '100px', height: '100px', top: '28%',  left: '5%',   animationDelay: '1.5s', animationDuration: '9s'  } },
-  { id: 3,  type: 'dot',      side: 'left',  style: { width: '14px',  height: '14px',  top: '55%',  left: '3%',   animationDelay: '0.8s', animationDuration: '6s'  } },
-  { id: 4,  type: 'triangle', side: 'left',  style: { width: '40px',  height: '40px',  top: '70%',  left: '7%',   animationDelay: '2.2s', animationDuration: '8s'  } },
-  { id: 5,  type: 'dot',      side: 'left',  style: { width: '8px',   height: '8px',   top: '42%',  left: '9%',   animationDelay: '3.1s', animationDuration: '5s'  } },
-  { id: 6,  type: 'circle',   side: 'left',  style: { width: '28px',  height: '28px',  top: '85%',  left: '1%',   animationDelay: '1s',   animationDuration: '11s' } },
-  // right side
-  { id: 7,  type: 'ring',     side: 'right', style: { width: '80px',  height: '80px',  top: '8%',   right: '3%',  animationDelay: '0.5s', animationDuration: '8s'  } },
-  { id: 8,  type: 'circle',   side: 'right', style: { width: '44px',  height: '44px',  top: '35%',  right: '2%',  animationDelay: '2s',   animationDuration: '7s'  } },
-  { id: 9,  type: 'dot',      side: 'right', style: { width: '18px',  height: '18px',  top: '60%',  right: '6%',  animationDelay: '1.2s', animationDuration: '9s'  } },
-  { id: 10, type: 'triangle', side: 'right', style: { width: '36px',  height: '36px',  top: '20%',  right: '7%',  animationDelay: '3s',   animationDuration: '6s'  } },
-  { id: 11, type: 'ring',     side: 'right', style: { width: '55px',  height: '55px',  top: '78%',  right: '4%',  animationDelay: '0.3s', animationDuration: '10s' } },
-  { id: 12, type: 'dot',      side: 'right', style: { width: '10px',  height: '10px',  top: '48%',  right: '9%',  animationDelay: '2.7s', animationDuration: '5s'  } },
+  {
+    id: 'r-far',
+    type: 'ring',
+    depthClass: 'lk-shape--depth-far',
+    motionClass: 'lk-shape--motion-a',
+    style: {
+      width: '152px',
+      height: '152px',
+      top: '4%',
+      left: '-3%',
+      border: '3px solid rgba(165, 180, 252, 0.42)',
+      opacity: 0.22,
+      filter: 'blur(2px)',
+      animationDelay: '0s',
+      animationDuration: '14s',
+    },
+  },
+  {
+    id: 'r-mid',
+    type: 'ring',
+    depthClass: 'lk-shape--depth-mid',
+    motionClass: 'lk-shape--motion-b',
+    style: {
+      width: '96px',
+      height: '96px',
+      top: '11%',
+      left: '7%',
+      border: '2px solid rgba(147, 197, 253, 0.55)',
+      opacity: 0.34,
+      filter: 'blur(0.6px)',
+      animationDelay: '1.2s',
+      animationDuration: '11s',
+    },
+  },
+  {
+    id: 'r-near',
+    type: 'ring',
+    depthClass: 'lk-shape--depth-near',
+    motionClass: 'lk-shape--motion-a',
+    style: {
+      width: '58px',
+      height: '58px',
+      top: '22%',
+      left: '1%',
+      border: '2px solid rgba(199, 210, 254, 0.65)',
+      opacity: 0.4,
+      animationDelay: '0.4s',
+      animationDuration: '9s',
+    },
+  },
+  {
+    id: 'tri',
+    type: 'triangle',
+    depthClass: 'lk-shape--depth-near',
+    motionClass: 'lk-shape--motion-c',
+    style: {
+      width: '36px',
+      height: '32px',
+      top: '62%',
+      left: '4%',
+      opacity: 0.45,
+      filter: 'blur(0.3px)',
+      animationDelay: '2s',
+      animationDuration: '10s',
+    },
+  },
+  {
+    id: 'tri-sm',
+    type: 'triangle',
+    depthClass: 'lk-shape--depth-far',
+    motionClass: 'lk-shape--motion-b',
+    style: {
+      width: '22px',
+      height: '20px',
+      top: '48%',
+      left: '11%',
+      opacity: 0.28,
+      filter: 'blur(1px)',
+      animationDelay: '1.8s',
+      animationDuration: '12s',
+    },
+  },
+  {
+    id: 'poly',
+    type: 'polygon',
+    depthClass: 'lk-shape--depth-far',
+    motionClass: '',
+    style: {
+      width: '200px',
+      height: '160px',
+      bottom: '-12%',
+      left: '-10%',
+      opacity: 0.26,
+      filter: 'blur(3px)',
+      transform: 'rotate(-11deg)',
+      animationDelay: '0.6s',
+      animationDuration: '16s',
+    },
+  },
+  {
+    id: 'poly-mid',
+    type: 'polygon',
+    depthClass: 'lk-shape--depth-mid',
+    motionClass: '',
+    style: {
+      width: '120px',
+      height: '100px',
+      bottom: '2%',
+      left: '2%',
+      opacity: 0.32,
+      filter: 'blur(1.2px)',
+      transform: 'rotate(8deg)',
+      animationDelay: '2.4s',
+      animationDuration: '13s',
+    },
+  },
+  {
+    id: 'dot-a',
+    type: 'bokeh',
+    depthClass: 'lk-shape--depth-far',
+    motionClass: 'lk-shape--motion-b',
+    style: {
+      width: '10px',
+      height: '10px',
+      top: '34%',
+      left: '14%',
+      opacity: 0.35,
+      filter: 'blur(1.5px)',
+      animationDelay: '3s',
+      animationDuration: '8s',
+    },
+  },
+  {
+    id: 'dot-b',
+    type: 'bokeh',
+    depthClass: 'lk-shape--depth-mid',
+    motionClass: 'lk-shape--motion-a',
+    style: {
+      width: '6px',
+      height: '6px',
+      top: '76%',
+      left: '12%',
+      opacity: 0.4,
+      animationDelay: '0.2s',
+      animationDuration: '7s',
+    },
+  },
 ]
 </script>
 
@@ -32,12 +171,13 @@ const shapes = [
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
-  /* Only visible on wider screens — below 1100px they just add noise */
+  z-index: 1;
+  contain: layout style paint;
   display: none;
+  overflow: hidden;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 768px) {
   .lk-shapes {
     display: block;
   }
@@ -45,58 +185,111 @@ const shapes = [
 
 .lk-shape {
   position: absolute;
-  opacity: 0.18;
-  animation: lk-float linear infinite;
-}
-
-/* Circles */
-.lk-shape--circle {
   border-radius: 50%;
-  background: linear-gradient(135deg, #7dd3fc, #a78bfa);
+  box-sizing: border-box;
+  will-change: transform, opacity, filter;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
-/* Hollow rings */
 .lk-shape--ring {
-  border-radius: 50%;
-  border: 2px solid rgba(125, 211, 252, 0.7);
   background: transparent;
 }
 
-/* Small dots */
-.lk-shape--dot {
-  border-radius: 50%;
-  background: #f9a8d4;
-}
-
-/* Triangles via clip-path */
 .lk-shape--triangle {
-  background: linear-gradient(135deg, #a78bfa, #7dd3fc);
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   border-radius: 0;
+  background: linear-gradient(165deg, rgba(59, 130, 246, 0.55), rgba(96, 165, 250, 0.4));
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
-/* Float animation — alternates direction per side */
-.lk-shape--left {
-  animation-name: lk-float-left;
+.lk-shape--polygon {
+  border-radius: 0;
+  background: linear-gradient(
+    145deg,
+    rgba(196, 181, 253, 0.55) 0%,
+    rgba(165, 180, 252, 0.38) 45%,
+    rgba(199, 210, 254, 0.28) 100%
+  );
+  clip-path: polygon(8% 18%, 92% 0%, 100% 78%, 42% 100%, 0% 62%);
 }
 
-.lk-shape--right {
-  animation-name: lk-float-right;
+.lk-shape--bokeh {
+  background: radial-gradient(
+    circle,
+    rgba(147, 197, 253, 0.85) 0%,
+    rgba(147, 197, 253, 0.2) 55%,
+    transparent 70%
+  );
 }
 
-@keyframes lk-float-left {
-  0%   { transform: translateY(0)   rotate(0deg);   opacity: 0.18; }
-  25%  { transform: translateY(-18px) rotate(8deg);  opacity: 0.28; }
-  50%  { transform: translateY(0)   rotate(0deg);   opacity: 0.18; }
-  75%  { transform: translateY(14px) rotate(-6deg); opacity: 0.26; }
-  100% { transform: translateY(0)   rotate(0deg);   opacity: 0.18; }
+.lk-shape--depth-far {
+  z-index: 0;
 }
 
-@keyframes lk-float-right {
-  0%   { transform: translateY(0)   rotate(0deg);   opacity: 0.18; }
-  25%  { transform: translateY(14px) rotate(-8deg); opacity: 0.26; }
-  50%  { transform: translateY(0)   rotate(0deg);   opacity: 0.18; }
-  75%  { transform: translateY(-18px) rotate(6deg); opacity: 0.28; }
-  100% { transform: translateY(0)   rotate(0deg);   opacity: 0.18; }
+.lk-shape--depth-mid {
+  z-index: 1;
+}
+
+.lk-shape--depth-near {
+  z-index: 2;
+}
+
+.lk-shape--motion-a {
+  animation-name: lk-drift-a;
+}
+
+.lk-shape--motion-b {
+  animation-name: lk-drift-b;
+}
+
+.lk-shape--motion-c {
+  animation-name: lk-drift-c;
+}
+
+@keyframes lk-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  33% {
+    transform: translate3d(4px, -10px, 0) rotate(4deg);
+  }
+
+  66% {
+    transform: translate3d(-3px, 8px, 0) rotate(-3deg);
+  }
+}
+
+@keyframes lk-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  40% {
+    transform: translate3d(-6px, 12px, 0) rotate(-5deg);
+  }
+
+  70% {
+    transform: translate3d(5px, -8px, 0) rotate(4deg);
+  }
+}
+
+@keyframes lk-drift-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(3px, 14px, 0) rotate(6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lk-shape {
+    animation: none !important;
+  }
 }
 </style>

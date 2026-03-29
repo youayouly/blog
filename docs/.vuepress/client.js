@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
 import SiteFooter from './components/SiteFooter.vue'
+import LkThemeMeta from './components/LkThemeMeta.vue'
 import FloatingShapes from './components/FloatingShapes.vue'
 
 /* ── Hero 背景：稳定图源 + 滚动绝对索引 + 预加载后再写 mask.style ─ */
@@ -129,10 +130,81 @@ function initProgressBar() {
   document.body.appendChild(bar)
   progressBar = bar
 
-  window.addEventListener('scroll', () => {
-    const h = document.documentElement.scrollHeight - window.innerHeight
-    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%'
-  }, { passive: true })
+  const sync = () => {
+    const doc = document.documentElement
+    const scrollable = doc.scrollHeight - window.innerHeight
+    const y = window.scrollY ?? doc.scrollTop ?? 0
+    const pct =
+      scrollable > 0 ? (y / scrollable) * 100 : 0
+    bar.style.width = `${Math.min(100, Math.max(0, pct))}%`
+  }
+
+  sync()
+  window.addEventListener('scroll', sync, { passive: true })
+  window.addEventListener('resize', sync, { passive: true })
+}
+
+/** public 目录下的猫咪 GIF；可自行替换为真实动图 */
+function loadingCatUrl() {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
+  return `${base}lk-loading-cat.gif`
+}
+
+const LK_LOADING_MIN_MS = 0
+const LK_LOADING_FADE_MS = 500
+
+/* ── 全屏预加载层：load 完成后淡出（无固定最短展示时间） ─ */
+function initLoadingOverlay() {
+  if (typeof document === 'undefined') return
+  if (document.getElementById('lk-loading-overlay')) return
+
+  const overlay = document.createElement('div')
+  overlay.id = 'lk-loading-overlay'
+  overlay.setAttribute('role', 'presentation')
+  overlay.setAttribute('aria-busy', 'true')
+  overlay.setAttribute('aria-label', 'Loading')
+
+  const img = document.createElement('img')
+  img.className = 'lk-loading-cat'
+  img.alt = ''
+  img.decoding = 'async'
+  img.loading = 'eager'
+  img.src = loadingCatUrl()
+
+  overlay.appendChild(img)
+  document.body.appendChild(overlay)
+
+  let removed = false
+  const remove = () => {
+    if (removed) return
+    removed = true
+    overlay.removeEventListener('transitionend', onTransitionEnd)
+    overlay.remove()
+  }
+  const onTransitionEnd = (e) => {
+    if (e.propertyName === 'opacity') remove()
+  }
+
+  const hide = () => {
+    overlay.style.opacity = '0'
+    overlay.style.pointerEvents = 'none'
+    overlay.setAttribute('aria-busy', 'false')
+    overlay.addEventListener('transitionend', onTransitionEnd)
+    window.setTimeout(remove, LK_LOADING_FADE_MS + 80)
+  }
+
+  const onLoadPromise = new Promise((resolve) => {
+    if (document.readyState === 'complete') resolve()
+    else window.addEventListener('load', () => resolve(), { once: true })
+  })
+
+  const minTimePromise = new Promise((resolve) => {
+    window.setTimeout(resolve, LK_LOADING_MIN_MS)
+  })
+
+  Promise.all([onLoadPromise, minTimePromise]).then(() => {
+    requestAnimationFrame(hide)
+  })
 }
 
 /* ── Typewriter ─────────────────────────────────────────────────────────── */
@@ -188,7 +260,7 @@ function mountHomeBodyGrid() {
   Object.assign(row.style, {
     display: 'grid',
     gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 3fr)',
-    gap: '1.25rem 1.5rem',
+    gap: '1rem 1.35rem',
     alignItems: 'start',
     width: '100%',
     boxSizing: 'border-box',
@@ -289,13 +361,14 @@ function unmountHome() {
 
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
-  rootComponents: [SiteFooter],
+  rootComponents: [SiteFooter, LkThemeMeta],
 
   setup() {
     const route = useRoute()
 
     onMounted(() => {
       initProgressBar()
+      initLoadingOverlay()
       if (route.path === '/') setTimeout(mountHome, 250)
     })
 
