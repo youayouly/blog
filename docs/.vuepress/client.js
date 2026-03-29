@@ -1,46 +1,121 @@
 import { defineClientConfig } from 'vuepress/client'
-import { createApp, h, onMounted, watch } from 'vue'
+import { createApp, h, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import FloatingShapes from './components/FloatingShapes.vue'
 
-/* ── Anime wallpaper pool (MIT · Dreamer-Paul/Anime-Wallpaper) ─────────── */
-const CDN = 'https://cdn.jsdelivr.net/gh/Dreamer-Paul/Anime-Wallpaper@master/'
-const POOL = [1, 2, 3, 5, 6, 8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 35, 40, 45, 50]
+/* ── Hero 背景：稳定图源 + 滚动绝对索引 + 预加载后再写 mask.style ─ */
+const images = [
+  'https://api.dujin.org/pic/fengjing',
+  'https://bu.dusays.com/2021/01/24/2f80164c01ca5.jpg',
+  'https://bu.dusays.com/2021/01/24/3f80164c01ca5.jpg',
+]
 
-function getWallpaperUrl() {
-  const cached = sessionStorage.getItem('lk-wp')
-  if (cached) return cached
-  const url = CDN + POOL[Math.floor(Math.random() * POOL.length)] + '.jpg'
-  sessionStorage.setItem('lk-wp', url)
-  return url
+let scrollBlurHandler = null
+/** 已成功展示的图片下标（仅 onload 成功后更新） */
+let wallpaperDisplayIndex = -1
+/** 正在为其发起 Image 加载的下标，避免重复请求 */
+let wallpaperLoadingForIndex = null
+
+function applyHeroMaskBaseStyles(mask) {
+  if (!mask) return
+  mask.style.backgroundSize = 'cover'
+  mask.style.backgroundPosition = 'center center'
+  mask.style.willChange = 'filter, transform, background-image'
 }
 
-/* ── Scroll blur ────────────────────────────────────────────────────────── */
-let scrollBlurHandler = null
+function wallpaperTargetIndex(scrollY, heroHeight) {
+  const n = images.length
+  if (n === 0) return 0
+  const step = Math.max(heroHeight * 0.8, 1)
+  const raw = Math.floor(scrollY / step)
+  return ((raw % n) + n) % n
+}
 
+function loadWallpaperForTarget(mask, targetIndex) {
+  if (!mask || images.length === 0) return
+  const n = images.length
+  const i = ((targetIndex % n) + n) % n
+  if (i === wallpaperDisplayIndex) return
+  if (wallpaperLoadingForIndex === i) return
+
+  wallpaperLoadingForIndex = i
+  const url = images[i]
+  const img = new Image()
+  img.onload = () => {
+    wallpaperLoadingForIndex = null
+    const heroHeight =
+      document.querySelector('.vp-hero-info-wrapper')?.offsetHeight ||
+      window.innerHeight
+    const nowTarget = wallpaperTargetIndex(window.scrollY, heroHeight)
+    if (nowTarget !== i) {
+      const m = document.querySelector('.vp-hero-mask')
+      if (m) loadWallpaperForTarget(m, nowTarget)
+      return
+    }
+    const m = document.querySelector('.vp-hero-mask')
+    if (!m) return
+    applyHeroMaskBaseStyles(m)
+    m.style.backgroundImage = `url("${url}")`
+    wallpaperDisplayIndex = i
+  }
+  img.onerror = () => {
+    wallpaperLoadingForIndex = null
+    console.error(
+      '[Hero wallpaper] Failed to load image (possible 403 or network error):',
+      url,
+    )
+  }
+  img.src = url
+}
+
+/* ── 模糊/缩放 + 绝对索引换图（仅预加载成功后才改 backgroundImage） ─ */
 function initScrollBlur() {
   const mask = document.querySelector('.vp-hero-mask')
   if (!mask) return
-  mask.style.backgroundImage = `url(${getWallpaperUrl()})`
-  mask.style.willChange = 'filter, transform'
+
+  const y0 = window.scrollY
+  const heroH0 =
+    document.querySelector('.vp-hero-info-wrapper')?.offsetHeight ||
+    window.innerHeight
+  wallpaperDisplayIndex = -1
+  wallpaperLoadingForIndex = null
+  loadWallpaperForTarget(mask, wallpaperTargetIndex(y0, heroH0))
 
   scrollBlurHandler = () => {
-    const progress = Math.min(window.scrollY / (window.innerHeight * 0.55), 1)
-    mask.style.filter = `blur(${progress * 14}px) brightness(${1 - progress * 0.25})`
-    mask.style.transform = `scale(${1 + progress * 0.06})`
+    const m = document.querySelector('.vp-hero-mask')
+    if (!m || images.length === 0) return
+
+    const scrollY = window.scrollY
+    const heroHeight =
+      document.querySelector('.vp-hero-info-wrapper')?.offsetHeight ||
+      window.innerHeight
+
+    applyHeroMaskBaseStyles(m)
+    const progress = Math.min(scrollY / (window.innerHeight * 0.55), 1)
+    m.style.filter = `blur(${progress * 14}px) brightness(${1 - progress * 0.25})`
+    m.style.transform = `scale(${1 + progress * 0.06})`
+
+    const target = wallpaperTargetIndex(scrollY, heroHeight)
+    loadWallpaperForTarget(m, target)
   }
+  scrollBlurHandler()
   window.addEventListener('scroll', scrollBlurHandler, { passive: true })
 }
 
 function cleanupScrollBlur() {
+  wallpaperDisplayIndex = -1
+  wallpaperLoadingForIndex = null
   if (scrollBlurHandler) {
     window.removeEventListener('scroll', scrollBlurHandler)
     scrollBlurHandler = null
     const mask = document.querySelector('.vp-hero-mask')
-    if (mask) { mask.style.filter = ''; mask.style.transform = '' }
+    if (mask) {
+      mask.style.filter = ''
+      mask.style.transform = ''
+    }
   }
 }
 
@@ -222,6 +297,10 @@ export default defineClientConfig({
     onMounted(() => {
       initProgressBar()
       if (route.path === '/') setTimeout(mountHome, 250)
+    })
+
+    onUnmounted(() => {
+      cleanupScrollBlur()
     })
 
     watch(
