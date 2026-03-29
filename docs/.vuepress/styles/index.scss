@@ -1,5 +1,7 @@
-// ── Hero fullscreen: dark overlay so text is readable over anime image ───────
+scss是什么，我给你里面的代码，为什么scss和compoent又能单独联系起来 // ── Hero fullscreen: dark overlay so text is readable over anime image ───────
+
 .page-home {
+
   // The ::after of .vp-hero-mask acts as the darkening overlay
   .vp-hero-mask {
     overflow: hidden; // clip scaled-up blur without leaking
@@ -44,111 +46,49 @@
     }
   }
 
-  /* ── Hero 向下箭头：#2c3e50，在既有样式基础上约 2.5×，无白色光晕，bounce 循环 ── */
-  .vp-hero-slide-down-button {
-    left: 50% !important;
-    width: 270px !important;
-    height: 270px !important;
-    padding: 20px !important;
-    transform: translateX(-50%) !important;
-    z-index: 10;
-
-    .slide-down-icon {
-      width: 140px !important;
-      height: auto !important;
-      margin: -55px 0 !important;
-      color: #2c3e50 !important;
-      fill: #2c3e50 !important;
-      stroke: #2c3e50 !important;
-      stroke-width: 2px !important;
-      filter: none !important;
-      animation: bounce 1.2s ease-in-out infinite !important;
-    }
-
-    .slide-down-icon:first-child {
-      color: #2c3e50 !important;
-      fill: #2c3e50 !important;
-      opacity: 0.65 !important;
-    }
-
-    .slide-down-icon:last-child {
-      color: #2c3e50 !important;
-      fill: #2c3e50 !important;
-      opacity: 1 !important;
-    }
-  }
 }
 
 @keyframes bounce {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(18px);
   }
 }
 
-// ── Home: 全屏 Hero 文案居左 ────────────────────────────────────────────────
-// 核心：.vp-hero-mask 是 position:absolute;inset:0，永远全铺背景，不可移动。
-// 正确做法：.vp-hero-info flex-start；文案区固定为视口左侧 1/4（25vw），与背景图角色无关。
+// 首页桌面端：引导气泡上下微动（仅用于 .vp-hero-slide-down-button）
+@keyframes lk-hero-guide-bubble-float {
 
-// 左侧加深覆层，让文案白字清晰可读；右侧减淡，透出动漫人物
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) !important;
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0) !important;
+  }
+}
+
+// ── Home: Hero 覆层（全局）；文案左移 + 大箭头仅在 ≥960px ───────────────────
+// 左侧加深覆层，让文案白字清晰可读；右侧减淡，透出动漫人物（仅全屏）
 .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.62) 0%,
-    rgba(0, 0, 0, 0.46) 35%,
-    rgba(0, 0, 0, 0.22) 58%,
-    rgba(0, 0, 0, 0.08) 100%
-  ) !important;
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.62) 0%,
+      rgba(0, 0, 0, 0.46) 35%,
+      rgba(0, 0, 0, 0.22) 58%,
+      rgba(0, 0, 0, 0.08) 100%) !important;
 }
 
-// 关键：首页 Hero 文本区强制贴左（不依赖 .hero-fullscreen，避免类名未挂上时不生效）
-.page-home .vp-hero-info-wrapper .vp-hero-info {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  padding-inline: 0 !important;
-  text-align: left !important;
-  box-sizing: border-box;
-}
-
-// 文案区：固定占用视口左侧 1/4，换角色/构图也不压脸
-.page-home .vp-hero-info-wrapper .vp-hero-infos {
-  flex: 0 0 25vw !important;
-  width: 25vw !important;
-  max-width: 25vw !important;
-  margin: 0 !important;
-  margin-inline: 0 !important;
-  padding-left: max(1rem, env(safe-area-inset-left)) !important;
-  padding-right: 0.75rem !important;
-  min-width: 0;
-  box-sizing: border-box;
-  text-align: left !important;
-}
-
-// 标题 / 副文案：桌面端一律左对齐（全屏时再叠白字与轻阴影）
-.page-home .vp-hero-info-wrapper #main-title {
-  text-align: left !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-
+// 全屏 Hero 标题 / 副文案配色（各宽度通用）
 .page-home .vp-hero-info-wrapper.hero-fullscreen #main-title {
   background: none !important;
   -webkit-text-fill-color: white !important;
   color: white !important;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45) !important;
-}
-
-.page-home .vp-hero-info-wrapper #main-description,
-.page-home .vp-hero-info-wrapper .home-typewriter-tagline {
-  margin: 1.25rem 0 !important;
-  margin-inline: 0 !important;
-  text-align: left !important;
 }
 
 .page-home .vp-hero-info-wrapper.hero-fullscreen #main-description,
@@ -161,19 +101,6 @@
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
-// 按钮区：贴左，无自动 margin
-.page-home .vp-hero-info-wrapper .vp-hero-actions {
-  margin: 1.25rem 0 0 !important;
-  margin-inline: 0 !important;
-  text-align: left !important;
-}
-
-.page-home .vp-hero-info-wrapper .vp-hero-action {
-  margin-inline-start: 0 !important;
-  margin-inline-end: 0.5rem !important;
-}
-
-// Daily 按钮：半透明白色（深色背景上）
 .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-action.default {
   background: rgba(255, 255, 255, 0.18) !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
@@ -184,50 +111,156 @@
   }
 }
 
-// ── Mobile (≤768px)：恢复居中，背景均匀覆层 ─────────────────────────────────
-@media (max-width: 768px) {
+// 小屏 / 平板：均匀暗角，不覆盖 Hero 布局（交给主题默认居中）
+@media (max-width: 959px) {
   .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
     background: rgba(0, 0, 0, 0.42) !important;
   }
+  
+}
 
-  .page-home .vp-hero-info-wrapper .vp-hero-info {
-    justify-content: center !important;
-    align-items: center !important;
-    flex-direction: column !important;
-    padding-inline: 1.5rem !important;
-    text-align: center !important;
-  }
+@media (min-width: 960px) {
+// 找准这个包裹所有文字和按钮的最大的那个容器
+.vp-hero-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important; // 强制内部所有子元素靠左对齐
+  justify-content: center !important; // 垂直居中
+  
+  padding-left: 12vw !important;    // 用 padding 把内容顶出来
+  width: 100% !important;           // 撑满宽度，这样 margin: auto 就失效了
+  max-width: 100% !important;       // 解除主题可能存在的 800px 或 1200px 限制
+  margin: 0 !important;             // 彻底干掉居中
+}
 
-  .page-home .vp-hero-info-wrapper .vp-hero-infos {
-    flex: 1 1 auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    text-align: center !important;
-  }
+// 针对内部具体的文字块，消除它们自带的居中逻辑
+.vp-hero-infos, 
+.vp-hero-infos > * {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  text-align: left !important;
+  width: 100% !important;
+}
 
-  .page-home .vp-hero-info-wrapper #main-title {
-    text-align: center !important;
-  }
+// 针对按钮组的特殊对齐
+.vp-hero-actions {
+  justify-content: flex-start !important;
+}
 
-  .page-home .vp-hero-info-wrapper #main-description,
-  .page-home .vp-hero-info-wrapper .home-typewriter-tagline {
-    text-align: center !important;
-    margin-inline: auto !important;
-  }
+// 4. 打字机组件内部（针对那个 data-v-5f031480 的 div）
+.page-home .home-typewriter-tagline {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
 
-  .page-home .vp-hero-info-wrapper .vp-hero-actions {
-    text-align: center !important;
-    margin-inline: auto !important;
-  }
-
-  .page-home .vp-hero-info-wrapper .vp-hero-action {
-    margin-inline: 0.35rem !important;
+// 5. 按钮容器（强制覆盖 display: flex 带来的居中）
+.page-home .vp-hero-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 1.25rem !important;
+  margin-top: 2rem !important;
+  padding: 0 !important;
+  
+  // 确保按钮之间没有奇怪的 auto margin
+  .vp-hero-action {
+    margin: 0 !important;
   }
 }
 
-// 非首页或非 .vp-hero-info-wrapper：仍用主题默认；首页桌面左对齐、≤768px 由上方案恢复居中
+
+  /* 按钮间距 */
+  .page-home .vp-hero-info-wrapper .vp-hero-action {
+    margin-inline-start: 0 !important;
+    margin-inline-end: 1rem !important;
+  }
+
+  // 磨砂玻璃引导气泡：与 .vp-hero-info 的 padding-left: 12vw 对齐（Hope 不用 pageClass，须同时匹配 main.vp-project-home）
+  main.vp-page.vp-project-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-slide-down-button,
+  .theme-container.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-slide-down-button,
+  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-slide-down-button {
+    left: 12vw !important;
+    right: auto !important;
+    bottom: clamp(1.25rem, 4vh, 3.25rem) !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    max-width: min(92vw, 320px) !important;
+    padding: 13px 28px 11px !important;
+    margin: 0 !important;
+    transform: translate3d(0, 0, 0) !important;
+    z-index: 10 !important;
+
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+
+    border-radius: 50px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    background: rgba(255, 255, 255, 0.28) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+
+    color: rgba(28, 38, 52, 0.95) !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+
+    transition:
+      transform 0.35s ease,
+      box-shadow 0.35s ease,
+      background 0.35s ease,
+      border-color 0.35s ease !important;
+
+    animation: lk-hero-guide-bubble-float 2.4s ease-in-out infinite !important;
+
+    &::before {
+      content: '发现更多惊喜' !important;
+      display: block !important;
+      font-size: 0.9375rem !important;
+      font-weight: 600 !important;
+      line-height: 1.35 !important;
+      letter-spacing: 0.04em !important;
+      color: rgba(24, 36, 52, 0.94) !important;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+      white-space: nowrap !important;
+      pointer-events: none !important;
+    }
+
+    // 彻底移除主题默认双箭头（灰色 V 形），仅保留 ::before 文案气泡
+    .slide-down-icon {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      animation: none !important;
+    }
+
+    &:hover {
+      animation-play-state: paused !important;
+      transform: translate3d(0, -3px, 0) scale(1.05) !important;
+      background: rgba(255, 255, 255, 0.42) !important;
+      border-color: rgba(255, 255, 255, 0.75) !important;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.55),
+        0 0 28px rgba(120, 190, 255, 0.55),
+        0 10px 36px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    }
+
+    &:active {
+      transform: translate3d(0, 0, 0) scale(1.02) !important;
+    }
+  }
+}
 
 // ── Home：主内容区加宽；左 1/4 · 右 3/4 ─────────────────────────────────────
 .page-home main.vp-page.vp-project-home.lk-home-dual,
@@ -346,6 +379,7 @@ main.vp-project-home.lk-home-dual {
 // Mobile: collapse to single column.
 // Using !important so it overrides the inline styles set by JavaScript.
 @media (max-width: 719px) {
+
   .lk-home-body-grid,
   .page-home .lk-home-body-grid {
     grid-template-columns: 1fr !important;

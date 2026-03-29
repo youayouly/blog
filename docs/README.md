@@ -2,6 +2,7 @@
 home: true
 title: Home
 pageClass: page-home
+containerClass: page-home
 comment: false
 heroText: Hi, I'm Luke 👋
 tagline: Welcome to my blog
