@@ -30,8 +30,11 @@ const year = new Date().getFullYear()
 }
 
 .lk-footer__meta-bar {
-  background: #4aa8d8;
-  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  color: rgba(15, 23, 42, 0.66);
   padding: 8px 20px;
   text-align: center;
 }
@@ -56,7 +59,7 @@ const year = new Date().getFullYear()
 }
 
 .lk-footer__link {
-  color: rgba(255, 255, 255, 0.95);
+  color: rgba(15, 23, 42, 0.72);
   text-decoration: none;
   transition: opacity 0.2s;
 }
@@ -64,5 +67,15 @@ const year = new Date().getFullYear()
 .lk-footer__link:hover {
   opacity: 1;
   text-decoration: underline;
+}
+
+[data-theme='dark'] .lk-footer__meta-bar {
+  background: rgba(2, 6, 23, 0.38);
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  color: rgba(226, 232, 240, 0.72);
+}
+
+[data-theme='dark'] .lk-footer__link {
+  color: rgba(226, 232, 240, 0.82);
 }
 </style>

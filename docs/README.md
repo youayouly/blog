@@ -15,8 +15,8 @@ actions:
   - text: About Me →
     link: /about
     type: primary
-  - text: Daily
-    link: /moments/
+  - text: Comments
+    link: /comments/
     type: default
 features:
   - title: 💻 Projects
@@ -31,8 +31,8 @@ features:
     details: Photo albums by place — travel snapshots in a 3×3 grid.
     link: /travel/
     tag: 旅行相册
-  - title: 📱 Daily
-    details: WeChat Moments–style daily updates and life snapshots.
-    link: /moments/
-    tag: 日常动态
+  - title: 💬 Comments
+    details: Leave your thoughts and suggestions here.
+    link: /comments/
+    tag: 留言交流
 ---

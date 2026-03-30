@@ -9,7 +9,7 @@
         </svg>
         <span class="lk-album__title">Album</span>
       </div>
-      <a class="lk-album__all" href="/moments/">
+      <a class="lk-album__all" href="/comments/">
         View All
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />

@@ -64,7 +64,12 @@
 
 // 首页 Hero：抵消 main.lk-home-dual 的左右 padding，整块贴视口左缘；文案与「发现更多惊喜」只留 safe-area
 .page-home main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
-main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
+main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
+
+// When we mount home as a 2-col grid, the hero may be moved under
+// `.lk-home-main-col`, so these direct-child tweaks must still apply.
+.page-home .lk-home-main-col > .vp-hero-info-wrapper:first-child,
+.lk-home-main-col > .vp-hero-info-wrapper:first-child {
   margin-left: calc(-1 * max(1.25rem, env(safe-area-inset-left)));
   width: calc(100% + max(1.25rem, env(safe-area-inset-left)));
   box-sizing: border-box;
@@ -89,6 +94,17 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
 .page-home .vp-hero-info-wrapper .vp-hero-info .vp-hero-actions {
   margin-left: 0 !important;
   padding-left: 0 !important;
+}
+
+// ── CLS guard for home enhancements ─────────────────────────────────────────
+// During client.js mount, we swap/re-parent nodes (sidebar + hero).
+// We temporarily hide the home main area while keeping a stable height
+// to avoid visible "layout jumping" (CLS).
+html.lk-home-enhance-suspended .page-home main.vp-page.vp-project-home,
+html.lk-home-enhance-suspended main.vp-page.vp-project-home,
+html.lk-home-enhance-suspended main.vp-project-home {
+  min-height: 70vh !important;
+  visibility: hidden !important;
 }
 
 .page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
@@ -129,6 +145,20 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
     rgba(60, 82, 120, 0.12) 32%,
     rgba(32, 44, 72, 0.45) 72%,
     rgba(20, 28, 48, 0.6) 100%
+  ) !important;
+}
+
+// Dark mode: darken the hero mask overlay to match other pages.
+[data-theme='dark']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  .vp-hero-mask::after {
+  background: linear-gradient(
+    to left,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(0, 0, 0, 0.18) 32%,
+    rgba(0, 0, 0, 0.55) 72%,
+    rgba(0, 0, 0, 0.72) 100%
   ) !important;
 }
 
@@ -254,7 +284,7 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
 
     display: inline-flex !important;
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
 
@@ -278,32 +308,6 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
       border-color 0.35s ease !important;
 
     animation: lk-hero-guide-bubble-float 2.4s ease-in-out infinite !important;
-
-    &::before {
-      content: '发现更多惊喜' !important;
-      display: block !important;
-      font-size: 0.9375rem !important;
-      font-weight: 600 !important;
-      line-height: 1.35 !important;
-      letter-spacing: 0.04em !important;
-      color: rgba(24, 36, 52, 0.94) !important;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) !important;
-      white-space: nowrap !important;
-      pointer-events: none !important;
-    }
-
-    // 彻底移除主题默认双箭头（灰色 V 形），仅保留 ::before 文案气泡
-    .slide-down-icon {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: hidden !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-      animation: none !important;
-    }
 
     &:hover {
       animation-play-state: paused !important;
@@ -426,6 +430,45 @@ main.vp-project-home.lk-home-dual {
   color: #334155 !important;
 }
 
+// ── Dark mode overrides (Home main content) ───────────────────────────────
+[data-theme='dark'] .page-home {
+  // Override the per-page light background gradient.
+  background: linear-gradient(
+    160deg,
+    rgba(2, 6, 23, 1) 0%,
+    rgba(15, 23, 42, 1) 40%,
+    rgba(7, 29, 57, 1) 100%
+  ) !important;
+}
+
+[data-theme='dark'] .page-home .lk-home-main-col .vp-feature-title {
+  color: rgba(226, 232, 240, 0.98) !important;
+}
+
+[data-theme='dark'] .page-home .lk-home-main-col .vp-feature-details {
+  color: rgba(148, 163, 184, 0.98) !important;
+}
+
+[data-theme='dark'] .page-home .lk-home-main-col .vp-feature-item {
+  // Darker "glass" card so the whole block matches dark theme.
+  background: rgba(15, 23, 42, 0.28) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme='dark']
+  .page-home
+  .lk-home-main-col
+  .vp-feature-item:hover {
+  background: rgba(15, 23, 42, 0.42) !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
 .lk-home-profile-col,
 .page-home .lk-home-profile-col {
   position: sticky !important;
@@ -458,6 +501,37 @@ main.vp-project-home.lk-home-dual {
   backdrop-filter: blur(10px);
 }
 
+// Navbar text: larger & bold + more spacing
+.vp-navbar {
+  .vp-navbar-item a,
+  .vp-navbar-site-name {
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em !important;
+    line-height: 1.25 !important;
+  }
+
+  // Increase spacing between navigation items.
+  // (Hope theme uses flex layout; margin-inline creates visible gap without touching theme internals.)
+  .vp-navbar-item {
+    margin: 0 0.65rem !important;
+  }
+}
+
+@media (max-width: 719px) {
+  .vp-navbar {
+    .vp-navbar-item a,
+    .vp-navbar-site-name {
+      font-size: 1.05rem !important;
+      font-weight: 800 !important;
+    }
+
+    .vp-navbar-item {
+      margin: 0 0.5rem !important;
+    }
+  }
+}
+
 .vp-navbar-logo img {
   width: 40px !important;
   height: 40px !important;
@@ -480,9 +554,9 @@ main.vp-project-home.lk-home-dual {
   min-height: 100vh;
 }
 
-// Projects — emerald green
+// Projects — warm beige
 .page-projects {
-  background: linear-gradient(150deg, #d1fae5 0%, #e0f2fe 100%);
+  background: #fbf3e9;
   min-height: 100vh;
 }
 
@@ -498,10 +572,141 @@ main.vp-project-home.lk-home-dual {
   min-height: 100vh;
 }
 
-// Daily moments — soft rose-purple
-.page-daily {
-  background: linear-gradient(150deg, #fce7f3 0%, #ede9fe 100%);
+// Comments — dark doodle style (mimic 留言评论 screenshots)
+.page-comments {
+  background: #0b0f1a;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page-comments::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/comments-bg.svg');
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 0;
+  filter: saturate(120%);
+}
+
+.page-comments .theme-container,
+.page-comments main,
+.page-comments .waline-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.lk-comments-hero {
+  padding: 56px 16px 18px;
+  text-align: center;
+}
+
+.lk-comments-hero__title {
+  margin: 0 0 6px;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #35d7d0;
+  text-shadow: 0 10px 34px rgba(0, 0, 0, 0.6);
+}
+
+.lk-comments-hero__subtitle {
+  margin: 0 auto;
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+// Make Waline look consistent in dark mode.
+.page-comments .waline-wrapper {
+  --waline-bg-color: rgba(0, 0, 0, 0.22);
+  --waline-bg-color-light: rgba(255, 255, 255, 0.06);
+  --waline-color: rgba(233, 236, 255, 0.92);
+  --waline-dark-grey: rgba(233, 236, 255, 0.72);
+  --waline-light-grey: rgba(233, 236, 255, 0.56);
+  --waline-border-color: rgba(255, 255, 255, 0.1);
+  --waline-border: 1px solid var(--waline-border-color);
+  --waline-theme-color: #35d7d0;
+  --waline-active-color: #19c7bc;
+  --waline-info-bg-color: rgba(255, 255, 255, 0.06);
+  --waline-info-color: rgba(233, 236, 255, 0.58);
+  --waline-code-bg-color: rgba(255, 255, 255, 0.06);
+  --waline-bq-color: rgba(233, 236, 255, 0.18);
+}
+
+.page-comments [data-waline] {
+  --waline-bg-color: rgba(0, 0, 0, 0.22);
+  --waline-bg-color-light: rgba(255, 255, 255, 0.06);
+  --waline-color: rgba(233, 236, 255, 0.92);
+  --waline-dark-grey: rgba(233, 236, 255, 0.72);
+  --waline-light-grey: rgba(233, 236, 255, 0.56);
+  --waline-border-color: rgba(255, 255, 255, 0.1);
+  --waline-border: 1px solid var(--waline-border-color);
+  --waline-theme-color: #35d7d0;
+  --waline-active-color: #19c7bc;
+  --waline-info-bg-color: rgba(255, 255, 255, 0.06);
+  --waline-info-color: rgba(233, 236, 255, 0.58);
+  --waline-code-bg-color: rgba(255, 255, 255, 0.06);
+  --waline-bq-color: rgba(233, 236, 255, 0.18);
+}
+
+.page-comments .wl-panel {
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.page-comments .wl-header {
+  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.page-comments .wl-header label {
+  color: rgba(53, 215, 208, 0.95) !important;
+  font-weight: 700 !important;
+}
+
+.page-comments .wl-editor,
+.page-comments .wl-input {
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.page-comments .wl-card .wl-panel {
+  background: rgba(0, 0, 0, 0.16) !important;
+}
+
+.page-comments [data-waline] {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page-comments .wl-btn {
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.page-comments .wl-btn.primary {
+  background: #35d7d0 !important;
+  border-color: #35d7d0 !important;
+  color: #051316 !important;
+}
+
+.page-comments .wl-btn:not(.primary) {
+  background: rgba(53, 215, 208, 0.08) !important;
+  border-color: rgba(53, 215, 208, 0.22) !important;
+  color: rgba(53, 215, 208, 0.95) !important;
+}
+
+.page-comments .wl-content {
+  color: rgba(233, 236, 255, 0.92) !important;
+}
+
+.page-comments .wl-content a {
+  color: #35d7d0 !important;
 }
 
 // ── About Page — Two-column layout ───────────────────────────────────────────
@@ -762,4 +967,49 @@ main.vp-project-home.lk-home-dual {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+// ── Footer (theme container) ───────────────────────────────────────────────
+// The theme sets background via CSS variables; we override with a low-contrast,
+// slightly blurred look to keep the footer consistent with dark designs.
+.vp-footer-wrapper {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: rgba(15, 23, 42, 0.62) !important;
+}
+
+.vp-footer {
+  color: rgba(15, 23, 42, 0.62) !important;
+}
+
+.vp-copyright {
+  color: rgba(15, 23, 42, 0.58) !important;
+}
+
+.vp-footer a {
+  color: rgba(15, 23, 42, 0.72) !important;
+  text-decoration: none;
+}
+
+.vp-footer a:hover {
+  text-decoration: underline;
+}
+
+[data-theme='dark'] .vp-footer-wrapper {
+  background: rgba(2, 6, 23, 0.35) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.18) !important;
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+[data-theme='dark'] .vp-footer,
+[data-theme='dark'] .vp-copyright {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+[data-theme='dark'] .vp-footer a {
+  color: rgba(226, 232, 240, 0.78) !important;
 }

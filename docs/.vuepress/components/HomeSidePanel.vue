@@ -102,4 +102,31 @@ import SiteStatsCard from './SiteStatsCard.vue'
     rgba(255, 255, 255, 0.72) 48%
   ) !important;
 }
+
+/* Dark mode: align outer shell + welcome/notice blocks with ProfileCard embedded */
+[data-theme='dark'] .lk-home-side-panel__shell {
+  background: rgba(15, 23, 42, 0.62) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow:
+    0 2px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme='dark'] :deep(.lk-home-side-panel__block--welcome) {
+  border-top: 3px solid rgba(167, 139, 250, 0.8) !important;
+  background-image: linear-gradient(
+    180deg,
+    rgba(221, 214, 254, 0.32) 0%,
+    rgba(15, 23, 42, 0.62) 48%
+  ) !important;
+}
+
+[data-theme='dark'] :deep(.lk-home-side-panel__block--notice) {
+  border-top: 3px solid rgba(167, 139, 250, 0.8) !important;
+  background-image: linear-gradient(
+    180deg,
+    rgba(221, 214, 254, 0.24) 0%,
+    rgba(15, 23, 42, 0.62) 48%
+  ) !important;
+}
 </style>

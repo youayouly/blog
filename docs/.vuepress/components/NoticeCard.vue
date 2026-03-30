@@ -113,4 +113,25 @@ defineProps({
 .lk-notice--embedded .lk-notice__text strong {
   color: #4338ca;
 }
+
+/* Dark mode: match ProfileCard embedded palette */
+[data-theme='dark'] .lk-notice--embedded {
+  background: rgba(15, 23, 42, 0.62) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  color: rgba(226, 232, 240, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-notice--embedded .lk-notice__title {
+  color: rgba(226, 232, 240, 0.98) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+[data-theme='dark'] .lk-notice--embedded .lk-notice__item {
+  color: rgba(148, 163, 184, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-notice--embedded .lk-notice__text strong {
+  color: rgba(196, 181, 253, 0.98) !important;
+}
 </style>

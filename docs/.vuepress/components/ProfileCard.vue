@@ -48,7 +48,7 @@
         </svg>
       </a>
 
-      <span class="lk-card__dock-sep" aria-hidden="true" />
+      <span class="lk-card__dock-sep" aria-hidden="true"></span>
 
       <a class="lk-card__dock-btn" href="https://qm.qq.com/"
         target="_blank" rel="noopener noreferrer" title="QQ">
@@ -154,6 +154,55 @@ function onQrError(e) {
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   color: #0f172a;
+}
+
+/* Dark mode: embedded card (homepage sidebar) should match overall theme. */
+[data-theme='dark'] .lk-card--embedded {
+  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  background: rgba(15, 23, 42, 0.62) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: rgba(226, 232, 240, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__dock {
+  background: rgba(2, 6, 23, 0.25) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__name {
+  color: rgba(199, 210, 254, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__sub {
+  color: rgba(148, 163, 184, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__tag {
+  color: rgba(196, 181, 253, 0.98) !important;
+  background: rgba(99, 102, 241, 0.16) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__dock-btn {
+  color: rgba(199, 210, 254, 0.95) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__dock-btn:hover {
+  color: rgba(255, 255, 255, 0.98) !important;
+  background: rgba(99, 102, 241, 0.22) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__dock-sep {
+  background: rgba(148, 163, 184, 0.35) !important;
+}
+
+[data-theme='dark'] .lk-card--embedded .lk-card__divider {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 163, 184, 0.3),
+    transparent
+  ) !important;
 }
 
 .lk-card--embedded .lk-card__avatar-wrap {

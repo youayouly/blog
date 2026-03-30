@@ -3,27 +3,61 @@ import { createApp, h, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
+import ProjectNineGrid from './components/ProjectNineGrid.vue'
+import ProjectCardsGrid from './components/ProjectCardsGrid.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import FloatingShapes from './components/FloatingShapes.vue'
 
-/* ── Hero 背景：稳定图源 + 滚动绝对索引 + 预加载后再写 mask.style ─ */
-const images = [
-  'https://api.dujin.org/pic/fengjing',
-  'https://bu.dusays.com/2021/01/24/2f80164c01ca5.jpg',
-  'https://bu.dusays.com/2021/01/24/3f80164c01ca5.jpg',
-]
+/* ── Hero 背景：禁用失效外链 + 降级到本地背景色 ─ */
+// Note: If external images return 403, we must not trigger requests.
+const images = []
+const heroWallpaperFallbackBg = 'rgba(74, 144, 217, 0.18)'
+
+function setHomeEnhanceSuspended(flag) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle('lk-home-enhance-suspended', !!flag)
+}
 
 let scrollBlurHandler = null
+let themeObserver = null
 /** 已成功展示的图片下标（仅 onload 成功后更新） */
 let wallpaperDisplayIndex = -1
 /** 正在为其发起 Image 加载的下标，避免重复请求 */
 let wallpaperLoadingForIndex = null
+/** Whether we have overridden .vp-hero-mask background* inline styles */
+let heroBgOverridden = false
+
+function isDarkMode() {
+  const root = document.documentElement
+  const body = document.body
+  return (
+    root?.getAttribute('data-theme') === 'dark' ||
+    body?.getAttribute('data-theme') === 'dark' ||
+    root?.classList.contains('dark') ||
+    body?.classList.contains('dark')
+  )
+}
 
 function applyHeroMaskBaseStyles(mask) {
   if (!mask) return
+
+  // If we don't have any wallpaper images configured, do not touch the
+  // theme-provided hero background styles; otherwise we'd cause visible
+  // background "flash" during mount/scroll.
+  if (images.length === 0) {
+    mask.style.willChange = 'filter, transform'
+    return
+  }
+
+  // Always set a local fallback so the hero never becomes "blank"
+  mask.style.backgroundImage = 'none'
+  mask.style.backgroundColor = isDarkMode()
+    ? 'rgba(0, 0, 0, 0.35)'
+    : heroWallpaperFallbackBg
   mask.style.backgroundSize = 'cover'
   mask.style.backgroundPosition = 'center center'
   mask.style.willChange = 'filter, transform, background-image'
+  heroBgOverridden = true
 }
 
 function wallpaperTargetIndex(scrollY, heroHeight) {
@@ -63,6 +97,8 @@ function loadWallpaperForTarget(mask, targetIndex) {
   }
   img.onerror = () => {
     wallpaperLoadingForIndex = null
+    // Keep hero readable even if the external image is blocked (403) / unreachable.
+    applyHeroMaskBaseStyles(mask)
     console.error(
       '[Hero wallpaper] Failed to load image (possible 403 or network error):',
       url,
@@ -76,6 +112,11 @@ function initScrollBlur() {
   const mask = document.querySelector('.vp-hero-mask')
   if (!mask) return
 
+  if (themeObserver) {
+    themeObserver.disconnect()
+    themeObserver = null
+  }
+
   const y0 = window.scrollY
   const heroH0 =
     document.querySelector('.vp-hero-info-wrapper')?.offsetHeight ||
@@ -86,16 +127,19 @@ function initScrollBlur() {
 
   scrollBlurHandler = () => {
     const m = document.querySelector('.vp-hero-mask')
-    if (!m || images.length === 0) return
+    if (!m) return
 
     const scrollY = window.scrollY
     const heroHeight =
       document.querySelector('.vp-hero-info-wrapper')?.offsetHeight ||
       window.innerHeight
 
-    applyHeroMaskBaseStyles(m)
+    if (images.length > 0) applyHeroMaskBaseStyles(m)
     const progress = Math.min(scrollY / (window.innerHeight * 0.55), 1)
-    m.style.filter = `blur(${progress * 14}px) brightness(${1 - progress * 0.25})`
+    // Dark mode: keep hero image readable but not overly bright.
+    const darkFactor = isDarkMode() ? 0.68 : 1
+    const brightness = (1 - progress * 0.25) * darkFactor
+    m.style.filter = `blur(${progress * 14}px) brightness(${brightness})`
     m.style.transform = `scale(${1 + progress * 0.06})`
 
     const target = wallpaperTargetIndex(scrollY, heroHeight)
@@ -103,6 +147,15 @@ function initScrollBlur() {
   }
   scrollBlurHandler()
   window.addEventListener('scroll', scrollBlurHandler, { passive: true })
+
+  // Ensure dark mode toggle updates hero brightness immediately (without scrolling).
+  themeObserver = new MutationObserver(() => {
+    if (scrollBlurHandler) scrollBlurHandler()
+  })
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'class'],
+  })
 }
 
 function cleanupScrollBlur() {
@@ -115,7 +168,22 @@ function cleanupScrollBlur() {
     if (mask) {
       mask.style.filter = ''
       mask.style.transform = ''
+      if (heroBgOverridden) {
+        // Restore theme-provided hero background (if any) by removing inline
+        // overrides we previously applied in applyHeroMaskBaseStyles().
+        mask.style.backgroundImage = ''
+        mask.style.backgroundColor = ''
+        mask.style.backgroundSize = ''
+        mask.style.backgroundPosition = ''
+        mask.style.willChange = ''
+        heroBgOverridden = false
+      }
     }
+  }
+
+  if (themeObserver) {
+    themeObserver.disconnect()
+    themeObserver = null
   }
 }
 
@@ -211,16 +279,22 @@ function mountHomeBodyGrid() {
   const mainCol = document.createElement('div')
   mainCol.className = 'lk-home-main-col'
 
+  row.appendChild(profileAside)
+  row.appendChild(mainCol)
+  // Insert the grid at the hero position so the sidebar (avatar etc.)
+  // is visible immediately on the first screen.
+  hero.insertAdjacentElement('beforebegin', row)
+
+  // Move `hero` + following siblings into the main column.
+  // Capture `sibling` before moving `hero`, otherwise `hero.nextSibling`
+  // becomes unrelated after the move.
   let sibling = hero.nextSibling
+  mainCol.appendChild(hero)
   while (sibling) {
     const next = sibling.nextSibling
     mainCol.appendChild(sibling)
     sibling = next
   }
-
-  row.appendChild(profileAside)
-  row.appendChild(mainCol)
-  hero.insertAdjacentElement('afterend', row)
 
   sidePanelApp = createApp({ render: () => h(HomeSidePanel) })
   sidePanelApp.mount(profileAside)
@@ -235,10 +309,8 @@ function unmountHomeBodyGrid() {
   const main = document.querySelector('main.vp-page.vp-project-home')
   if (row && main) {
     const mainCol = row.querySelector('.lk-home-main-col')
-    const hero = main.querySelector(':scope > header.vp-hero-info-wrapper')
-    if (mainCol && hero) {
-      while (mainCol.firstChild)
-        main.insertBefore(mainCol.firstChild, row)
+    if (mainCol) {
+      while (mainCol.firstChild) main.insertBefore(mainCol.firstChild, row)
     }
     row.remove()
   }
@@ -291,12 +363,31 @@ function unmountHome() {
 export default defineClientConfig({
   rootComponents: [SiteFooter],
 
+  enhance({ app }) {
+    // Ensure these are usable in markdown as <ProjectNineGrid /> / <ProjectCardsGrid />.
+    app.component('ProjectNineGrid', ProjectNineGrid)
+    app.component('ProjectCardsGrid', ProjectCardsGrid)
+  },
+
   setup() {
     const route = useRoute()
+    const microtask =
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : (fn) => Promise.resolve().then(fn)
 
     onMounted(() => {
       initProgressBar()
-      if (route.path === '/') setTimeout(mountHome, 250)
+      if (route.path === '/') {
+        setHomeEnhanceSuspended(true)
+        microtask(() => {
+          try {
+            mountHome()
+          } finally {
+            setHomeEnhanceSuspended(false)
+          }
+        })
+      }
     })
 
     onUnmounted(() => {
@@ -306,8 +397,20 @@ export default defineClientConfig({
     watch(
       () => route.path,
       (newPath, oldPath) => {
-        if (oldPath === '/') unmountHome()
-        if (newPath === '/') setTimeout(mountHome, 350)
+        if (oldPath === '/') {
+          unmountHome()
+          setHomeEnhanceSuspended(false)
+        }
+        if (newPath === '/') {
+          setHomeEnhanceSuspended(true)
+          microtask(() => {
+            try {
+              mountHome()
+            } finally {
+              setHomeEnhanceSuspended(false)
+            }
+          })
+        }
       },
     )
   },

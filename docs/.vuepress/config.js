@@ -70,7 +70,7 @@ export default defineUserConfig({
         ],
       },
       { text: '📷 Album', link: '/travel/' },
-      { text: '📱 Daily', link: '/moments/' },
+      { text: '💬 Comments', link: '/comments/' },
     ],
 
     sidebar: {
@@ -87,27 +87,14 @@ export default defineUserConfig({
         },
       ],
       '/travel/': 'structure',
-      '/moments/': false,
+      '/comments/': false,
       '/': 'structure',
     },
 
     plugins: {
-      comment: {
-        provider: 'Waline',
-        // ── Replace with your real Waline server URL after deployment ────────
-        serverURL: 'https://waline-test.example.com',
-        // ────────────────────────────────────────────────────────────────────
-        meta: ['nick', 'mail', 'link'],
-        requiredMeta: ['nick'],
-        login: 'disable',
-        lang: 'zh-CN',
-        emoji: [
-          'https://unpkg.com/@waline/emojis@1.2.0/weibo',
-        ],
-        pageSize: 10,
-        wordLimit: 0,
-        reaction: true,
-      },
+      // Disable Waline comments to avoid failing requests
+      // (e.g. https://waline-test.example.com) causing runtime errors.
+      comment: false,
     },
   }),
 })

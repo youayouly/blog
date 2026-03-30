@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <g fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    <!-- Heart doodle -->
+    <path d="M80 130 C64 114 46 104 46 84 C46 70 57 60 71 60 C80 60 86 67 80 74 C74 67 80 60 89 60 C103 60 114 70 114 84 C114 104 96 114 80 130 Z"/>
+    <!-- Small heart -->
+    <path d="M27 55 C22 49 15 46 12 40 C9 34 14 27 20 27 C25 27 27 31 27 31 C27 31 29 27 34 27 C40 27 45 34 42 40 C39 46 32 49 27 55 Z"/>
+    <!-- Circle doodle -->
+    <circle cx="132" cy="48" r="10"/>
+    <!-- Star-ish doodle -->
+    <path d="M120 118 L127 132 L142 136 L130 146 L132 160 L120 152 L108 160 L110 146 L98 136 L113 132 Z" transform="translate(-2,-6) scale(0.45)"/>
+    <!-- Spark lines -->
+    <path d="M138 98 L150 104"/>
+    <path d="M136 112 L148 112"/>
+    <path d="M128 104 L128 90"/>
+    <!-- Another small heart -->
+    <path d="M112 70 C107 64 100 61 97 55 C94 49 99 42 105 42 C110 42 112 46 112 46 C112 46 114 42 119 42 C125 42 130 49 127 55 C124 61 117 64 112 70 Z"/>
+  </g>
+</svg>
+
