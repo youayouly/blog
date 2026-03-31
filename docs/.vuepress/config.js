@@ -92,9 +92,18 @@ export default defineUserConfig({
     },
 
     plugins: {
-      // Disable Waline comments to avoid failing requests
-      // (e.g. https://waline-test.example.com) causing runtime errors.
-      comment: false,
+      comment: {
+        // 启用 Waline 评论系统
+        provider: 'Waline',
+        // 请替换为你的 Waline 服务器地址
+        // 例如: 'https://waline.your-domain.com'
+        serverURL: 'https://waline.js.org', // 临时使用公共测试地址
+        // 可选配置
+        // emoji: ['https://cdn.jsdelivr.net/gh/walinejs/emojis@latest/weibo'],
+        // dark: 'auto',
+        // requiredMeta: ['nick', 'mail'],
+        // locale: { ... },
+      },
     },
   }),
 })

@@ -13,6 +13,8 @@ index: true
 
 ## 相册 Album
 
+<ProjectNineGrid />
+
 <AlbumFeed />
 
 ---
