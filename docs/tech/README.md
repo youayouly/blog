@@ -9,6 +9,12 @@ index: true
 
 记录我在 HKU 学习期间完成的编程项目与技术探索。
 
+---
+
+<ProjectNineGrid />
+
+---
+
 ## 项目列表
 
 <ProjectCardsGrid />

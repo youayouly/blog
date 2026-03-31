@@ -4,16 +4,10 @@
 
   // The ::after of .vp-hero-mask：文字侧浅灰雾，人物侧透/极浅白（仅遮罩图片层）
   .vp-hero-mask {
-    overflow: visible; // clip scaled-up blur without leaking
-    // 固定使用本地首页背景图，避免主题默认的蓝色人物等外链图重新出现
-    background-image: url('/home-hero.jpg') !important;
-    background-color: rgba(74, 144, 217, 0.18) !important;
+    overflow: hidden; // clip scaled-up blur without leaking
     background-attachment: scroll !important;
     background-size: cover !important;
     background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-origin: border-box !important;
-    background-clip: border-box !important;
     transition:
       background-image 0.8s ease-in-out,
       filter 0.12s ease-out,
@@ -29,43 +23,6 @@
         rgba(18, 24, 40, 0.62) 100%
       ) !important;
     }
-  }
-
-  // 高特异性：确保 Hero 背景视觉上横向铺满整个视口
-  html body .theme-container.page-home main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask,
-  html body .theme-container.page-home main.vp-page.vp-project-home.lk-home-dual > .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask {
-    position: relative !important;
-    left: 0 !important;
-    width: 100vw !important;
-    max-width: none !important;
-    margin-left: calc(50% - 50vw) !important;
-    margin-right: 0 !important;
-    box-sizing: border-box !important;
-    transform-origin: center center !important;
-  }
-
-  // 强制覆盖内联样式 - 使用属性选择器增加特异性
-  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask[style] {
-    background-image: url('/home-hero.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-    background-color: rgba(74, 144, 217, 0.18) !important;
-    background-origin: border-box !important;
-    background-clip: border-box !important;
-    overflow: visible !important;
-  }
-
-  // Hero 区域至少一屏高，遮罩铺满整个 Hero
-  .vp-hero-info-wrapper.hero-fullscreen {
-    position: relative !important;
-    min-height: 100vh !important;
-  }
-
-  .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask {
-    position: absolute !important;
-    inset: 0 !important;
   }
 
   // White title（具体阴影由下方全屏 Hero 块统一控制，避免叠加重影）
@@ -92,16 +49,29 @@
     }
   }
 
+  // Translucent navbar over the hero image
+  .vp-navbar {
+    background: rgba(0, 0, 0, 0.18) !important;
+    backdrop-filter: blur(12px);
+
+    .vp-navbar-item a,
+    .vp-navbar-site-name {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+  }
+
 }
 
 // 首页 Hero：抵消 main.lk-home-dual 的左右 padding，整块贴视口左缘；文案与「发现更多惊喜」只留 safe-area
 .page-home main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
-main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
+main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
+
+// When we mount home as a 2-col grid, the hero may be moved under
+// `.lk-home-main-col`, so these direct-child tweaks must still apply.
+.page-home .lk-home-main-col > .vp-hero-info-wrapper:first-child,
+.lk-home-main-col > .vp-hero-info-wrapper:first-child {
   margin-left: calc(-1 * max(1.25rem, env(safe-area-inset-left)));
-  margin-right: calc(-1 * max(1.25rem, env(safe-area-inset-right)));
-  width: calc(
-    100% + max(1.25rem, env(safe-area-inset-left)) + max(1.25rem, env(safe-area-inset-right))
-  );
+  width: calc(100% + max(1.25rem, env(safe-area-inset-left)));
   box-sizing: border-box;
 }
 
@@ -137,6 +107,11 @@ html.lk-home-enhance-suspended main.vp-project-home {
   visibility: hidden !important;
 }
 
+.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
+  left: var(--lk-hero-content-inset) !important;
+  right: auto !important;
+}
+
 @keyframes bounce {
 
   0%,
@@ -162,27 +137,28 @@ html.lk-home-enhance-suspended main.vp-project-home {
   }
 }
 
-// ── Home: Hero 覆层轻度加暗，仅保证白字可读 ─────────────────────────────
+// ── Home: 全屏 Hero 覆层（左深右浅，白字可读；不作用于整页底色）
 .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
   background: linear-gradient(
-    180deg,
-    rgba(15, 23, 42, 0.16) 0%,
-    rgba(15, 23, 42, 0.26) 40%,
-    rgba(15, 23, 42, 0.36) 100%
+    to left,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(60, 82, 120, 0.12) 32%,
+    rgba(32, 44, 72, 0.45) 72%,
+    rgba(20, 28, 48, 0.6) 100%
   ) !important;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
+// Dark mode: darken the hero mask overlay to match other pages.
 [data-theme='dark']
   .page-home
   .vp-hero-info-wrapper.hero-fullscreen
   .vp-hero-mask::after {
   background: linear-gradient(
-    180deg,
-    rgba(15, 23, 42, 0.42) 0%,
-    rgba(15, 23, 42, 0.62) 40%,
-    rgba(15, 23, 42, 0.78) 100%
+    to left,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(0, 0, 0, 0.18) 32%,
+    rgba(0, 0, 0, 0.55) 72%,
+    rgba(0, 0, 0, 0.72) 100%
   ) !important;
 }
 
@@ -222,55 +198,21 @@ html.lk-home-enhance-suspended main.vp-project-home {
     background:
       linear-gradient(
         180deg,
-        rgba(22, 30, 50, 0.45) 0%,
-        rgba(22, 30, 50, 0.12) 46%,
+        rgba(22, 30, 50, 0.55) 0%,
+        rgba(22, 30, 50, 0.12) 42%,
         transparent 58%
       ),
       linear-gradient(
         to left,
         rgba(255, 255, 255, 0) 0%,
-        rgba(32, 44, 72, 0.3) 100%
+        rgba(32, 44, 72, 0.4) 100%
       ) !important;
   }
 }
 
-// ── 全局滚动进度条：与首页向下箭头保持同一套玻璃感风格 ───────────────
-#lk-progress {
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 3px;
-  width: 0;
-  z-index: 60;
-
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.0),
-    rgba(255, 255, 255, 0.75),
-    rgba(255, 255, 255, 0.0)
-  );
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.25),
-    0 6px 18px rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-[data-theme='dark'] #lk-progress {
-  background: linear-gradient(
-    90deg,
-    rgba(148, 163, 184, 0.0),
-    rgba(191, 219, 254, 0.85),
-    rgba(148, 163, 184, 0.0)
-  );
-  box-shadow:
-    0 0 0 1px rgba(15, 23, 42, 0.55),
-    0 6px 22px rgba(15, 23, 42, 0.85);
-}
-
 @media (min-width: 960px) {
 // 找准这个包裹所有文字和按钮的最大的那个容器
-.page-home .vp-hero-info {
+.vp-hero-info {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important; // 强制内部所有子元素靠左对齐
@@ -283,8 +225,8 @@ html.lk-home-enhance-suspended main.vp-project-home {
 }
 
 // 针对内部具体的文字块，消除它们自带的居中逻辑
-.page-home .vp-hero-infos,
-.page-home .vp-hero-infos > * {
+.vp-hero-infos, 
+.vp-hero-infos > * {
   margin-left: 0 !important;
   margin-right: auto !important;
   text-align: left !important;
@@ -292,7 +234,7 @@ html.lk-home-enhance-suspended main.vp-project-home {
 }
 
 // 针对按钮组的特殊对齐
-.page-home .vp-hero-actions {
+.vp-hero-actions {
   justify-content: flex-start !important;
 }
 
@@ -330,8 +272,7 @@ html.lk-home-enhance-suspended main.vp-project-home {
   .page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
     left: var(--lk-hero-content-inset) !important;
     right: auto !important;
-    top: clamp(330px, 56vh, 560px) !important;
-    bottom: auto !important;
+    bottom: clamp(1.25rem, 4vh, 3.25rem) !important;
     width: auto !important;
     height: auto !important;
     min-width: 0 !important;
@@ -339,7 +280,7 @@ html.lk-home-enhance-suspended main.vp-project-home {
     padding: 13px 26px 11px 20px !important;
     margin: 0 !important;
     transform: translate3d(0, 0, 0) !important;
-    z-index: 40 !important;
+    z-index: 10 !important;
 
     display: inline-flex !important;
     flex-direction: column !important;
@@ -348,8 +289,7 @@ html.lk-home-enhance-suspended main.vp-project-home {
     gap: 0 !important;
 
     border-radius: 50px !important;
-    border: none !important;
-    & .icon { display: none !important; }
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
     background: rgba(255, 255, 255, 0.28) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
@@ -399,22 +339,14 @@ main.vp-project-home.lk-home-dual {
   box-sizing: border-box !important;
 }
 
-// 统一隐藏主题箭头图标，仅保留自定义样式
-.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button .icon {
-  display: none !important;
-}
-
-
 // Standalone selector – works even if .page-home ancestor is absent
 .lk-home-body-grid {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) !important;
   gap: 1.25rem 1.5rem !important;
-  align-items: stretch !important;
+  align-items: start !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  margin-top: 0.85rem !important;
-  min-height: clamp(520px, 72vh, 920px);
 }
 
 // Extra specificity for good measure
@@ -427,7 +359,6 @@ main.vp-project-home.lk-home-dual {
 .page-home .lk-home-main-col {
   min-width: 0;
   padding-top: 0;
-  height: 100%;
 }
 
 /* 首页功能卡：纵向一列，贴齐主列左缘，顶对齐左侧栏第一张卡 */
@@ -547,7 +478,6 @@ main.vp-project-home.lk-home-dual {
   width: 100% !important;
   max-width: min(320px, 100%) !important;
   min-width: 0 !important;
-  height: fit-content;
 }
 
 // Mobile: collapse to single column.
@@ -565,28 +495,24 @@ main.vp-project-home.lk-home-dual {
   }
 }
 
-// ── Navbar：全局玻璃效果 ──────────────────────────────────────────────────────
+// ── Navbar ───────────────────────────────────────────────────────────────────
 .vp-navbar {
-  background:
-    radial-gradient(circle at 8% 0, rgba(255, 255, 255, 0.32), rgba(148, 197, 253, 0.18)),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.2));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 10px 40px rgba(15, 23, 42, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  background: rgba(74, 144, 217, 0.1);
+  backdrop-filter: blur(10px);
+}
 
+// Navbar text: larger & bold + more spacing
+.vp-navbar {
   .vp-navbar-item a,
   .vp-navbar-site-name {
     font-size: 1.15rem !important;
     font-weight: 800 !important;
     letter-spacing: 0.01em !important;
     line-height: 1.25 !important;
-    color: rgba(248, 250, 252, 0.96) !important;
-    text-shadow: 0 1px 4px rgba(15, 23, 42, 0.55);
   }
 
+  // Increase spacing between navigation items.
+  // (Hope theme uses flex layout; margin-inline creates visible gap without touching theme internals.)
   .vp-navbar-item {
     margin: 0 0.65rem !important;
   }
@@ -616,15 +542,9 @@ main.vp-project-home.lk-home-dual {
 }
 
 // ── Per-page gradient backgrounds ────────────────────────────────────────────
-// Home — warm, colorful fallback
+// Home — sky blue fade
 .page-home {
-  background: radial-gradient(
-      circle at 15% 10%,
-      rgba(248, 250, 252, 0.96) 0%,
-      rgba(226, 232, 255, 0.96) 28%,
-      rgba(254, 243, 199, 0.98) 55%,
-      rgba(254, 202, 202, 0.98) 85%
-    );
+  background: linear-gradient(160deg, #dbeafe 0%, #e0f2fe 40%, #f8faff 100%);
   min-height: 100vh;
 }
 
@@ -652,9 +572,9 @@ main.vp-project-home.lk-home-dual {
   min-height: 100vh;
 }
 
-// Comments — cyber dark Waline theme
+// Comments — dark doodle style (mimic 留言评论 screenshots)
 .page-comments {
-  background: #0b0f1a !important;
+  background: #0b0f1a;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -666,402 +586,127 @@ main.vp-project-home.lk-home-dual {
   inset: 0;
   background-image: url('/comments-bg.svg');
   background-repeat: repeat;
-  background-size: 220px 220px;
-  opacity: 0.24;
+  background-size: 160px 160px;
+  opacity: 0.25;
   pointer-events: none;
   z-index: 0;
+  filter: saturate(120%);
 }
 
 .page-comments .theme-container,
 .page-comments main,
-.page-comments .waline-wrapper,
-.page-comments [data-waline] {
+.page-comments .waline-wrapper {
   position: relative;
   z-index: 1;
 }
 
 .lk-comments-hero {
-  padding: 52px 16px 18px;
+  padding: 56px 16px 18px;
   text-align: center;
 }
 
 .lk-comments-hero__title {
-  margin: 0 0 8px;
-  font-size: clamp(34px, 5.4vw, 52px);
+  margin: 0 0 6px;
+  font-size: 42px;
   font-weight: 900;
-  letter-spacing: 0.1em;
-  color: rgba(230, 236, 245, 0.9) !important;
-  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+  letter-spacing: 0.12em;
+  color: #35d7d0;
+  text-shadow: 0 10px 34px rgba(0, 0, 0, 0.6);
 }
 
 .lk-comments-hero__subtitle {
   margin: 0 auto;
-  max-width: 720px;
-  color: rgba(225, 236, 255, 0.72) !important;
-  font-size: 14px;
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14.5px;
   line-height: 1.7;
 }
 
-.page-comments .waline-wrapper,
-.page-comments [data-waline] {
-  --waline-theme-color: #46e7df;
-  --waline-active-color: #2ed5cc;
-  --waline-color: rgba(232, 240, 255, 0.93);
-  --waline-dark-grey: rgba(220, 230, 250, 0.75);
-  --waline-light-grey: rgba(205, 216, 238, 0.55);
-  --waline-bg-color: rgba(0, 0, 0, 0.2);
+// Make Waline look consistent in dark mode.
+.page-comments .waline-wrapper {
+  --waline-bg-color: rgba(0, 0, 0, 0.22);
   --waline-bg-color-light: rgba(255, 255, 255, 0.06);
-  --waline-border-color: rgba(116, 235, 230, 0.2);
+  --waline-color: rgba(233, 236, 255, 0.92);
+  --waline-dark-grey: rgba(233, 236, 255, 0.72);
+  --waline-light-grey: rgba(233, 236, 255, 0.56);
+  --waline-border-color: rgba(255, 255, 255, 0.1);
   --waline-border: 1px solid var(--waline-border-color);
+  --waline-theme-color: #35d7d0;
+  --waline-active-color: #19c7bc;
   --waline-info-bg-color: rgba(255, 255, 255, 0.06);
-  --waline-info-color: rgba(220, 230, 250, 0.68);
+  --waline-info-color: rgba(233, 236, 255, 0.58);
   --waline-code-bg-color: rgba(255, 255, 255, 0.06);
-  --waline-bq-color: rgba(70, 231, 223, 0.18);
-
-  max-width: min(1100px, calc(100% - 2rem));
-  margin: 0 auto;
+  --waline-bq-color: rgba(233, 236, 255, 0.18);
 }
 
-// Editor card
-.page-comments .wl-editor,
-.page-comments .wl-input {
-  background: rgba(5, 10, 18, 0.62) !important;
-  border: 1px solid rgba(110, 230, 225, 0.24) !important;
-  border-radius: 10px !important;
-  color: rgba(236, 243, 255, 0.94) !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.page-comments .wl-editor:focus,
-.page-comments .wl-input:focus {
-  border-color: rgba(110, 230, 225, 0.45) !important;
-  box-shadow: 0 0 0 3px rgba(70, 231, 223, 0.12) !important;
-}
-
-.page-comments .wl-editor::placeholder,
-.page-comments .wl-input::placeholder {
-  color: rgba(196, 210, 235, 0.6) !important;
+.page-comments [data-waline] {
+  --waline-bg-color: rgba(0, 0, 0, 0.22);
+  --waline-bg-color-light: rgba(255, 255, 255, 0.06);
+  --waline-color: rgba(233, 236, 255, 0.92);
+  --waline-dark-grey: rgba(233, 236, 255, 0.72);
+  --waline-light-grey: rgba(233, 236, 255, 0.56);
+  --waline-border-color: rgba(255, 255, 255, 0.1);
+  --waline-border: 1px solid var(--waline-border-color);
+  --waline-theme-color: #35d7d0;
+  --waline-active-color: #19c7bc;
+  --waline-info-bg-color: rgba(255, 255, 255, 0.06);
+  --waline-info-color: rgba(233, 236, 255, 0.58);
+  --waline-code-bg-color: rgba(255, 255, 255, 0.06);
+  --waline-bq-color: rgba(233, 236, 255, 0.18);
 }
 
 .page-comments .wl-panel {
-  background: rgba(5, 10, 18, 0.42) !important;
-  border: 1px solid rgba(116, 235, 230, 0.2) !important;
-  border-radius: 12px !important;
-  box-shadow:
-    0 14px 44px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .page-comments .wl-header {
-  border-bottom: 1px dashed rgba(116, 235, 230, 0.26) !important;
-  background: rgba(7, 14, 24, 0.32);
+  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
 }
 
 .page-comments .wl-header label {
-  color: rgba(70, 231, 223, 0.95) !important;
+  color: rgba(53, 215, 208, 0.95) !important;
   font-weight: 700 !important;
 }
 
-.page-comments .wl-editor-actions {
-  margin-top: 14px !important;
+.page-comments .wl-editor,
+.page-comments .wl-input {
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.page-comments .wl-card .wl-panel {
+  background: rgba(0, 0, 0, 0.16) !important;
+}
+
+.page-comments [data-waline] {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .page-comments .wl-btn {
-  border-radius: 10px !important;
-  font-weight: 700 !important;
-  border: 1px solid rgba(116, 235, 230, 0.3) !important;
-  background: rgba(70, 231, 223, 0.1) !important;
-  color: rgba(219, 250, 248, 0.95) !important;
+  border-radius: 10px;
+  font-weight: 700;
 }
 
 .page-comments .wl-btn.primary {
-  background: #46e7df !important;
-  border-color: #46e7df !important;
-  color: #032224 !important;
+  background: #35d7d0 !important;
+  border-color: #35d7d0 !important;
+  color: #051316 !important;
 }
 
-.page-comments .wl-btn:hover {
-  border-color: rgba(116, 235, 230, 0.55) !important;
+.page-comments .wl-btn:not(.primary) {
+  background: rgba(53, 215, 208, 0.08) !important;
+  border-color: rgba(53, 215, 208, 0.22) !important;
+  color: rgba(53, 215, 208, 0.95) !important;
 }
 
-// Comment card and nested card
-.page-comments .wl-card .wl-panel {
-  background: rgba(4, 10, 18, 0.55) !important;
-  border: 1px solid rgba(116, 235, 230, 0.18) !important;
-  border-radius: 12px !important;
+.page-comments .wl-content {
+  color: rgba(233, 236, 255, 0.92) !important;
 }
 
-.page-comments .wl-card .wl-content {
-  color: rgba(229, 238, 255, 0.92) !important;
-  line-height: 1.72 !important;
-}
-
-.page-comments .wl-card .wl-content a {
-  color: #46e7df !important;
-}
-
-.page-comments .wl-user {
-  color: #46e7df !important;
-  font-weight: 800 !important;
-}
-
-.page-comments .wl-meta,
-.page-comments .wl-time,
-.page-comments .wl-action {
-  color: rgba(201, 212, 233, 0.72) !important;
-}
-
-.page-comments .wl-card .wl-footer {
-  border-top: 1px dashed rgba(116, 235, 230, 0.22) !important;
-}
-
-.page-comments .wl-action:hover {
-  color: rgba(70, 231, 223, 0.95) !important;
-}
-
-.page-comments .wl-avatar {
-  border-radius: 10px !important;
-  border: 1px solid rgba(116, 235, 230, 0.3) !important;
-}
-
-.page-comments .wl-card .wl-card {
-  margin-left: 30px !important;
-  border-left: 2px solid rgba(116, 235, 230, 0.24) !important;
-  padding-left: 8px;
-}
-
-.page-comments .wl-card .wl-card .wl-panel {
-  background: rgba(6, 13, 22, 0.64) !important;
-}
-
-.page-comments .wl-sort li {
-  color: rgba(201, 212, 233, 0.85) !important;
-}
-
-.page-comments .wl-sort li.active {
-  color: #46e7df !important;
-}
-
-.page-comments .mock-wl {
-  max-width: min(1100px, calc(100% - 2rem));
-  margin: 0 auto 24px;
-}
-
-.page-comments .mock-wl__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  color: rgba(220, 230, 250, 0.9);
-}
-
-.page-comments .mock-wl__title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.page-comments .mock-wl__tip {
-  font-size: 12px;
-  color: rgba(201, 212, 233, 0.72);
-}
-
-.page-comments .mock-wl__list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.page-comments .mock-wl-card {
-  background: rgba(4, 10, 18, 0.58);
-  border: 1px solid rgba(116, 235, 230, 0.14);
-  border-radius: 14px;
-  box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  padding: 16px !important;
-}
-
-.page-comments .mock-wl-card__main {
-  display: flex !important;
-  align-items: flex-start;
-  gap: 12px !important;
-}
-
-.page-comments .mock-wl-avatar {
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 50% !important;
-  border: 1px solid rgba(116, 235, 230, 0.3);
-  display: block !important;
-  object-fit: cover;
-  flex: 0 0 auto;
-  max-width: 36px !important;
-}
-
-.page-comments .mock-wl-body {
-  min-width: 0;
-  width: 100%;
-}
-
-.page-comments .mock-wl-meta {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.page-comments .mock-wl-meta-main {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  min-width: 0;
-}
-
-.page-comments .mock-wl-meta-actions {
-  color: rgba(201, 212, 233, 0.55);
-  font-size: 12px;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.page-comments .mock-wl-user {
-  color: #46e7df;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.page-comments .mock-wl-time {
-  color: rgba(201, 212, 233, 0.72);
-  font-size: 12px;
-}
-
-.page-comments .mock-wl-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.page-comments .mock-wl-tags span {
-  border: 1px solid rgba(116, 235, 230, 0.24);
-  background: rgba(7, 14, 24, 0.42);
-  color: rgba(201, 212, 233, 0.82);
-  border-radius: 999px;
-  font-size: 11px;
-  padding: 2px 8px;
-}
-
-.page-comments .mock-wl-content {
-  margin: 12px 0 10px;
-  font-size: 20px;
-  font-weight: 500;
-  color: rgba(229, 238, 255, 0.92);
-  line-height: 1.75;
-}
-
-.page-comments .mock-wl-mention {
-  color: #35d77d;
-  font-weight: 700;
-}
-
-.page-comments .mock-wl-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 14px;
-  border-top: 1px dashed rgba(116, 235, 230, 0.22);
-  padding-top: 10px;
-}
-
-.page-comments .mock-wl-actions button {
-  border: none;
-  background: transparent;
-  color: rgba(201, 212, 233, 0.8);
-  font-size: 13px;
-  padding: 0;
-  cursor: pointer;
-}
-
-.page-comments .mock-wl-actions button:hover {
-  color: #46e7df;
-}
-
-.page-comments .mock-wl-replies {
-  margin-top: 12px;
-  margin-left: 24px;
-  padding-left: 14px;
-  border-left: 1px dashed rgba(116, 235, 230, 0.26);
-}
-
-.page-comments .mock-wl-card--reply {
-  background: rgba(7, 14, 24, 0.7);
-  border-color: rgba(116, 235, 230, 0.2);
-  border-radius: 16px;
-  padding: 14px 14px 12px !important;
-}
-
-@media (max-width: 959px) {
-  .lk-comments-hero {
-    padding-top: 42px;
-  }
-
-  .page-comments .waline-wrapper,
-  .page-comments [data-waline] {
-    max-width: calc(100% - 1rem);
-  }
-
-  .page-comments .wl-card .wl-card {
-    margin-left: 16px !important;
-  }
-}
-
-@media (max-width: 719px) {
-  .page-comments .mock-wl {
-    max-width: calc(100% - 1rem);
-  }
-
-  .page-comments .mock-wl__head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .page-comments .mock-wl-replies {
-    margin-left: 10px;
-    padding-left: 8px;
-  }
-
-  .page-comments .mock-wl-avatar {
-    width: 32px !important;
-    height: 32px !important;
-    max-width: 32px !important;
-  }
-
-  .page-comments .mock-wl-user {
-    font-size: 14px;
-  }
-
-  .page-comments .mock-wl-content {
-    font-size: 17px;
-  }
-
-  .page-comments .wl-header {
-    padding: 12px !important;
-  }
-
-  .page-comments .wl-editor {
-    min-height: 140px;
-  }
-
-  .page-comments .wl-card .wl-panel {
-    border-radius: 10px !important;
-  }
-
-  .page-comments .wl-card .wl-footer {
-    padding-top: 10px !important;
-  }
+.page-comments .wl-content a {
+  color: #35d7d0 !important;
 }
 
 // ── About Page — Two-column layout ───────────────────────────────────────────
@@ -1367,65 +1012,4 @@ main.vp-project-home.lk-home-dual {
 
 [data-theme='dark'] .vp-footer a {
   color: rgba(226, 232, 240, 0.78) !important;
-}
-
-/* --- 任务 2: 背景铺满视口 --- */
-html body .theme-container.page-home {
-  main.vp-page.vp-project-home.lk-home-dual,
-  main.vp-project-home.lk-home-dual {
-    max-width: none !important;
-    width: 100vw !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-  }
-
-  main.vp-page.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
-  main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100vw !important;
-  }
-
-  .vp-hero-mask {
-    width: 100vw !important;
-    left: 0 !important;
-    max-width: none !important;
-    position: absolute !important;
-    top: 0 !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-  }
-
-  .vp-page,
-  main.vp-page.vp-project-home,
-  main.vp-project-home {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-}
-
-// ── 全局背景：白描风格下的固定大图 ─────────────────────────────────────────────
-html,
-body {
-  height: 100%;
-  // 当背景图无法完全覆盖极端缩放时，使用接近夜色海边的深色兜底，
-  // 避免页面底部出现纯白色大块空白。
-  background-color: #020617;
-}
-
-body {
-  margin: 0;
-  background-image: url('/home-hero.jpg');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-// 让首页不再叠加额外渐变背景，避免与全局背景冲突
-.page-home {
-  background: none !important;
 }
