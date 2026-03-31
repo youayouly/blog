@@ -327,6 +327,39 @@ html.lk-home-enhance-suspended main.vp-project-home {
   }
 }
 
+// ── Hero 向下箭头：圆形按钮 + 朝下箭头 ────────────────────────────────────────
+.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
+  width: 42px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  background: rgba(15, 23, 42, 0.48) !important;
+  box-shadow:
+    0 4px 18px rgba(15, 23, 42, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  /* 强制关闭引导按钮自身的上下浮动动画，彻底移除视觉上的「跳动」感 */
+  animation: none !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button::before {
+  content: '↓';
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(248, 250, 252, 0.92);
+}
+
+// 隐藏主题自带 SVG 图标，避免与自定义箭头重复
+.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button .icon {
+  display: none !important;
+}
+
 // ── Home：主内容区加宽；左 1/4 · 右 3/4 ─────────────────────────────────────
 .page-home main.vp-page.vp-project-home.lk-home-dual,
 main.vp-project-home.lk-home-dual {
@@ -359,6 +392,53 @@ main.vp-project-home.lk-home-dual {
 .page-home .lk-home-main-col {
   min-width: 0;
   padding-top: 0;
+  /* 锁定主内容列自身的滚动锚点，避免因右侧卡片高度微调带来整列抖动 */
+  overflow-anchor: none;
+  align-self: start;
+}
+
+// 进一步关闭首页区域的滚动锚点，避免浏览器在接近底部时因内容高度微调
+// 而「自动纠正」视口位置，导致左侧粘性侧栏出现轻微上下抖动。
+html,
+body,
+#app,
+.theme-container,
+.theme-container.page-home,
+.page-home main.vp-page.vp-project-home,
+.page-home main.vp-project-home {
+  overflow-anchor: none !important;
+}
+
+// 右侧主内容列：在左侧叠加一条轻微渐变，柔化与侧栏的交界
+.page-home .lk-home-main-col {
+  position: relative;
+  border-left: none !important;
+}
+
+.page-home .lk-home-main-col::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -24px;
+  width: 40px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(148, 163, 184, 0.55) 0%,
+    rgba(148, 163, 184, 0.15) 40%,
+    rgba(148, 163, 184, 0) 100%
+  );
+  z-index: 0;
+}
+
+// 左侧个人卡片栏：半透明磨砂玻璃效果，减弱与灰色主区的硬边界
+.page-home .lk-home-profile-col {
+  background-color: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 10px 0 24px -14px rgba(15, 23, 42, 0.38);
 }
 
 /* 首页功能卡：纵向一列，贴齐主列左缘，顶对齐左侧栏第一张卡 */
@@ -366,6 +446,8 @@ main.vp-project-home.lk-home-dual {
   margin-inline: 0;
   padding: 0 0 1rem;
   text-align: left;
+  /* 防止浏览器把 Feature 列当成滚动锚点，hover 轻微高度变化时导致视口被「纠正」 */
+  overflow-anchor: none;
 }
 
 .page-home .lk-home-main-col .vp-features {
@@ -375,8 +457,10 @@ main.vp-project-home.lk-home-dual {
   align-items: stretch;
   margin: 0;
   padding-top: 0;
+  overflow-anchor: none;
 }
 
+.theme-container.page-home .lk-home-main-col .vp-feature-item,
 .page-home .lk-home-main-col .vp-feature-item {
   flex: none !important;
   flex-basis: auto !important;
@@ -385,7 +469,19 @@ main.vp-project-home.lk-home-dual {
   margin: 0.4rem 0 !important;
   box-sizing: border-box;
   min-height: 90px;
-  background: rgba(255, 255, 255, 0.62) !important;
+  /* 统一行高，避免文本重排导致高度细微变化 */
+  line-height: 1.5;
+  /* 常态：几乎纯白的卡片 + 非常浅的蓝色渐变，只在右侧隐约可见 */
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  background-image: linear-gradient(
+    90deg,
+    rgba(239, 246, 255, 0) 0%,
+    rgba(191, 219, 254, 0.55) 100%
+  );
+  background-repeat: no-repeat;
+  /* 初始时让渐变主要停留在右侧，看起来仍然是原来的浅色卡片 */
+  background-size: 200% 100%;
+  background-position: 100% 0;
   backdrop-filter: blur(18px) saturate(1.5) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.75) !important;
@@ -394,21 +490,54 @@ main.vp-project-home.lk-home-dual {
     0 4px 24px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
   padding: 1.1rem 1.4rem !important;
-  transition: background 0.22s, box-shadow 0.22s, transform 0.22s !important;
+  /* 仅做亮度/文字颜色 + 渐变位置过渡，不做位移/缩放 */
+  transition:
+    background-position 0.28s ease-out,
+    background-color 0.16s ease-out,
+    color 0.16s ease-out !important;
 }
 
+.theme-container.page-home .lk-home-main-col .vp-feature-item:hover,
 .page-home .lk-home-main-col .vp-feature-item:hover {
-  background: rgba(255, 255, 255, 0.82) !important;
-  box-shadow:
-    0 8px 36px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-  transform: translateY(-2px) !important;
+  /* hover 后整体变为很浅的蓝（仍接近白），视觉从白色柔和过渡到浅蓝 */
+  background-color: rgba(239, 246, 255, 1) !important;
+  background-position: 0 0;
+  box-shadow: inherit !important;
 }
 
-.page-home .lk-home-main-col .vp-feature-item.link:hover::before {
-  float: none;
-  display: inline;
-  margin-left: 0.35rem;
+// 首页 4 张卡片右侧的小箭头：固定在卡片右端中线，不再参与文本排版，
+// 避免 hover 时因为 ::before 浮动/换行导致高度微调，引起整列轻微上下跳动。
+.page-home .lk-home-main-col .vp-feature-item.link {
+  position: relative;
+  padding-right: 3rem !important; // 为右侧箭头预留空间，防止文字与箭头重叠
+}
+
+// 全局禁用主题自带的 feature 卡片小箭头，避免 float / margin 带来 layout 变化。
+.vp-feature-item.link::before {
+  display: none !important;
+}
+
+// 自定义箭头：绝对定位在卡片最右端、垂直居中，只做透明度 + 轻微水平位移动画，
+// 不改变卡片高度，也不影响左侧 sticky 头像的滚动位置。
+.page-home .lk-home-main-col .vp-feature-item.link::after {
+  content: '→';
+  position: absolute;
+  right: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  line-height: 1;
+  color: rgba(15, 23, 42, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease-out,
+    transform 0.16s ease-out;
+}
+
+.page-home .lk-home-main-col .vp-feature-item.link:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(1px);
 }
 
 /* Feature card tag — no wrap, yellow pill badge */
@@ -451,7 +580,15 @@ main.vp-project-home.lk-home-dual {
 
 [data-theme='dark'] .page-home .lk-home-main-col .vp-feature-item {
   // Darker "glass" card so the whole block matches dark theme.
-  background: rgba(15, 23, 42, 0.28) !important;
+  background-color: rgba(15, 23, 42, 0.3) !important;
+  background-image: linear-gradient(
+    90deg,
+    rgba(56, 189, 248, 0) 0%,
+    rgba(56, 189, 248, 0.4) 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-position: 100% 0;
   border: 1px solid rgba(148, 163, 184, 0.22) !important;
   box-shadow:
     0 10px 34px rgba(0, 0, 0, 0.35),
@@ -462,11 +599,11 @@ main.vp-project-home.lk-home-dual {
   .page-home
   .lk-home-main-col
   .vp-feature-item:hover {
-  background: rgba(15, 23, 42, 0.42) !important;
+  /* 只稍微提高亮度 + 把蓝色渐变推到整张卡片上，不再加强阴影，避免视觉抖动 */
+  background-color: rgba(15, 23, 42, 0.38) !important;
+  background-position: 0 0;
   border-color: rgba(148, 163, 184, 0.32) !important;
-  box-shadow:
-    0 16px 44px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inherit !important;
 }
 
 .lk-home-profile-col,
@@ -478,6 +615,17 @@ main.vp-project-home.lk-home-dual {
   width: 100% !important;
   max-width: min(320px, 100%) !important;
   min-width: 0 !important;
+  /* 单独一层，减少与右侧 hover 重绘的耦合，并隔离布局影响 */
+  contain: paint;
+  overflow-anchor: none;
+}
+
+// 朋友圈时间线：关闭头部与时间线自身的滚动锚点，避免在滚动到底部时，
+// 图片或文字高度细微变化触发浏览器自动「校正」底部位置，造成蓝色头像区上下跳动。
+.wm-app,
+.wm-header,
+.wm-feed {
+  overflow-anchor: none;
 }
 
 // Mobile: collapse to single column.
@@ -539,6 +687,9 @@ main.vp-project-home.lk-home-dual {
   border: 2px solid rgba(167, 139, 250, 0.7) !important;
   object-fit: cover !important;
   overflow: hidden !important;
+  /* 导航栏头像与 About 页面头像保持同一蓝调与对比度，弱化照片感，增强整体设计感 */
+  filter: grayscale(0.25) saturate(0.6) hue-rotate(190deg) brightness(1.04);
+  transition: filter 0.3s ease;
 }
 
 // ── Per-page gradient backgrounds ────────────────────────────────────────────
@@ -736,11 +887,18 @@ main.vp-project-home.lk-home-dual {
   border: 3px solid #4a90d9;
   object-fit: cover;
   cursor: zoom-in;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* 统一人物色调：轻微偏蓝、对比度适度降低，与页面主色调融为一体 */
+  filter: grayscale(0.25) saturate(0.6) hue-rotate(190deg) brightness(1.04);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    filter 0.3s ease;
   box-shadow: 0 4px 20px rgba(74, 144, 217, 0.28);
 
   &:hover {
     transform: scale(1.08);
+    /* hover 时略微恢复一点饱和度，但仍保持统一蓝调与低对比度 */
+    filter: grayscale(0.2) saturate(0.8) hue-rotate(190deg) brightness(1.06);
     box-shadow: 0 10px 40px rgba(74, 144, 217, 0.45);
   }
 }
@@ -859,6 +1017,9 @@ main.vp-project-home.lk-home-dual {
   border-radius: 8px;
   border: 2px solid #fff;
   object-fit: cover;
+  /* 朋友圈头像同样应用蓝调单色处理，与整页主色和深色背景一致 */
+  filter: grayscale(0.25) saturate(0.6) hue-rotate(190deg) brightness(1.04);
+  transition: filter 0.3s ease;
 }
 
 .wm-feed {
@@ -1012,4 +1173,251 @@ main.vp-project-home.lk-home-dual {
 
 [data-theme='dark'] .vp-footer a {
   color: rgba(226, 232, 240, 0.78) !important;
+}
+
+// ── Comments page (Waline skin) ─────────────────────────────────────────────
+.page-comments {
+  background:
+    radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.06) 0, transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(148, 163, 184, 0.08) 0, transparent 55%),
+    #020617;
+}
+
+.page-comments .theme-hope-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3.5rem;
+}
+
+.lk-comments-hero {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.lk-comments-hero__title {
+  font-size: 2.2rem;
+  letter-spacing: 0.08em;
+  color: #a5f3fc;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.lk-comments-hero__subtitle {
+  margin-top: 0.75rem;
+  font-size: 0.98rem;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.lk-comments-layout {
+  max-width: 960px;
+  margin: 0 auto 1.5rem;
+  padding: 0 0.25rem;
+}
+
+.lk-comments-layout__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(148, 163, 184, 0.9);
+  text-align: center;
+}
+
+// Waline main panel
+.page-comments .wl-panel {
+  margin: 0 auto;
+  max-width: 960px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  box-shadow:
+    0 22px 40px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 20px 22px 18px;
+}
+
+.page-comments .wl-editor,
+.page-comments .wl-header,
+.page-comments .wl-comment {
+  background: transparent;
+}
+
+// Input info row (nickname / email / site)
+.page-comments .wl-header {
+  padding: 10px 12px 4px;
+  margin-bottom: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(71, 85, 105, 0.94);
+  background: radial-gradient(circle at 0 0, rgba(30, 64, 175, 0.55), transparent 65%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 10px;
+  row-gap: 6px;
+}
+
+.page-comments .wl-header-item {
+  position: relative;
+}
+
+.page-comments .wl-header-item input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background-color: rgba(15, 23, 42, 0.85);
+  color: rgba(226, 232, 240, 0.95);
+  font-size: 0.86rem;
+}
+
+.page-comments .wl-header-item input::placeholder {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+// Main editor
+.page-comments .wl-editor {
+  margin-top: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(71, 85, 105, 0.94);
+  background-color: rgba(15, 23, 42, 0.9);
+}
+
+.page-comments .wl-editor textarea,
+.page-comments .wl-editor .wl-editor-input {
+  background: transparent;
+  border: none;
+  color: rgba(226, 232, 240, 0.96);
+  font-size: 0.94rem;
+}
+
+.page-comments .wl-editor textarea::placeholder {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.page-comments .wl-editor-footer {
+  border-top: 1px solid rgba(51, 65, 85, 0.85);
+  padding: 8px 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-comments .wl-editor-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(148, 163, 184, 0.96);
+  font-size: 0.96rem;
+}
+
+.page-comments .wl-editor-icons svg {
+  width: 18px;
+  height: 18px;
+}
+
+.page-comments .wl-editor-footer button,
+.page-comments .wl-editor-footer .wl-editor-submit {
+  border-radius: 999px !important;
+  padding: 6px 18px !important;
+  border: none !important;
+  background: linear-gradient(135deg, #22d3ee, #4ade80) !important;
+  color: #020617 !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.page-comments .wl-editor-footer button[disabled],
+.page-comments .wl-editor-footer .wl-editor-submit[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+// Comment list
+.page-comments .wl-comments {
+  margin-top: 16px;
+}
+
+.page-comments .wl-comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: rgba(148, 163, 184, 0.96);
+}
+
+.page-comments .wl-comment-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.page-comments .wl-comment-count {
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.96);
+}
+
+.page-comments .wl-comment-sort button {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(15, 23, 42, 0.7);
+  color: rgba(148, 163, 184, 0.96);
+  font-size: 0.8rem;
+}
+
+.page-comments .wl-comment-sort button.wl-active {
+  background: rgba(148, 163, 184, 0.24);
+  color: rgba(226, 232, 240, 0.96);
+}
+
+.page-comments .wl-card {
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(30, 64, 175, 0.55);
+  padding: 10px 12px 8px;
+  margin-bottom: 10px;
+}
+
+.page-comments .wl-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: rgba(148, 163, 184, 0.96);
+}
+
+.page-comments .wl-card-author {
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.96);
+}
+
+.page-comments .wl-card-content {
+  margin-top: 6px;
+  color: rgba(226, 232, 240, 0.96);
+  font-size: 0.9rem;
+}
+
+.page-comments .wl-card-footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+// Responsive tweaks
+@media (max-width: 768px) {
+  .page-comments .theme-hope-content {
+    padding: 1.75rem 1rem 3rem;
+  }
+
+  .page-comments .wl-panel {
+    padding: 14px 12px 14px;
+    border-radius: 16px;
+  }
+
+  .page-comments .wl-header {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
 }

@@ -20,6 +20,8 @@ function setHomeEnhanceSuspended(flag) {
 
 let scrollBlurHandler = null
 let themeObserver = null
+let homeHoverProbeSamples = 0
+let themeChangeSamples = 0
 /** 已成功展示的图片下标（仅 onload 成功后更新） */
 let wallpaperDisplayIndex = -1
 /** 正在为其发起 Image 加载的下标，避免重复请求 */
@@ -151,6 +153,24 @@ function initScrollBlur() {
   // Ensure dark mode toggle updates hero brightness immediately (without scrolling).
   themeObserver = new MutationObserver(() => {
     if (scrollBlurHandler) scrollBlurHandler()
+    if (themeChangeSamples < 6) {
+      themeChangeSamples += 1
+      const root = document.documentElement
+      const dataTheme = root ? root.getAttribute('data-theme') || null : null
+      const rootClasses = root ? Array.from(root.classList || []) : []
+      let storedScheme = null
+      try {
+        storedScheme =
+          window.localStorage.getItem('vuepress-theme-hope-scheme') ??
+          window.localStorage.getItem('hope-theme-scheme') ??
+          null
+      } catch (_) {
+        storedScheme = null
+      }
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a1d28'},body:JSON.stringify({sessionId:'0a1d28',runId:'run-theme',hypothesisId:'H8',location:'client.js:initScrollBlur:themeMutation',message:'theme attributes changed',data:{sample:themeChangeSamples,dataTheme,rootClasses,storedScheme},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+    }
   })
   themeObserver.observe(document.documentElement, {
     attributes: true,
@@ -298,6 +318,38 @@ function mountHomeBodyGrid() {
 
   sidePanelApp = createApp({ render: () => h(HomeSidePanel) })
   sidePanelApp.mount(profileAside)
+
+  const cards = mainCol.querySelectorAll('.vp-feature-item')
+  cards.forEach((card) => {
+    card.addEventListener('mouseenter', () => {
+      if (homeHoverProbeSamples >= 12) return
+      homeHoverProbeSamples += 1
+      const sidebarRect = profileAside.getBoundingClientRect()
+      const cardRect = card.getBoundingClientRect()
+      const gridRect = row.getBoundingClientRect()
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a1d28'},body:JSON.stringify({sessionId:'0a1d28',runId:'run-hover',hypothesisId:'H7',location:'client.js:mountHomeBodyGrid:hoverEnter',message:'feature card hover enter',data:{sample:homeHoverProbeSamples,sidebarTop:sidebarRect.top,sidebarBottom:sidebarRect.bottom,gridTop:gridRect.top,gridBottom:gridRect.bottom,cardTop:cardRect.top,cardBottom:cardRect.bottom},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+      const bgColor = window.getComputedStyle(card).backgroundColor
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b4536a'},body:JSON.stringify({sessionId:'b4536a',runId:'hover-color',hypothesisId:'H1',location:'client.js:mountHomeBodyGrid:hoverEnter:bg',message:'feature card hover enter bg',data:{sample:homeHoverProbeSamples,bgColor,cardTop:cardRect.top,cardBottom:cardRect.bottom},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+    })
+    card.addEventListener('mouseleave', () => {
+      if (homeHoverProbeSamples >= 12) return
+      homeHoverProbeSamples += 1
+      const sidebarRect = profileAside.getBoundingClientRect()
+      const cardRect = card.getBoundingClientRect()
+      const gridRect = row.getBoundingClientRect()
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a1d28'},body:JSON.stringify({sessionId:'0a1d28',runId:'run-hover',hypothesisId:'H7',location:'client.js:mountHomeBodyGrid:hoverLeave',message:'feature card hover leave',data:{sample:homeHoverProbeSamples,sidebarTop:sidebarRect.top,sidebarBottom:sidebarRect.bottom,gridTop:gridRect.top,gridBottom:gridRect.bottom,cardTop:cardRect.top,cardBottom:cardRect.bottom},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+      const bgColor = window.getComputedStyle(card).backgroundColor
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b4536a'},body:JSON.stringify({sessionId:'b4536a',runId:'hover-color',hypothesisId:'H1',location:'client.js:mountHomeBodyGrid:hoverLeave:bg',message:'feature card hover leave bg',data:{sample:homeHoverProbeSamples,bgColor,cardTop:cardRect.top,cardBottom:cardRect.bottom},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+    })
+  })
 }
 
 function unmountHomeBodyGrid() {

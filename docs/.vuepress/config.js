@@ -92,9 +92,15 @@ export default defineUserConfig({
     },
 
     plugins: {
-      // Disable Waline comments to avoid failing requests
-      // (e.g. https://waline-test.example.com) causing runtime errors.
-      comment: false,
+      // Waline comment system (Comments page)
+      // TODO: replace `serverURL` with your actual Waline backend address
+      comment: {
+        provider: 'Waline',
+        serverURL: 'https://your-waline-server.example.com',
+        comment: true,
+        reaction: true,
+        pageview: true,
+      },
     },
   }),
 })

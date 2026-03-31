@@ -11,10 +11,6 @@ index: true
 
 ---
 
-<ProjectNineGrid />
-
----
-
 ## 项目列表
 
 <ProjectCardsGrid />
