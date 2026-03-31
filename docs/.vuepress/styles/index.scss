@@ -78,7 +78,7 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
 .page-home .vp-hero-info-wrapper {
   /* 略靠右 + 不小于安全区：标题 / 欢迎语 / 按钮 / 「发现更多惊喜」共一条左垂线 */
   --lk-hero-content-inset: max(
-    calc(1.35rem + 1.35vw),
+    calc(1.1rem + 1.1vw),
     env(safe-area-inset-left, 0px)
   );
 }
@@ -137,29 +137,23 @@ html.lk-home-enhance-suspended main.vp-project-home {
   }
 }
 
-// ── Home: 全屏 Hero 覆层（左深右浅，白字可读；不作用于整页底色）
-.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
-  background: linear-gradient(
-    to left,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(60, 82, 120, 0.12) 32%,
-    rgba(32, 44, 72, 0.45) 72%,
-    rgba(20, 28, 48, 0.6) 100%
-  ) !important;
+// ── Home: Hero mask 仅作为透明滤镜层，整屏人物由 .page-home 背景承担 ────────
+.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask {
+  position: absolute;
+  inset: 0;
+  background: transparent !important;
+  pointer-events: none;
 }
 
-// Dark mode: darken the hero mask overlay to match other pages.
+.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-mask::after {
+  background: none !important;
+}
+
 [data-theme='dark']
   .page-home
   .vp-hero-info-wrapper.hero-fullscreen
   .vp-hero-mask::after {
-  background: linear-gradient(
-    to left,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(0, 0, 0, 0.18) 32%,
-    rgba(0, 0, 0, 0.55) 72%,
-    rgba(0, 0, 0, 0.72) 100%
-  ) !important;
+  background: none !important;
 }
 
 // 全屏 Hero 标题 / 副文案配色（各宽度通用）
@@ -176,6 +170,38 @@ html.lk-home-enhance-suspended main.vp-project-home {
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.75),
     0 2px 14px rgba(0, 0, 0, 0.55) !important;
+}
+
+// Desktop: subtle local gradient / frosted strip behind hero title block
+@media (min-width: 960px) {
+  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos {
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos::before {
+    content: '';
+    position: absolute;
+    inset-block: -18px;
+    inset-inline-start: -24px;
+    width: min(520px, 80vw);
+    border-radius: 32px;
+    background:
+      radial-gradient(
+        circle at 0% 50%,
+        rgba(15, 23, 42, 0.62) 0%,
+        rgba(15, 23, 42, 0.35) 42%,
+        rgba(15, 23, 42, 0.0) 100%
+      );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+      0 18px 40px rgba(15, 23, 42, 0.48),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    opacity: 0.96;
+    pointer-events: none;
+    z-index: -1;
+  }
 }
 
 .page-home .vp-hero-info-wrapper.hero-fullscreen .home-typewriter-tagline__cursor {
@@ -198,14 +224,14 @@ html.lk-home-enhance-suspended main.vp-project-home {
     background:
       linear-gradient(
         180deg,
-        rgba(22, 30, 50, 0.55) 0%,
-        rgba(22, 30, 50, 0.12) 42%,
+        rgba(15, 23, 42, 0.55) 0%,
+        rgba(15, 23, 42, 0.16) 42%,
         transparent 58%
       ),
       linear-gradient(
         to left,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(32, 44, 72, 0.4) 100%
+        rgba(229, 237, 247, 0) 0%,
+        rgba(194, 208, 228, 0.55) 100%
       ) !important;
   }
 }
@@ -218,7 +244,7 @@ html.lk-home-enhance-suspended main.vp-project-home {
   align-items: flex-start !important; // 强制内部所有子元素靠左对齐
   justify-content: center !important; // 垂直居中
   
-  padding-left: 12vw !important;    // 用 padding 把内容顶出来
+  padding-left: 8vw !important;     // 用较小的 padding 把内容顶出来，整体略向左移
   width: 100% !important;           // 撑满宽度，这样 margin: auto 就失效了
   max-width: 100% !important;       // 解除主题可能存在的 800px 或 1200px 限制
   margin: 0 !important;             // 彻底干掉居中
@@ -693,9 +719,12 @@ body,
 }
 
 // ── Per-page gradient backgrounds ────────────────────────────────────────────
-// Home — sky blue fade
+// Home — full-page character wallpaper
 .page-home {
-  background: linear-gradient(160deg, #dbeafe 0%, #e0f2fe 40%, #f8faff 100%);
+  background:
+    url('https://cdn.jsdelivr.net/gh/Dreamer-Paul/Anime-Wallpaper@master/1.jpg')
+      center center / cover no-repeat fixed,
+    #d7dde7;
   min-height: 100vh;
 }
 
@@ -887,18 +916,13 @@ body,
   border: 3px solid #4a90d9;
   object-fit: cover;
   cursor: zoom-in;
-  /* 统一人物色调：轻微偏蓝、对比度适度降低，与页面主色调融为一体 */
-  filter: grayscale(0.25) saturate(0.6) hue-rotate(190deg) brightness(1.04);
   transition:
     transform 0.3s ease,
-    box-shadow 0.3s ease,
-    filter 0.3s ease;
+    box-shadow 0.3s ease;
   box-shadow: 0 4px 20px rgba(74, 144, 217, 0.28);
 
   &:hover {
     transform: scale(1.08);
-    /* hover 时略微恢复一点饱和度，但仍保持统一蓝调与低对比度 */
-    filter: grayscale(0.2) saturate(0.8) hue-rotate(190deg) brightness(1.06);
     box-shadow: 0 10px 40px rgba(74, 144, 217, 0.45);
   }
 }

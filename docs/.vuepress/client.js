@@ -11,7 +11,7 @@ import FloatingShapes from './components/FloatingShapes.vue'
 /* ── Hero 背景：禁用失效外链 + 降级到本地背景色 ─ */
 // Note: If external images return 403, we must not trigger requests.
 const images = []
-const heroWallpaperFallbackBg = 'rgba(74, 144, 217, 0.18)'
+const heroWallpaperFallbackBg = 'rgba(198, 212, 232, 0.45)'
 
 function setHomeEnhanceSuspended(flag) {
   if (typeof document === 'undefined') return
