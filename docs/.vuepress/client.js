@@ -29,6 +29,82 @@ let wallpaperLoadingForIndex = null
 /** Whether we have overridden .vp-hero-mask background* inline styles */
 let heroBgOverridden = false
 
+/* ── Live2D widget（右侧与 Profile 底部齐平的小人） ─────────────────────────── */
+let live2dLoaded = false
+
+function attachLive2DToGrid() {
+  if (typeof window === 'undefined') return
+  const container = document.getElementById('live2d-widget')
+  if (!container) return
+
+  const grid =
+    document.querySelector('.lk-home-body-grid') ||
+    document.querySelector('.theme-container.page-home')
+  const host = grid || document.body
+
+  if (container.parentElement !== host && host) {
+    host.appendChild(container)
+  }
+
+  if (grid) {
+    // 让小人和左侧 Profile 区域底部大致齐平，跟随首页布局而不是视口
+    grid.style.position = grid.style.position || 'relative'
+    Object.assign(container.style, {
+      position: 'absolute',
+      right: '0',
+      bottom: '24px',
+    })
+  } else {
+    Object.assign(container.style, {
+      position: 'absolute',
+      right: '24px',
+      bottom: '24px',
+    })
+  }
+}
+
+function initLive2DWidget() {
+  if (typeof window === 'undefined' || live2dLoaded) return
+
+  function mountWithGlobal() {
+    if (!window.L2Dwidget || live2dLoaded) return
+    window.L2Dwidget.init({
+      model: {
+        // 使用官方 Shizuku 女孩模型，可按需替换为其他模型包
+        jsonPath:
+          'https://unpkg.com/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json',
+      },
+      display: {
+        position: 'right',
+        width: 220,
+        height: 440,
+      },
+      mobile: {
+        show: false,
+      },
+      react: {
+        opacityDefault: 1,
+        opacityOnHover: 1,
+      },
+    })
+    live2dLoaded = true
+    attachLive2DToGrid()
+  }
+
+  if (window.L2Dwidget) {
+    mountWithGlobal()
+    return
+  }
+
+  const script = document.createElement('script')
+  script.src = 'https://unpkg.com/live2d-widget@3.1.4/lib/L2Dwidget.min.js'
+  script.async = true
+  script.onload = () => {
+    mountWithGlobal()
+  }
+  document.body.appendChild(script)
+}
+
 function isDarkMode() {
   const root = document.documentElement
   const body = document.body
@@ -320,6 +396,9 @@ function mountHomeBodyGrid() {
   sidePanelApp = createApp({ render: () => h(HomeSidePanel) })
   sidePanelApp.mount(profileAside)
 
+  // 布局准备好之后，把 Live2D 小人挂到网格上，保持与侧栏底部齐平
+  attachLive2DToGrid()
+
   const cards = mainCol.querySelectorAll('.vp-feature-item')
   cards.forEach((card) => {
     card.addEventListener('mouseenter', () => {
@@ -468,6 +547,7 @@ export default defineClientConfig({
 
     onMounted(() => {
       initProgressBar()
+      initLive2DWidget()
       // #region agent log
       fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'00c032'},body:JSON.stringify({sessionId:'00c032',runId:'run-route',hypothesisId:'H1',location:'client.js:setup:onMounted',message:'client mounted with initial route',data:{path:route.path},timestamp:Date.now()})}).catch(()=>{})
       // #endregion

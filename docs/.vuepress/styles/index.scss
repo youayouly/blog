@@ -495,12 +495,21 @@ body,
 // 右侧主内容列：在左侧叠加一条轻微渐变，柔化与侧栏的交界
 .page-home .lk-home-main-col {
   position: relative;
-  border-left: none !important;
 }
 
 .page-home .lk-home-main-col::before {
-  /* 彻底移除主内容列左侧渐变，避免滚动过程中与 Hero 卡片叠出黑色切割线 */
-  content: none !important;
+  /* 恢复左侧分割线：一条细微的竖向渐变，区分固定侧栏与右侧滚动区 */
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0),
+    rgba(15, 23, 42, 0.35),
+    rgba(15, 23, 42, 0)
+  );
 }
 
 // 左侧个人卡片栏：半透明磨砂玻璃效果，减弱与灰色主区的硬边界
@@ -510,6 +519,8 @@ body,
   -webkit-backdrop-filter: blur(10px);
   border-right: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 10px 0 24px -14px rgba(15, 23, 42, 0.38);
+  border-radius: 24px;
+  overflow: hidden;
 }
 
 /* 首页功能卡：纵向一列，贴齐主列左缘，顶对齐左侧栏第一张卡 */
@@ -872,6 +883,17 @@ body,
 .page-study {
   background: linear-gradient(150deg, #bfdbfe 0%, #ddd6fe 100%);
   min-height: 100vh;
+}
+
+/* Live2D 小人：基础层级控制，其具体位置由 JS 以绝对定位挂在首页网格上 */
+#live2d-widget {
+  z-index: 40;
+}
+
+@media (max-width: 959px) {
+  #live2d-widget {
+    display: none !important;
+  }
 }
 
 // Album (travel) — warm amber
