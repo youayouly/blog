@@ -80,11 +80,15 @@
           </div>
           <p class="lk-card__wechat-label">扫码添加好友</p>
           <!-- speech bubble arrow -->
-          <div class="lk-card__wechat-arrow" />
         </div>
       </div>
 
     </nav>
+
+    <!-- 毛玻璃底部区域 -->
+    <div class="lk-card__footer">
+      <span class="lk-card__footer-text">Personal Space</span>
+    </div>
   </aside>
 </template>
 
@@ -147,12 +151,16 @@ function onQrError(e) {
   min-height: 0;
   max-width: 100%;
   width: 100%;
-  padding: 12px 12px 14px;
+  padding: 12px 8px 14px 12px; /* 左12px，右8px，上12px，下14px */
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(248, 250, 252, 0.78) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
   color: #0f172a;
 }
 
@@ -244,7 +252,7 @@ function onQrError(e) {
 }
 
 .lk-card--embedded .lk-card__sub {
-  color: #475569;
+  color: #4b5563;
 }
 
 .lk-card--embedded .lk-card__tag {
@@ -306,11 +314,11 @@ function onQrError(e) {
 
 /* ── Name — gradient text ──────────────────────────────────────── */
 .lk-card__name {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   letter-spacing: 0.01em;
   margin-bottom: 4px;
-  background: linear-gradient(90deg, #93c5fd, #c4b5fd, #f9a8d4);
+  background: linear-gradient(90deg, #60a5fa, #8b5cf6, #ec4899);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -318,8 +326,8 @@ function onQrError(e) {
 }
 
 .lk-card__sub {
-  font-size: 0.78rem;
-  color: rgba(200, 210, 255, 0.82);
+  font-size: 0.85rem;
+  color: #4b5563;
   margin-bottom: 12px;
 }
 
@@ -465,16 +473,34 @@ function onQrError(e) {
   margin: 0;
 }
 
-/* speech-bubble arrow */
-.lk-card__wechat-arrow {
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid rgba(255, 255, 255, 0.96);
+
+/* 毛玻璃底部区域 */
+.lk-card__footer {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px) saturate(2);
+  -webkit-backdrop-filter: blur(24px) saturate(2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.lk-card__footer-text {
+  font-size: 0.75rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+/* 暗色主题适配 */
+[data-theme='dark'] .lk-card__footer {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+}
+
+[data-theme='dark'] .lk-card__footer-text {
+  color: rgba(226, 232, 240, 0.9) !important;
 }
 </style>

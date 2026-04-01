@@ -53,9 +53,9 @@ function applyHeroMaskBaseStyles(mask) {
 
   // Always set a local fallback so the hero never becomes "blank"
   mask.style.backgroundImage = 'none'
-  mask.style.backgroundColor = isDarkMode()
-    ? 'rgba(0, 0, 0, 0.35)'
-    : heroWallpaperFallbackBg
+  // Keep the same bright hero fallback in both light and dark mode so the
+  // character illustration never gets fully crushed by a dark overlay.
+  mask.style.backgroundColor = heroWallpaperFallbackBg
   mask.style.backgroundSize = 'cover'
   mask.style.backgroundPosition = 'center center'
   mask.style.willChange = 'filter, transform, background-image'
@@ -138,8 +138,8 @@ function initScrollBlur() {
 
     if (images.length > 0) applyHeroMaskBaseStyles(m)
     const progress = Math.min(scrollY / (window.innerHeight * 0.55), 1)
-    // Dark mode: keep hero image readable but not overly bright.
-    const darkFactor = isDarkMode() ? 0.68 : 1
+    // Dark mode: keep hero image readable; avoid over-darkening the character.
+    const darkFactor = isDarkMode() ? 0.85 : 1
     const brightness = (1 - progress * 0.25) * darkFactor
     m.style.filter = `blur(${progress * 14}px) brightness(${brightness})`
     m.style.transform = `scale(${1 + progress * 0.06})`
@@ -271,13 +271,14 @@ function mountHomeBodyGrid() {
   const row = document.createElement('div')
   row.className = 'lk-home-body-grid'
 
-  // ── Force the two-column grid via inline styles to guarantee the layout
-  // regardless of whatever the theme injects via its own stylesheet. ──────
+  // ── Force a two-column flex layout via inline styles to guarantee the
+  // layout regardless of whatever the theme injects via its own stylesheet. ──
   Object.assign(row.style, {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 3fr)',
-    gap: '1.25rem 1.5rem',
-    alignItems: 'start',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    columnGap: '1.5rem',
+    rowGap: '1.25rem',
     width: '100%',
     boxSizing: 'border-box',
   })
@@ -293,7 +294,7 @@ function mountHomeBodyGrid() {
     alignSelf: 'start',
     justifySelf: 'stretch',
     width: '100%',
-    maxWidth: '100%',
+    maxWidth: '33%',
   })
 
   const mainCol = document.createElement('div')
@@ -350,6 +351,43 @@ function mountHomeBodyGrid() {
       // #endregion
     })
   })
+
+  // #region agent log
+  try {
+    const featureWrapper = mainCol.querySelector('.vp-feature-wrapper')
+    const themeContent = document.querySelector('.theme-hope-content')
+    const viewportWidth = window.innerWidth
+    const data = {
+      viewportWidth,
+      mainColWidth: mainCol.getBoundingClientRect().width,
+      featureWrapperWidth: featureWrapper
+        ? featureWrapper.getBoundingClientRect().width
+        : null,
+      themeContentWidth: themeContent
+        ? themeContent.getBoundingClientRect().width
+        : null,
+      cardCount: cards.length,
+    }
+    fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': '0eee0b',
+      },
+      body: JSON.stringify({
+        sessionId: '0eee0b',
+        runId: 'pre-fix',
+        hypothesisId: 'H1',
+        location: 'client.js:mountHomeBodyGrid:widths',
+        message: 'Home feature widths snapshot',
+        data,
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {})
+  } catch (_) {
+    // ignore logging errors
+  }
+  // #endregion
 }
 
 function unmountHomeBodyGrid() {
@@ -430,6 +468,9 @@ export default defineClientConfig({
 
     onMounted(() => {
       initProgressBar()
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'00c032'},body:JSON.stringify({sessionId:'00c032',runId:'run-route',hypothesisId:'H1',location:'client.js:setup:onMounted',message:'client mounted with initial route',data:{path:route.path},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
       if (route.path === '/') {
         setHomeEnhanceSuspended(true)
         microtask(() => {
@@ -449,6 +490,9 @@ export default defineClientConfig({
     watch(
       () => route.path,
       (newPath, oldPath) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'00c032'},body:JSON.stringify({sessionId:'00c032',runId:'run-route',hypothesisId:'H1',location:'client.js:setup:watchRoute',message:'route changed',data:{oldPath,newPath},timestamp:Date.now()})}).catch(()=>{})
+        // #endregion
         if (oldPath === '/') {
           unmountHome()
           setHomeEnhanceSuspended(false)

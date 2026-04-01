@@ -31,7 +31,7 @@ import SiteStatsCard from './SiteStatsCard.vue'
 <style scoped>
 .lk-home-side-panel {
   width: 100%;
-  max-width: 320px;
+  max-width: 100%;
   min-width: 0;
   margin-inline: auto;
   box-sizing: border-box;
@@ -105,7 +105,7 @@ import SiteStatsCard from './SiteStatsCard.vue'
 
 /* Dark mode: align outer shell + welcome/notice blocks with ProfileCard embedded */
 [data-theme='dark'] .lk-home-side-panel__shell {
-  background: rgba(15, 23, 42, 0.62) !important;
+  background: rgba(15, 23, 42, 0.38) !important;
   border: 1px solid rgba(148, 163, 184, 0.22) !important;
   box-shadow:
     0 2px 18px rgba(0, 0, 0, 0.35),
@@ -116,8 +116,8 @@ import SiteStatsCard from './SiteStatsCard.vue'
   border-top: 3px solid rgba(167, 139, 250, 0.8) !important;
   background-image: linear-gradient(
     180deg,
-    rgba(221, 214, 254, 0.32) 0%,
-    rgba(15, 23, 42, 0.62) 48%
+    rgba(221, 214, 254, 0.26) 0%,
+    rgba(15, 23, 42, 0.34) 48%
   ) !important;
 }
 
@@ -125,8 +125,8 @@ import SiteStatsCard from './SiteStatsCard.vue'
   border-top: 3px solid rgba(167, 139, 250, 0.8) !important;
   background-image: linear-gradient(
     180deg,
-    rgba(221, 214, 254, 0.24) 0%,
-    rgba(15, 23, 42, 0.62) 48%
+    rgba(221, 214, 254, 0.22) 0%,
+    rgba(15, 23, 42, 0.34) 48%
   ) !important;
 }
 </style>
