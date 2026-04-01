@@ -30,6 +30,10 @@
     background: none !important;
     -webkit-text-fill-color: white !important;
     color: white !important;
+    font-weight: 800 !important;
+    text-shadow:
+      0 6px 18px rgba(15, 23, 42, 0.55),
+      0 0 18px rgba(15, 23, 42, 0.45) !important;
   }
 
   // White typewriter text
@@ -38,14 +42,21 @@
     color: rgba(255, 255, 255, 0.92) !important;
   }
 
-  // Keep primary button, ghost-ify the default one
+  // Hero secondary button（例如「Comments」）：浅灰半透明，契合毛玻璃风格
   .vp-hero-action.default {
-    background: rgba(255, 255, 255, 0.15) !important;
-    border-color: rgba(255, 255, 255, 0.55) !important;
-    color: white !important;
+    background: rgba(255, 255, 255, 0.38) !important;
+    border-color: rgba(148, 163, 184, 0.48) !important;
+    color: rgba(15, 23, 42, 0.78) !important;
+    border-radius: 999px !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow:
+      0 10px 26px rgba(15, 23, 42, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.28) !important;
+      background: rgba(255, 255, 255, 0.55) !important;
+      border-color: rgba(148, 163, 184, 0.7) !important;
     }
   }
 
@@ -70,8 +81,9 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
 // `.lk-home-main-col`, so these direct-child tweaks must still apply.
 .page-home .lk-home-main-col > .vp-hero-info-wrapper:first-child,
 .lk-home-main-col > .vp-hero-info-wrapper:first-child {
-  margin-left: calc(-1 * max(1.25rem, env(safe-area-inset-left)));
-  width: calc(100% + max(1.25rem, env(safe-area-inset-left)));
+  /* 不再向左溢出到视口边缘，保持与右侧主内容列同一左边界 */
+  margin-left: 0 !important;
+  width: 100% !important;
   box-sizing: border-box;
 }
 
@@ -89,13 +101,14 @@ main.vp-project-home.lk-home-dual > .vp-hero-info-wrapper:first-child,
 }
 
 .page-home .vp-hero-info-wrapper .vp-hero-info {
-  padding-left: var(--lk-hero-content-inset) !important;
+  /* 让 Hero 内容块左边缘由主内容列的 padding 控制，便于与功能卡对齐 */
+  padding-left: 0 !important;
 }
 
-/* 与主列左缘一致，避免主题在标题/副文案上多出一层缩进 */
+/* 与主列左缘一致，避免主题在标题/副文案上多出一层缩进
+   注意：不再重置 .vp-hero-infos 自身的 padding，交由卡片内部控制「呼吸感」 */
 .page-home .vp-hero-info-wrapper .vp-hero-info #main-title,
 .page-home .vp-hero-info-wrapper .vp-hero-info #main-description,
-.page-home .vp-hero-info-wrapper .vp-hero-info .vp-hero-infos,
 .page-home .vp-hero-info-wrapper .vp-hero-info .vp-hero-actions {
   margin-left: 0 !important;
   padding-left: 0 !important;
@@ -110,11 +123,6 @@ html.lk-home-enhance-suspended main.vp-page.vp-project-home,
 html.lk-home-enhance-suspended main.vp-project-home {
   min-height: 70vh !important;
   visibility: hidden !important;
-}
-
-.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
-  left: var(--lk-hero-content-inset) !important;
-  right: auto !important;
 }
 
 @keyframes bounce {
@@ -164,7 +172,8 @@ html.lk-home-enhance-suspended main.vp-project-home {
 
 [data-theme="dark"] .vp-hero-mask {
   background: rgba(0, 0, 0, 0.3) !important;
-  z-index: 1 !important;
+  /* 确保遮罩在背景之上但不压住其它前景图层 */
+  z-index: 0 !important;
 }
 
 .vp-hero-bg {
@@ -176,7 +185,8 @@ html.lk-home-enhance-suspended main.vp-project-home {
 .vp-hero-info-wrapper.hero-fullscreen {
   min-height: auto !important;
   height: auto !important;
-  padding: 80px 0 40px !important;
+  /* 减少顶部留白，把下面四个功能卡整体拉近 Hero */
+  padding: 5rem 0 1.75rem !important;
   display: flex;
   align-items: center;
 }
@@ -184,9 +194,11 @@ html.lk-home-enhance-suspended main.vp-project-home {
 // 全屏 Hero 标题 / 副文案配色（各宽度通用）
 .page-home .vp-hero-info-wrapper.hero-fullscreen #main-title {
   background: none !important;
-  -webkit-text-fill-color: white !important;
-  color: white !important;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45) !important;
+  -webkit-text-fill-color: #fff !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  /* 默认在深色背景上使用稍重一点的阴影，保证可读性 */
+  text-shadow: 0 4px 12px rgba(15, 23, 42, 0.45) !important;
 }
 
 .page-home .vp-hero-info-wrapper.hero-fullscreen #main-description,
@@ -197,11 +209,63 @@ html.lk-home-enhance-suspended main.vp-project-home {
     0 2px 14px rgba(0, 0, 0, 0.55) !important;
 }
 
-// Desktop: keep hero title block simple (no extra frosted strip background)
+/* Light 模式下：让文字改为深色，提高在浅色玻璃上的对比度 */
+[data-theme='light']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  #main-title {
+  -webkit-text-fill-color: #0f172a !important;
+  color: #0f172a !important;
+  text-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.7),
+    0 0 10px rgba(15, 23, 42, 0.12) !important;
+}
+
+[data-theme='light']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  #main-description,
+[data-theme='light']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  .home-typewriter-tagline {
+  color: rgba(15, 23, 42, 0.86) !important;
+  text-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.65),
+    0 0 8px rgba(15, 23, 42, 0.12) !important;
+}
+
 @media (min-width: 960px) {
   .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos {
     position: relative;
     z-index: 1;
+    /* 裁剪深色磨砂 ::before 的边缘，避免在暗色背景上出现多余黑线 */
+    overflow: hidden;
+  }
+
+  /* Desktop：还原 Hi Luke 版本的局部深色磨砂背景条，背景固定在人物脸部区域 */
+  .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos::before {
+    content: '';
+    position: absolute;
+    inset-block: -18px;
+    inset-inline-start: -24px;
+    width: min(520px, 80vw);
+    border-radius: 32px;
+    background:
+      radial-gradient(
+        circle at 18% 50%,
+        rgba(15, 23, 42, 0.38) 0%,
+        rgba(15, 23, 42, 0.24) 40%,
+        rgba(15, 23, 42, 0.0) 100%
+      );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+      0 18px 40px rgba(15, 23, 42, 0.48),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    opacity: 0.96;
+    pointer-events: none;
+    z-index: -1;
   }
 
   // Desktop hero: ensure title block sticks to the top of the main column
@@ -210,7 +274,8 @@ html.lk-home-enhance-suspended main.vp-project-home {
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: flex-start !important; // 顶部对齐，避免垂直居中导致的下沉
-    padding-left: 8vw !important;
+    /* 与右侧主内容列保持同一左边界，由主列 padding 决定 */
+    padding-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 1.2rem 0 0 !important; // 与左侧欢迎卡片顶部对齐
@@ -221,25 +286,34 @@ html.lk-home-enhance-suspended main.vp-project-home {
   max-width: 520px !important;
   width: auto !important;
   margin: 0 auto !important;
-  padding: 2rem 1.5rem;
-  border-radius: 22px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  /* 单层半透明深色卡片背景，避免与其它遮罩叠加产生重影 */
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.6),
-    0 0 0 1px rgba(15, 23, 42, 0.7);
+  /* 更宽松的内边距，让标题 / 欢迎语 / 按钮远离左边缘，留出呼吸感（四周约 40px） */
+  padding: 2.5rem;
+  border-radius: 26px;
+  /* 仅作为内容容器：视觉上的卡片由下方 ::before 深色磨砂条承担 */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="dark"] .vp-hero-infos {
-  background: rgba(0, 0, 0, 0.55);
+  /* 深浅主题下都保持内容容器角色，不额外叠加一层小卡片 */
+  background: transparent !important;
+  border-color: transparent !important;
 }
 
 @media (max-width: 719px) {
   .vp-hero-infos {
-    padding: 1.5rem 1rem;
+    max-width: min(96vw, 540px);
+    margin: 0 auto 1.25rem;
+    /* 小屏同样保证左侧至少 2rem 以上 padding，避免文字贴边 */
+    padding: 2.1rem 1.75rem 2rem 2.2rem;
+    /* 移动端单独提供一层浅色玻璃背景，保证在窄屏上文字可读 */
+    background: rgba(15, 23, 42, 0.08) !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    backdrop-filter: blur(14px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(1.3) !important;
   }
 }
 
@@ -248,12 +322,33 @@ html.lk-home-enhance-suspended main.vp-project-home {
 }
 
 .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-action.default {
-  background: rgba(255, 255, 255, 0.18) !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  color: white !important;
+  background: rgba(255, 255, 255, 0.38) !important;
+  border-color: rgba(148, 163, 184, 0.48) !important;
+  color: rgba(15, 23, 42, 0.82) !important;
+  border-radius: 999px !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+    border-color: rgba(148, 163, 184, 0.7) !important;
+  }
+}
+
+/* Hero 主按钮（例如「About Me」）：保持绿色圆角，增强层次感 */
+.page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-actions .vp-hero-action:first-child {
+  border-radius: 999px !important;
+  padding-inline: 1.8rem !important;
+  padding-block: 0.78rem !important;
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  border-color: transparent !important;
+  box-shadow:
+    0 14px 30px rgba(22, 163, 74, 0.5),
+    0 0 0 1px rgba(21, 128, 61, 0.4) !important;
+  color: #ecfdf3 !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #4ade80, #22c55e) !important;
   }
 }
 
@@ -282,8 +377,8 @@ html.lk-home-enhance-suspended main.vp-project-home {
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: flex-start !important; // 垂直顶部对齐，避免整块居中
-
-    padding-left: 8vw !important;
+    /* 桌面端左边缘与功能卡保持一致，由外层主列控制 padding */
+    padding-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -335,98 +430,7 @@ html.lk-home-enhance-suspended main.vp-project-home {
     margin-inline-end: 1rem !important;
   }
 
-  // 磨砂玻璃引导气泡：left 由全局 --lk-hero-content-inset（与欢迎文案同垂线）
-  main.vp-page.vp-project-home .vp-hero-info-wrapper .vp-hero-slide-down-button,
-  .theme-container.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button,
-  .page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
-    left: var(--lk-hero-content-inset) !important;
-    right: auto !important;
-    bottom: clamp(1.25rem, 4vh, 3.25rem) !important;
-    width: auto !important;
-    height: auto !important;
-    min-width: 0 !important;
-    max-width: min(92vw, 320px) !important;
-    padding: 13px 26px 11px 20px !important;
-    margin: 0 !important;
-    transform: translate3d(0, 0, 0) !important;
-    z-index: 10 !important;
-
-    display: inline-flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0 !important;
-
-    border-radius: 50px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    background: rgba(255, 255, 255, 0.28) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    box-shadow:
-      0 4px 20px rgba(0, 0, 0, 0.14),
-      inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
-
-    color: rgba(28, 38, 52, 0.95) !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
-
-    transition:
-      transform 0.35s ease,
-      box-shadow 0.35s ease,
-      background 0.35s ease,
-      border-color 0.35s ease !important;
-
-    animation: lk-hero-guide-bubble-float 2.4s ease-in-out infinite !important;
-
-    &:hover {
-      animation-play-state: paused !important;
-      transform: translate3d(0, -3px, 0) scale(1.05) !important;
-      background: rgba(255, 255, 255, 0.42) !important;
-      border-color: rgba(255, 255, 255, 0.75) !important;
-      box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.55),
-        0 0 28px rgba(120, 190, 255, 0.55),
-        0 10px 36px rgba(0, 0, 0, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
-    }
-
-    &:active {
-      transform: translate3d(0, 0, 0) scale(1.02) !important;
-    }
-  }
-}
-
-// ── Hero 向下箭头：圆形按钮 + 朝下箭头 ────────────────────────────────────────
-.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button {
-  width: 42px !important;
-  height: 42px !important;
-  padding: 0 !important;
-  border-radius: 999px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0 !important;
-
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  background: rgba(15, 23, 42, 0.48) !important;
-  box-shadow:
-    0 4px 18px rgba(15, 23, 42, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
-  /* 强制关闭引导按钮自身的上下浮动动画，彻底移除视觉上的「跳动」感 */
-  animation: none !important;
-  transform: translate3d(0, 0, 0) !important;
-}
-
-.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button::before {
-  content: '↓';
-  font-size: 18px;
-  line-height: 1;
-  color: rgba(248, 250, 252, 0.92);
-}
-
-// 隐藏主题自带 SVG 图标，避免与自定义箭头重复
-.page-home .vp-hero-info-wrapper .vp-hero-slide-down-button .icon {
-  display: none !important;
+  // （已移除顶部引导小箭头，避免与 Hero 卡片视觉竞争）
 }
 
 // ── Home：主内容区加宽；左 1/4 · 右 3/4 ─────────────────────────────────────
@@ -471,6 +475,9 @@ main.vp-project-home.lk-home-dual {
   align-items: flex-start !important;
   justify-content: flex-start !important;
   flex: 1 1 auto;
+  /* 提前为滚动重绘做优化，减少列之间的渲染伪影 */
+  will-change: transform;
+  z-index: 1;
 }
 
 // 进一步关闭首页区域的滚动锚点，避免浏览器在接近底部时因内容高度微调
@@ -492,20 +499,8 @@ body,
 }
 
 .page-home .lk-home-main-col::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -24px;
-  width: 40px;
-  height: 100%;
-  pointer-events: none;
-  background: linear-gradient(
-    to right,
-    rgba(148, 163, 184, 0.55) 0%,
-    rgba(148, 163, 184, 0.15) 40%,
-    rgba(148, 163, 184, 0) 100%
-  );
-  z-index: 0;
+  /* 彻底移除主内容列左侧渐变，避免滚动过程中与 Hero 卡片叠出黑色切割线 */
+  content: none !important;
 }
 
 // 左侧个人卡片栏：半透明磨砂玻璃效果，减弱与灰色主区的硬边界
@@ -536,28 +531,18 @@ body,
   margin: 0;
   padding-top: 0;
   overflow-anchor: none;
-  /* 与上方 Hero 卡片之间保留适度间距，而不是推到整列底部 */
-  margin-top: 1.1rem;
+  /* 与上方 Hero 卡片之间缩小间距，让 Project 栈更贴近中间分界线 */
+  margin-top: 0.45rem;
 }
 
 // ── 2. 首页底部功能卡片整体上移，缩小与 Hero 的垂直间距 ──────────────────
 .theme-hope-content .vp-feature-wrapper {
   max-width: 900px !important;
   width: 100% !important;
-  margin: 20px auto !important;
+  margin: 10px auto !important;
   position: relative;
   z-index: 2;
   transition: transform 0.25s ease-in-out !important;
-}
-
-@media (min-width: 960px) {
-  .theme-container.page-home .theme-hope-content {
-    max-width: min(1200px, 100%) !important;
-  }
-
-  .theme-hope-content .vp-feature-wrapper {
-    max-width: min(1200px, 100%) !important;
-  }
 }
 
 // 小屏高度较小时，再额外上移一截，避免视觉上「下沉」感
@@ -567,11 +552,10 @@ body,
   }
 }
 
-/* 首页 Hero 下方的白色向下箭头（引导按钮）直接隐藏 */
-.page-home .vp-hero-slide-down-button {
-  display: none !important;
-}
-
+/* Hero 向下箭头：整站隐藏（避免遮挡 Hero 卡片与内容） */
+.page-home .vp-hero-slide-down-button,
+.theme-container.page-home .vp-hero-slide-down-button,
+.lk-home-main-col .vp-hero-slide-down-button,
 .vp-hero-slide-down-button {
   display: none !important;
 }
@@ -772,6 +756,10 @@ body,
   contain: paint;
   overflow-anchor: none;
   flex: 0 0 auto;
+  /* 轻微抬高层级并向右重叠 1px，用 Profile 列盖住可能出现的 1px 缝隙 */
+  z-index: 2;
+  margin-right: -1px;
+  will-change: transform;
 }
 
 // 小屏高度较小时，右侧主内容列也保持与左侧类似的固定效果，
