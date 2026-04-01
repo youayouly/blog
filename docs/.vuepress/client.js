@@ -70,9 +70,9 @@ function initLive2DWidget() {
     if (!window.L2Dwidget || live2dLoaded) return
     window.L2Dwidget.init({
       model: {
-        // 使用官方 Shizuku 女孩模型，可按需替换为其他模型包
+        // 使用官方 Koharu 女孩模型，可按需替换为其他模型包
         jsonPath:
-          'https://unpkg.com/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json',
+          'https://unpkg.com/live2d-widget-model-koharu@1.0.5/assets/koharu.model.json',
       },
       display: {
         position: 'right',

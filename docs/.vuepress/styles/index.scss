@@ -194,31 +194,28 @@ html.lk-home-enhance-suspended main.vp-project-home {
 // 全屏 Hero 标题 / 副文案配色（各宽度通用）
 .page-home .vp-hero-info-wrapper.hero-fullscreen #main-title {
   background: none !important;
-  -webkit-text-fill-color: #fff !important;
-  color: #fff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
   font-weight: 800 !important;
-  /* 默认在深色背景上使用稍重一点的阴影，保证可读性 */
-  text-shadow: 0 4px 12px rgba(15, 23, 42, 0.45) !important;
+  /* 轻柔阴影：在浅色玻璃上保持可读性又不过重 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .page-home .vp-hero-info-wrapper.hero-fullscreen #main-description,
 .page-home .vp-hero-info-wrapper.hero-fullscreen .home-typewriter-tagline {
-  color: rgba(255, 255, 255, 0.95) !important;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.75),
-    0 2px 14px rgba(0, 0, 0, 0.55) !important;
+  /* Welcome 文案统一为纯白系，在所有主题下保持一致 */
+  color: rgba(255, 255, 255, 0.96) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 
-/* Light 模式下：让文字改为深色，提高在浅色玻璃上的对比度 */
+/* Light 模式下同样保持白色文案和统一的阴影效果 */
 [data-theme='light']
   .page-home
   .vp-hero-info-wrapper.hero-fullscreen
   #main-title {
-  -webkit-text-fill-color: #0f172a !important;
-  color: #0f172a !important;
-  text-shadow:
-    0 1px 2px rgba(255, 255, 255, 0.7),
-    0 0 10px rgba(15, 23, 42, 0.12) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 [data-theme='light']
@@ -229,10 +226,8 @@ html.lk-home-enhance-suspended main.vp-project-home {
   .page-home
   .vp-hero-info-wrapper.hero-fullscreen
   .home-typewriter-tagline {
-  color: rgba(15, 23, 42, 0.86) !important;
-  text-shadow:
-    0 1px 2px rgba(255, 255, 255, 0.65),
-    0 0 8px rgba(15, 23, 42, 0.12) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 
 @media (min-width: 960px) {
