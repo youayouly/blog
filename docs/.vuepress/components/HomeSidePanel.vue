@@ -53,8 +53,8 @@ import SiteStatsCard from './SiteStatsCard.vue'
   backdrop-filter: blur(28px) saturate(1.8);
   -webkit-backdrop-filter: blur(28px) saturate(1.8);
   box-shadow:
-    0 8px 40px rgba(15, 23, 42, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.90);
+    0 10px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   box-sizing: border-box;
   overflow-x: hidden;
 }
@@ -108,7 +108,7 @@ import SiteStatsCard from './SiteStatsCard.vue'
   background: rgba(15, 23, 42, 0.38) !important;
   border: 1px solid rgba(148, 163, 184, 0.22) !important;
   box-shadow:
-    0 2px 18px rgba(0, 0, 0, 0.35),
+    0 16px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 

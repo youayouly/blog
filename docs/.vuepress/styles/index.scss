@@ -1,5 +1,11 @@
 // ── Hero fullscreen: dark overlay so text is readable over anime image ───────
 
+:root[data-theme='light'] {
+  --lk-glass-light-bg: rgba(255, 255, 255, 0.6);
+  --lk-glass-light-border: 1px solid rgba(0, 0, 0, 0.05);
+  --lk-glass-light-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
 .page-home {
 
   // The ::after of .vp-hero-mask：文字侧浅灰雾，人物侧透/极浅白（仅遮罩图片层）
@@ -213,9 +219,9 @@ html.lk-home-enhance-suspended main.vp-project-home {
   .page-home
   .vp-hero-info-wrapper.hero-fullscreen
   #main-title {
-  -webkit-text-fill-color: #ffffff !important;
-  color: #ffffff !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  -webkit-text-fill-color: #1a1a2e !important;
+  color: #1a1a2e !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.12) !important;
 }
 
 [data-theme='light']
@@ -226,19 +232,19 @@ html.lk-home-enhance-suspended main.vp-project-home {
   .page-home
   .vp-hero-info-wrapper.hero-fullscreen
   .home-typewriter-tagline {
-  color: rgba(255, 255, 255, 0.96) !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #2c3e50 !important;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.12) !important;
 }
 
 @media (min-width: 960px) {
   .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos {
     position: relative;
     z-index: 1;
-    /* 裁剪深色磨砂 ::before 的边缘，避免在暗色背景上出现多余黑线 */
+    /* 裁剪磨砂 ::before 的边缘，避免在背景上出现多余黑线 */
     overflow: hidden;
   }
 
-  /* Desktop：还原 Hi Luke 版本的局部深色磨砂背景条，背景固定在人物脸部区域 */
+  /* Desktop：Hero 文案背后的毛玻璃条，Light / Dark 用主题变量区分 */
   .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos::before {
     content: '';
     position: absolute;
@@ -304,11 +310,26 @@ html.lk-home-enhance-suspended main.vp-project-home {
     margin: 0 auto 1.25rem;
     /* 小屏同样保证左侧至少 2rem 以上 padding，避免文字贴边 */
     padding: 2.1rem 1.75rem 2rem 2.2rem;
-    /* 移动端单独提供一层浅色玻璃背景，保证在窄屏上文字可读 */
+    /* 默认移动端玻璃背景在 Dark 模式下略偏深，Light 模式使用下面的主题覆盖 */
     background: rgba(15, 23, 42, 0.08) !important;
     border: 1px solid rgba(148, 163, 184, 0.18) !important;
     backdrop-filter: blur(14px) saturate(1.3) !important;
     -webkit-backdrop-filter: blur(14px) saturate(1.3) !important;
+  }
+}
+
+[data-theme='light'] .page-home .vp-hero-info-wrapper.hero-fullscreen .vp-hero-infos::before {
+  background: var(--lk-glass-light-bg);
+  box-shadow: var(--lk-glass-light-shadow);
+  border: var(--lk-glass-light-border);
+}
+
+@media (max-width: 719px) {
+  [data-theme='light'] .vp-hero-infos {
+    background: var(--lk-glass-light-bg) !important;
+    border: var(--lk-glass-light-border) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
   }
 }
 
@@ -345,6 +366,33 @@ html.lk-home-enhance-suspended main.vp-project-home {
   &:hover {
     background: linear-gradient(135deg, #4ade80, #22c55e) !important;
   }
+}
+
+[data-theme='light']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  .vp-hero-actions
+  .vp-hero-action:first-child {
+  box-shadow:
+    0 12px 28px rgba(34, 197, 94, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme='light']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  .vp-hero-action.default {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: #1f2933 !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.1) !important;
+}
+
+[data-theme='light']
+  .page-home
+  .vp-hero-info-wrapper.hero-fullscreen
+  .vp-hero-action.default:hover {
+  background: rgba(255, 255, 255, 0.86) !important;
 }
 
 // 小屏：顶部略压暗（标题常在上区）+ 横向左深右浅
@@ -507,15 +555,37 @@ body,
   );
 }
 
-// 左侧个人卡片栏：半透明磨砂玻璃效果，减弱与灰色主区的硬边界
+// 左侧个人卡片栏：极致清透毛玻璃外框（Glassmorphism）
 .page-home .lk-home-profile-col {
-  background-color: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 10px 0 24px -14px rgba(15, 23, 42, 0.38);
+  position: relative;
   border-radius: 24px;
   overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 0 0,
+      rgba(255, 255, 255, 0.28),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 100% 0,
+      rgba(148, 163, 255, 0.22),
+      transparent 55%
+    ),
+    rgba(30, 30, 45, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='light'] .page-home .lk-home-profile-col {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
 /* 首页功能卡：纵向一列，贴齐主列左缘，顶对齐左侧栏第一张卡 */
@@ -610,7 +680,9 @@ body,
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* 常态：几乎纯白的卡片 + 非常浅的蓝色渐变，只在右侧隐约可见 */
+  position: relative;
+  overflow: hidden;
+  /* 默认使用浅色毛玻璃，深浅由主题覆盖调整 */
   background-color: var(--vp-c-bg-soft, rgba(255, 255, 255, 0.98)) !important;
   background-image: linear-gradient(
     90deg,
@@ -626,7 +698,7 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.75) !important;
   border-radius: 18px !important;
   box-shadow:
-    0 4px 24px rgba(15, 23, 42, 0.08),
+    0 10px 40px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
   padding: 1.8rem 1.6rem !important;
   /* 仅做亮度/文字颜色 + 渐变位置过渡，不做位移/缩放 */
@@ -698,6 +770,95 @@ body,
   color: #334155 !important;
 }
 
+[data-theme='light'] .page-home .lk-home-main-col .vp-feature-item,
+[data-theme='light'] .theme-container.page-home .lk-home-main-col .vp-feature-item {
+  background: var(--lk-glass-light-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: var(--lk-glass-light-border) !important;
+  box-shadow: var(--lk-glass-light-shadow) !important;
+  background-image: none !important;
+}
+
+[data-theme='light'] .page-home .lk-home-main-col .vp-feature-item:hover,
+[data-theme='light'] .theme-container.page-home .lk-home-main-col .vp-feature-item:hover {
+  background: rgba(255, 255, 255, 0.82) !important;
+  box-shadow: var(--lk-glass-light-shadow) !important;
+}
+
+[data-theme='light'] .page-home .lk-home-main-col .vp-feature-title {
+  color: #1f2a3c !important;
+}
+
+[data-theme='light'] .page-home .lk-home-main-col .vp-feature-details {
+  color: #4b5563 !important;
+}
+
+/* Home feature cards: colored left stripes matching sidebar blocks */
+.page-home .lk-home-main-col .vp-features .vp-feature-item:nth-child(1)::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(125, 211, 252, 0.95),
+    rgba(125, 211, 252, 0.4)
+  );
+}
+
+.page-home .lk-home-main-col .vp-features .vp-feature-item:nth-child(2)::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(167, 139, 250, 0.9),
+    rgba(167, 139, 250, 0.4)
+  );
+}
+
+.page-home .lk-home-main-col .vp-features .vp-feature-item:nth-child(3)::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(244, 114, 182, 0.9),
+    rgba(244, 114, 182, 0.4)
+  );
+}
+
+.page-home .lk-home-main-col .vp-features .vp-feature-item:nth-child(4)::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(251, 191, 36, 0.95),
+    rgba(251, 191, 36, 0.45)
+  );
+}
+
+[data-theme='dark']
+  .page-home
+  .lk-home-main-col
+  .vp-features
+  .vp-feature-item:nth-child(-n + 4)::before {
+  opacity: 0.7;
+}
+
 // ── Dark mode overrides (Home main content) ───────────────────────────────
 [data-theme='dark'] .page-home {
   // Keep the character wallpaper visible in dark mode, with a softer dark overlay
@@ -714,27 +875,21 @@ body,
 }
 
 [data-theme='dark'] .page-home .lk-home-main-col .vp-feature-title {
-  color: rgba(226, 232, 240, 0.98) !important;
+  color: rgba(237, 233, 254, 0.98) !important;
 }
 
 [data-theme='dark'] .page-home .lk-home-main-col .vp-feature-details {
-  color: rgba(148, 163, 184, 0.98) !important;
+  color: rgba(209, 213, 219, 0.96) !important;
 }
 
 [data-theme='dark'] .page-home .lk-home-main-col .vp-feature-item {
-  // Darker "glass" card so the whole block matches dark theme.
-  background-color: rgba(15, 23, 42, 0.3) !important;
-  background-image: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0) 0%,
-    rgba(56, 189, 248, 0.4) 100%
-  );
-  background-repeat: no-repeat;
-  background-size: 200% 100%;
-  background-position: 100% 0;
-  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  // Dark-mode purple glass card
+  background: rgba(45, 40, 70, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
   box-shadow:
-    0 10px 34px rgba(0, 0, 0, 0.35),
+    0 16px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -742,9 +897,8 @@ body,
   .page-home
   .lk-home-main-col
   .vp-feature-item:hover {
-  /* 只稍微提高亮度 + 把蓝色渐变推到整张卡片上，不再加强阴影，避免视觉抖动 */
-  background-color: rgba(15, 23, 42, 0.38) !important;
-  background-position: 0 0;
+  /* Slightly brighten purple glass without changing shadow strength */
+  background: rgba(45, 40, 70, 0.72) !important;
   border-color: rgba(148, 163, 184, 0.32) !important;
   box-shadow: inherit !important;
 }
@@ -824,6 +978,19 @@ body,
   .vp-navbar-item {
     margin: 0 0.65rem !important;
   }
+}
+
+[data-theme='light'] .vp-navbar {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme='light'] .vp-navbar .vp-navbar-item a,
+[data-theme='light'] .vp-navbar .vp-navbar-site-name {
+  color: #1f2933 !important;
 }
 
 @media (max-width: 719px) {
