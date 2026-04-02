@@ -14,7 +14,7 @@ const props = defineProps({
   text: { type: String, default: '' },
 })
 
-const DEFAULT_TEXT = 'Welcome to my blog'
+const DEFAULT_TEXT = 'Welcome to my blog!'
 
 const fullText = computed(() => {
   const raw = props.text?.replace(/<[^>]*>/g, '').trim()

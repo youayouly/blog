@@ -16,7 +16,7 @@
       </li>
       <li class="lk-notice__item">
         <span class="lk-notice__icon" aria-hidden="true">🎲</span>
-        <span class="lk-notice__text"><strong>CDN 加速：</strong>Vercel CDN</span>
+        <span class="lk-notice__text"><strong>CDN 加速：</strong>Cloudflare CDN</span>
       </li>
     </ul>
   </section>

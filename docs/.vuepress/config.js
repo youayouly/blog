@@ -54,6 +54,7 @@ export default defineUserConfig({
     logo: '/avatar.jpg',
     darkmode: 'toggle',
     pure: false,
+    appearance: 'dark', // ✅ 默认暗黑
 
     navbar: [
       { text: 'Home', link: '/' },

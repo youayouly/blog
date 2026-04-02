@@ -238,3 +238,18 @@
 {"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/study/uk.html","newPath":"/study/singapore.html"},"timestamp":1775148168504}
 {"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/study/singapore.html","newPath":"/travel/"},"timestamp":1775148169212}
 {"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/travel/","newPath":"/"},"timestamp":1775148243745}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/about.html"},"timestamp":1775148482595}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/"},"timestamp":1775148483527}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/about.html"},"timestamp":1775148484044}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/"},"timestamp":1775148486578}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/"},"timestamp":1775148774784}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/about.html"},"timestamp":1775148781536}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/tech/"},"timestamp":1775148961190}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/tech/","newPath":"/"},"timestamp":1775148962938}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/about.html"},"timestamp":1775148963755}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/"},"timestamp":1775148964621}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/about.html"},"timestamp":1775149050231}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/about.html"},"timestamp":1775149145600}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/about.html"},"timestamp":1775149273817}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/about.html"},"timestamp":1775149302325}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/"},"timestamp":1775149379991}

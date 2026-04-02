@@ -538,7 +538,7 @@ function unmountFloatingShapes() {
 
 /* ── Mount / unmount all home-page enhancements ─────────────────────────── */
 function mountHome() {
-  mountTypewriter('Welcome to my blog')
+  mountTypewriter('Welcome to my blog!')
   mountHomeBodyGrid()
   mountFloatingShapes()
   initScrollBlur()

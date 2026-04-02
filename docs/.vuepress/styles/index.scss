@@ -1003,7 +1003,6 @@ body,
 .vp-navbar {
   background: rgba(74, 144, 217, 0.1);
   backdrop-filter: blur(10px);
-  position: relative;
   z-index: 1000;
   /* Isolate compositing to avoid scroll-time backdrop-filter artifacts. */
   transform: translateZ(0);
