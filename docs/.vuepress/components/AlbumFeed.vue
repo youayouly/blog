@@ -27,6 +27,8 @@
         <time class="lk-album__when" :datetime="block.iso">{{ block.dateLabel }}</time>
       </header>
 
+      <div class="lk-album__rule lk-album__rule--under-title" role="presentation" />
+
       <div
         class="lk-album__grid"
         :class="{ 'lk-album__grid--loading': !block.ready }"
@@ -56,7 +58,6 @@
           </a>
         </template>
       </div>
-      <div class="lk-album__rule" role="presentation" />
     </article>
   </section>
 </template>
@@ -116,15 +117,21 @@ onMounted(() => {
   --lk-album-text: #3d3548;
   --lk-album-skel: #ebe4db;
   --lk-album-bar: #c4b8a8;
+  --lk-album-rule: rgba(107, 91, 115, 0.18);
+  --lk-album-cell-border: rgba(107, 91, 115, 0.12);
+  --lk-album-cell-shadow: rgba(61, 53, 72, 0.1);
 
-  max-width: 420px;
-  margin: 1.25rem auto 2rem;
-  padding: 1rem 1.1rem 0.5rem;
+  width: 100%;
+  max-width: min(420px, 100%);
+  margin: 1.25rem 0 2rem;
+  margin-inline: 0;
+  padding: 1rem 1.1rem 0.75rem;
   background: var(--lk-album-bg);
   border-radius: 16px;
   box-shadow: 0 2px 20px rgba(61, 53, 72, 0.08);
   color: var(--lk-album-text);
   font-family: ui-serif, Georgia, 'Times New Roman', serif;
+  border: 1px solid rgba(107, 91, 115, 0.08);
 }
 
 .lk-album__top {
@@ -167,17 +174,12 @@ onMounted(() => {
   text-decoration: underline;
 }
 
-.lk-album__block {
-  margin: 0;
-  padding: 0;
-}
-
 .lk-album__meta {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem 0.65rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.5rem;
 }
 
 .lk-album__place {
@@ -198,6 +200,8 @@ onMounted(() => {
   gap: 10px;
   width: 100%;
   max-width: 320px;
+  margin: 0;
+  margin-inline: 0;
 }
 
 .lk-album__skel {
@@ -264,14 +268,14 @@ onMounted(() => {
   border-radius: 50%;
   overflow: hidden;
   display: block;
-  border: 2px solid rgba(107, 91, 115, 0.12);
-  box-shadow: 0 2px 8px rgba(61, 53, 72, 0.1);
+  border: 2px solid var(--lk-album-cell-border);
+  box-shadow: 0 2px 8px var(--lk-album-cell-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lk-album__cell:hover {
   transform: scale(1.04);
-  box-shadow: 0 4px 14px rgba(61, 53, 72, 0.16);
+  box-shadow: 0 4px 14px var(--lk-album-cell-shadow);
 }
 
 .lk-album__cell img {
@@ -283,11 +287,41 @@ onMounted(() => {
 
 .lk-album__rule {
   height: 1px;
-  background: rgba(107, 91, 115, 0.12);
-  margin: 1rem 0 1.1rem;
+  background: var(--lk-album-rule);
+  margin: 0 0 0.85rem;
 }
 
-.lk-album__block:last-child .lk-album__rule {
-  display: none;
+.lk-album__block {
+  margin: 0;
+  padding-bottom: 1.35rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--lk-album-rule);
+}
+
+.lk-album__block:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+</style>
+
+<style>
+/* Dark theme: album card matches page, not bright cream (Chromium-safe, no backdrop-filter). */
+[data-theme='dark'] .lk-album {
+  --lk-album-bg: rgba(30, 41, 59, 0.82);
+  --lk-album-muted: rgba(148, 163, 184, 0.88);
+  --lk-album-text: rgba(241, 245, 249, 0.94);
+  --lk-album-skel: rgba(51, 65, 85, 0.75);
+  --lk-album-bar: rgba(148, 163, 184, 0.45);
+  --lk-album-rule: rgba(148, 163, 184, 0.22);
+  --lk-album-cell-border: rgba(148, 163, 184, 0.2);
+  --lk-album-cell-shadow: rgba(0, 0, 0, 0.35);
+
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+[data-theme='dark'] .lk-album__all:hover {
+  color: var(--lk-album-text);
 }
 </style>

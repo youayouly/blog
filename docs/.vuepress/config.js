@@ -55,6 +55,7 @@ export default defineUserConfig({
     darkmode: 'toggle',
     pure: false,
     appearance: 'dark', // ✅ 默认暗黑
+    backToTop: false,
 
     navbar: [
       { text: 'Home', link: '/' },
@@ -75,7 +76,16 @@ export default defineUserConfig({
     ],
 
     sidebar: {
-      '/tech/': 'structure',
+      '/tech/': [
+        { text: 'Overview', link: '/tech/' },
+        { text: 'Personal Blog', link: '/tech/my-blog.html' },
+        { text: 'Xinke ICT Competition', link: '/tech/xinke-sai.html' },
+        { text: 'National Intelligent Car Competition', link: '/tech/smartcar-nationwide.html' },
+        { text: 'Electronic Design Contest', link: '/tech/edc.html' },
+        { text: 'LLM RAG Assistant', link: '/tech/ai-llm-rag.html' },
+        { text: 'Edge AI Inference', link: '/tech/ai-edge-inference.html' },
+        { text: 'Vision ML Pipeline', link: '/tech/ai-vision-pipeline.html' },
+      ],
       '/study/': [
         {
           text: '🎓 Study Abroad',

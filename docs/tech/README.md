@@ -19,7 +19,7 @@ index: true
 
 ## 技术笔记
 
-> 按需在 `docs/tech/` 目录下添加 `.md` 文件，侧边栏会自动生成。
+> 在 `docs/tech/` 下添加 `.md` 后，请在 [`docs/.vuepress/config.js`](.vuepress/config.js) 的 `sidebar['/tech/']` 中按需要加入链接以保持顺序。
 
 ---
 

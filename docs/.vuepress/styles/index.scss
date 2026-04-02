@@ -66,10 +66,11 @@
     }
   }
 
-  // Translucent navbar over the hero image
+  // Translucent navbar over the hero image (stronger blur/tint so nav wins over hero text)
   .vp-navbar {
-    background: rgba(0, 0, 0, 0.18) !important;
-    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.28) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 
     .vp-navbar-item a,
     .vp-navbar-site-name {
@@ -1093,9 +1094,11 @@ body,
   min-height: 100vh;
 }
 
-/* Live2D 小人：基础层级控制，其具体位置由 JS 以绝对定位挂在首页网格上 */
+/* Live2D：由 client.js 设为 position:fixed + bottom/right；此处只做层级与缩放原点 */
 #live2d-widget {
-  z-index: 40;
+  z-index: 50;
+  transform-origin: bottom right;
+  pointer-events: auto;
 }
 
 @media (max-width: 959px) {
@@ -1817,4 +1820,27 @@ html.lk-site-non-home #app *::before,
 html.lk-site-non-home #app *::after {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+// Non-home: navbar cannot use backdrop blur (disabled above); use opaque bar so nav text never blends with body.
+html.lk-site-non-home .vp-navbar {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+html.lk-site-non-home .vp-navbar .vp-navbar-item a,
+html.lk-site-non-home .vp-navbar .vp-navbar-site-name {
+  color: rgba(241, 245, 249, 0.95) !important;
+}
+
+html.lk-site-non-home[data-theme='light'] .vp-navbar {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.1);
+}
+
+html.lk-site-non-home[data-theme='light'] .vp-navbar .vp-navbar-item a,
+html.lk-site-non-home[data-theme='light'] .vp-navbar .vp-navbar-site-name {
+  color: #1f2933 !important;
 }

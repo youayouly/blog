@@ -1,13 +1,17 @@
 <template>
   <section class="lk-proj-cards" aria-label="Projects list cards">
     <div class="lk-proj-cards__grid">
-      <article
+      <RouterLink
         v-for="item in items"
         :key="item.title"
+        :to="item.to"
         class="lk-proj-card"
         :aria-label="item.title"
       >
-        <header class="lk-proj-card__top">
+        <header
+          class="lk-proj-card__top"
+          :class="{ 'lk-proj-card__top--noicon': !item.href }"
+        >
           <h3 class="lk-proj-card__title">{{ item.title }}</h3>
 
           <a
@@ -16,7 +20,8 @@
             :href="item.href"
             target="_blank"
             rel="noopener noreferrer"
-            :aria-label="item.iconLabel || 'Open GitHub'"
+            :aria-label="item.iconLabel || 'Open external link'"
+            @click.stop
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
               <path
@@ -25,26 +30,16 @@
               />
             </svg>
           </a>
-
-          <span
-            v-else
-            class="lk-proj-card__icon lk-proj-card__icon--disabled"
-            aria-hidden="true"
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.86-.01-1.69-2.78.62-3.37-1.38-3.37-1.38-.46-1.19-1.12-1.51-1.12-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.58 2.36 1.12 2.93.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.15-4.56-5.13 0-1.13.39-2.05 1.03-2.77-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05.8-.23 1.66-.35 2.52-.35.86 0 1.72.12 2.52.35 1.9-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.64 1.03 2.77 0 3.99-2.35 4.86-4.58 5.12.36.32.68.95.68 1.92 0 1.38-.01 2.5-.01 2.84 0 .27.18.6.69.49 3.96-1.36 6.83-5.2 6.83-9.73C22 6.58 17.52 2 12 2Z"
-              />
-            </svg>
-          </span>
         </header>
 
         <p class="lk-proj-card__desc">
           {{ item.summary }}
         </p>
 
-        <footer class="lk-proj-card__bottom">
+        <footer
+          v-if="item.stats || (item.tags && item.tags.length)"
+          class="lk-proj-card__bottom"
+        >
           <div class="lk-proj-card__stats">
             <template v-if="item.stats">
               <div class="lk-proj-card__statrow">
@@ -65,69 +60,63 @@
               </div>
             </template>
 
-            <div class="lk-proj-card__tags" v-if="item.tags && item.tags.length">
+            <div v-if="item.tags && item.tags.length" class="lk-proj-card__tags">
               <span v-for="t in item.tags" :key="t" class="lk-proj-card__tag">
                 {{ t }}
               </span>
             </div>
           </div>
         </footer>
-      </article>
+      </RouterLink>
     </div>
   </section>
 </template>
 
 <script setup>
+import { RouterLink } from 'vue-router'
+
 const items = [
   {
-    title: '项目一：个人博客搭建',
+    title: 'Personal Blog',
+    to: '/tech/my-blog.html',
     summary:
-      'VuePress 2 + vuepress-theme-hope + Vercel 部署；使用 VuePress 2 搭建静态博客，配置自定义导航/侧边栏与暗黑模式，并通过 Vercel 自动化部署。',
-    href: 'https://github.com/',
-    stats: { star: 377, fork: 53 },
-    iconLabel: 'Open project code on GitHub',
+      'VuePress 2 + vuepress-theme-hope static site: custom home, album, tech hub, and deploy story.',
   },
   {
-    title: '项目二：（待填写）',
+    title: 'Xinke ICT Competition',
+    to: '/tech/xinke-sai.html',
     summary:
-      '简短描述这个项目的背景与目的；功能点一、功能点二、功能点三。',
-    href: 'https://github.com/',
-    stats: { star: 89, fork: 34 },
+      'National new-generation ICT contest (信科赛): 5G/embedded tracks, engineering practice and innovation.',
   },
   {
-    title: '项目三：（待填写）',
+    title: 'National Intelligent Car Competition',
+    to: '/tech/smartcar-nationwide.html',
     summary:
-      '简短描述这个项目的背景与目的；功能点一、功能点二、功能点三。',
-    href: 'https://github.com/',
-    stats: { star: 84, fork: 19 },
+      'NXP Cup–style autonomous model cars: full-model and vision-class work in one write-up.',
   },
   {
-    title: '项目四：（待填写）',
+    title: 'Electronic Design Contest',
+    to: '/tech/edc.html',
     summary:
-      '简短描述这个项目的背景与目的；功能点一、功能点二、功能点三。',
-    href: 'https://github.com/',
-    stats: { star: 47, fork: 8 },
+      'National Undergraduate Electronic Design Contest: analog/digital systems and timed prototyping.',
   },
   {
-    title: '项目五：（待填写）',
+    title: 'LLM RAG Assistant',
+    to: '/tech/ai-llm-rag.html',
     summary:
-      '简短描述这个项目的背景与目的；功能点一、功能点二、功能点三。',
-    href: 'https://github.com/',
-    stats: { star: 46, fork: 14 },
+      'Retrieval-augmented LLM: chunking, embeddings, vector store, and grounded Q&A.',
   },
   {
-    title: '项目六：（待填写）',
+    title: 'Edge AI Inference',
+    to: '/tech/ai-edge-inference.html',
     summary:
-      '简短描述这个项目的背景与目的；功能点一、功能点二、功能点三。',
-    href: 'https://github.com/',
-    stats: { star: 18, fork: 1 },
+      'On-device neural nets: quantization, TFLite/ONNX runtimes, and latency-focused benchmarks.',
   },
   {
-    title: '项目七：（待填写）',
+    title: 'Vision ML Pipeline',
+    to: '/tech/ai-vision-pipeline.html',
     summary:
-      '简短描述这个项目的背景与目的；功能点一、功能点二、功能点三。',
-    href: 'https://github.com/',
-    stats: { star: 12, fork: 2 },
+      'Label, train, evaluate, and export for CV models and small demos.',
   },
 ]
 </script>
@@ -169,6 +158,8 @@ const items = [
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease;
+  text-decoration: none;
+  display: block;
 }
 
 .lk-proj-card:hover {
@@ -182,6 +173,10 @@ const items = [
   display: block;
   margin-bottom: 10px;
   padding-right: 24px; /* reserved for top-right icon */
+}
+
+.lk-proj-card__top--noicon {
+  padding-right: 0;
 }
 
 .lk-proj-card__title {
@@ -305,4 +300,3 @@ const items = [
   color: rgba(226, 232, 240, 0.92);
 }
 </style>
-

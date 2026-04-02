@@ -6,9 +6,10 @@ import HomeSidePanel from './components/HomeSidePanel.vue'
 import ProjectNineGrid from './components/ProjectNineGrid.vue'
 import ProjectCardsGrid from './components/ProjectCardsGrid.vue'
 import SiteFooter from './components/SiteFooter.vue'
+import ScrollProgressFab from './components/ScrollProgressFab.vue'
 import FloatingShapes from './components/FloatingShapes.vue'
 
-/* ── Hero 背景：禁用失效外链 + 降级到本地背景色 ─ */
+/* ── Hero 背景：禁用失效外�?+ 降级到本地背景色 ─ */
 // Note: If external images return 403, we must not trigger requests.
 const images = []
 const heroWallpaperFallbackBg = 'rgba(198, 212, 232, 0.45)'
@@ -52,38 +53,98 @@ let wallpaperLoadingForIndex = null
 /** Whether we have overridden .vp-hero-mask background* inline styles */
 let heroBgOverridden = false
 
-/* ── Live2D widget（右侧与 Profile 底部齐平的小人） ─────────────────────────── */
+/* ── Live2D：挂 body + fixed 视口右下，避免随首页网格卸载而销毁 ───────────── */
 let live2dLoaded = false
+let live2dViewportListenersAttached = false
+const LIVE2D_MODEL_H = 440
+const LIVE2D_VIEWPORT_BOTTOM = 'calc(4rem + 52px + 12px)'
 
-function attachLive2DToGrid() {
+let live2dViewportHandler = null
+
+function applyLive2dViewportScale() {
+  if (typeof window === 'undefined') return
+  const el = document.getElementById('live2d-widget')
+  if (!el) return
+  const cs = window.getComputedStyle(el)
+  if (cs.display === 'none' || cs.visibility === 'hidden') return
+
+  const vv = window.visualViewport
+  const h = vv ? vv.height : window.innerHeight
+  const reservedBottom = 140
+  const reservedTop = 80
+  const avail = Math.max(160, h - reservedTop - reservedBottom)
+  const scale = Math.min(1, Math.max(0.55, avail / LIVE2D_MODEL_H))
+
+  el.style.transformOrigin = 'bottom right'
+  el.style.transform = scale < 0.998 ? `scale(${scale})` : ''
+}
+
+function attachLive2dViewportListeners() {
+  if (typeof window === 'undefined' || live2dViewportListenersAttached) return
+  live2dViewportListenersAttached = true
+  live2dViewportHandler = () => {
+    applyLive2dViewportScale()
+  }
+  window.visualViewport?.addEventListener('resize', live2dViewportHandler)
+  window.visualViewport?.addEventListener('scroll', live2dViewportHandler)
+  window.addEventListener('resize', live2dViewportHandler)
+}
+
+function detachLive2dViewportListeners() {
+  if (!live2dViewportHandler || typeof window === 'undefined') return
+  window.visualViewport?.removeEventListener('resize', live2dViewportHandler)
+  window.visualViewport?.removeEventListener('scroll', live2dViewportHandler)
+  window.removeEventListener('resize', live2dViewportHandler)
+  live2dViewportHandler = null
+  live2dViewportListenersAttached = false
+}
+
+/** Keep widget under ScrollProgressFab (fixed bottom ~4rem, ~52px tall). */
+function positionLive2DWidget(siteHome) {
   if (typeof window === 'undefined') return
   const container = document.getElementById('live2d-widget')
   if (!container) return
 
-  const grid =
-    document.querySelector('.lk-home-body-grid') ||
-    document.querySelector('.theme-container.page-home')
-  const host = grid || document.body
+  const home =
+    typeof siteHome === 'boolean'
+      ? siteHome
+      : isSiteHomePath(window.location.pathname)
 
-  if (container.parentElement !== host && host) {
-    host.appendChild(container)
+  document.body.appendChild(container)
+
+  if (!home) {
+    Object.assign(container.style, {
+      position: 'fixed',
+      right: '1rem',
+      bottom: LIVE2D_VIEWPORT_BOTTOM,
+      zIndex: '50',
+      display: 'none',
+    })
+    container.style.transform = ''
+    return
   }
 
-  if (grid) {
-    // 让小人和左侧 Profile 区域底部大致齐平，跟随首页布局而不是视口
-    grid.style.position = grid.style.position || 'relative'
-    Object.assign(container.style, {
-      position: 'absolute',
-      right: '0',
-      bottom: '24px',
+  Object.assign(container.style, {
+    position: 'fixed',
+    right: 'max(0.5rem, env(safe-area-inset-right, 0px))',
+    bottom:
+      'calc(4rem + 52px + 12px + env(safe-area-inset-bottom, 0px))',
+    left: '',
+    top: '',
+    zIndex: '50',
+    display: '',
+  })
+  applyLive2dViewportScale()
+}
+
+/** Run after layout + L2D internal DOM so fixed bottom/right are not overwritten. */
+function scheduleLive2dReposition() {
+  if (typeof window === 'undefined' || !live2dLoaded) return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      positionLive2DWidget(isSiteHomePath(window.location.pathname))
     })
-  } else {
-    Object.assign(container.style, {
-      position: 'absolute',
-      right: '24px',
-      bottom: '24px',
-    })
-  }
+  })
 }
 
 function initLive2DWidget() {
@@ -111,7 +172,8 @@ function initLive2DWidget() {
       },
     })
     live2dLoaded = true
-    attachLive2DToGrid()
+    attachLive2dViewportListeners()
+    scheduleLive2dReposition()
   }
 
   if (window.L2Dwidget) {
@@ -208,7 +270,7 @@ function loadWallpaperForTarget(mask, targetIndex) {
   img.src = url
 }
 
-/* ── 模糊/缩放 + 绝对索引换图（仅预加载成功后才改 backgroundImage） ─ */
+/* ── 模糊/缩放 + 绝对索引换图（仅预加载成功后才改 backgroundImage�?─ */
 function initScrollBlur() {
   const mask = document.querySelector('.vp-hero-mask')
   if (!mask) return
@@ -338,7 +400,7 @@ function unmountTypewriter() {
   if (twApp) { twApp.unmount(); twApp = null }
 }
 
-/* ── 侧栏：Profile + Notice + Stats（主内容区左侧，非整屏 fixed）──────────── */
+/* ── 侧栏：Profile + Notice + Stats（主内容区左侧，非整�?fixed）──────────── */
 let sidePanelApp = null
 
 function firstElementAfter(hero) {
@@ -360,7 +422,7 @@ function mountHomeBodyGrid() {
              || main.querySelector('header.vp-hero-info-wrapper')
   if (!hero) return
 
-  // NOTE: intentionally NOT checking for firstElementAfter(hero) — the
+  // NOTE: intentionally NOT checking for firstElementAfter(hero) �?the
   // feature items may still be hydrating at this point; the while-loop
   // handles the empty-sibling case gracefully.
 
@@ -386,7 +448,7 @@ function mountHomeBodyGrid() {
   profileAside.className = 'lk-home-profile-col'
   profileAside.setAttribute('aria-label', '侧栏：简介、公告与站点信息')
 
-  // Sticky sidebar via inline style — same reason as above
+  // Sticky sidebar via inline style �?same reason as above
   Object.assign(profileAside.style, {
     position: 'sticky',
     top: 'calc(var(--navbar-height, 3.5rem) + 20px)',
@@ -418,9 +480,6 @@ function mountHomeBodyGrid() {
 
   sidePanelApp = createApp({ render: () => h(HomeSidePanel) })
   sidePanelApp.mount(profileAside)
-
-  // 布局准备好之后，把 Live2D 小人挂到网格上，保持与侧栏底部齐平
-  attachLive2DToGrid()
 
   const cards = mainCol.querySelectorAll('.vp-feature-item')
   cards.forEach((card) => {
@@ -492,6 +551,14 @@ function mountHomeBodyGrid() {
   // #endregion
 }
 
+function rescueLive2dFromHomeGrid() {
+  const row = document.querySelector('main.vp-project-home .lk-home-body-grid')
+  const container = document.getElementById('live2d-widget')
+  if (row && container && row.contains(container)) {
+    document.body.appendChild(container)
+  }
+}
+
 function unmountHomeBodyGrid() {
   if (sidePanelApp) {
     sidePanelApp.unmount()
@@ -499,6 +566,7 @@ function unmountHomeBodyGrid() {
   }
   const row = document.querySelector('main.vp-project-home .lk-home-body-grid')
   const main = document.querySelector('main.vp-page.vp-project-home')
+  rescueLive2dFromHomeGrid()
   if (row && main) {
     const mainCol = row.querySelector('.lk-home-main-col')
     if (mainCol) {
@@ -542,6 +610,7 @@ function mountHome() {
   mountHomeBodyGrid()
   mountFloatingShapes()
   initScrollBlur()
+  scheduleLive2dReposition()
 }
 
 function unmountHome() {
@@ -553,7 +622,7 @@ function unmountHome() {
 
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
-  rootComponents: [SiteFooter],
+  rootComponents: [SiteFooter, ScrollProgressFab],
 
   enhance({ app }) {
     // Ensure these are usable in markdown as <ProjectNineGrid /> / <ProjectCardsGrid />.
@@ -608,6 +677,7 @@ export default defineClientConfig({
 
     onUnmounted(() => {
       cleanupScrollBlur()
+      detachLive2dViewportListeners()
       if (typeof document !== 'undefined') {
         document.documentElement.classList.remove('lk-site-non-home')
       }
@@ -622,6 +692,9 @@ export default defineClientConfig({
         if (isSiteHomePath(oldPath)) {
           unmountHome()
           setHomeEnhanceSuspended(false)
+          if (live2dLoaded) {
+            positionLive2DWidget(false)
+          }
         }
         if (isSiteHomePath(newPath)) {
           setHomeEnhanceSuspended(true)

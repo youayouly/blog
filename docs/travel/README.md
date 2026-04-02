@@ -17,6 +17,20 @@ index: true
 
 <AlbumFeed />
 
+### 相册图片如何更新
+
+本站为 **VuePress 静态站点**，**没有**内置「在网页里点一下上传」的功能；要在页面上展示新图，需要改组件数据并重新构建部署。
+
+- 上方 **Projects 九宫格**（`ProjectNineGrid`）：编辑 `docs/.vuepress/components/ProjectNineGrid.vue` 中的 `items` 数组。  
+- 下方 **按地点分组的九宫格**（`AlbumFeed`）：编辑同目录下 `AlbumFeed.vue` 中的 `blocks` 与每组的 `urls`。
+
+| 方式 | 说明 |
+|------|------|
+| Git 仓库 | 把图片放进 `docs/.vuepress/public/`（或仓库内其他路径），在 `items` / `blocks` 里写对应 URL 路径。 |
+| 对象存储 / CDN | 上传到 R2、S3、图床等，把**可公网访问的 URL**写进上述数组。 |
+| Headless CMS | 例如 Decap CMS，通过编辑界面改 Git 仓库内容，仍通常走构建发布流程。 |
+| 自建后端 | 需单独做上传接口、鉴权与存储；前端再写入 URL 或同步到数据，工作量较大。 |
+
 ---
 
 ## 足迹地图
