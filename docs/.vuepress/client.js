@@ -18,6 +18,29 @@ function setHomeEnhanceSuspended(flag) {
   document.documentElement.classList.toggle('lk-home-enhance-suspended', !!flag)
 }
 
+/** VuePress home route (respects trailing slash normalization). */
+function isSiteHomePath(path) {
+  const normalized = (path || '/').replace(/\/+$/, '') || '/'
+  return normalized === '/'
+}
+
+/** Edge/Chromium: bump compositor layers for navbar/sidebar after navigation. */
+function nudgeNavbarSidebarRepaint() {
+  if (typeof document === 'undefined') return
+  const els = document.querySelectorAll('.vp-navbar, .vp-sidebar')
+  if (!els.length) return
+  requestAnimationFrame(() => {
+    for (const el of els) {
+      el.style.transform = 'translateZ(0.02px)'
+    }
+    requestAnimationFrame(() => {
+      for (const el of els) {
+        el.style.transform = ''
+      }
+    })
+  })
+}
+
 let scrollBlurHandler = null
 let themeObserver = null
 let homeHoverProbeSamples = 0
@@ -545,62 +568,25 @@ export default defineClientConfig({
         ? queueMicrotask
         : (fn) => Promise.resolve().then(fn)
 
-    let scrollBlurProbeCount = 0
-    const scrollBlurProbeMax = 6
+    watch(
+      () => route.path,
+      (path) => {
+        if (typeof document === 'undefined') return
+        document.documentElement.classList.toggle(
+          'lk-site-non-home',
+          !isSiteHomePath(path),
+        )
+      },
+      { immediate: true },
+    )
 
-    function probeNonHomeBlurOnScroll() {
-      if (typeof window === 'undefined') return
-      if (scrollBlurProbeCount >= scrollBlurProbeMax) return
-      // Only probe non-home pages (home has its own scroll blur logic).
-      if (route.path === '/') return
-
-      const nav = document.querySelector('.vp-navbar')
-      const footerBar = document.querySelector('.lk-footer__meta-bar')
-      const heroMask = document.querySelector('.vp-hero-mask')
-
-      const navCS = nav ? window.getComputedStyle(nav) : null
-      const footerCS = footerBar ? window.getComputedStyle(footerBar) : null
-      const htmlCS = window.getComputedStyle(document.documentElement)
-      const bodyCS = window.getComputedStyle(document.body)
-
-      const data = {
-        runRoute: route.path,
-        scrollY: window.scrollY,
-        navExists: !!nav,
-        navBackdropFilter: navCS?.backdropFilter ?? null,
-        navFilter: navCS?.filter ?? null,
-        navBg: navCS?.backgroundColor ?? null,
-        navZIndex: navCS?.zIndex ?? null,
-        footerExists: !!footerBar,
-        footerBackdropFilter: footerCS?.backdropFilter ?? null,
-        footerFilter: footerCS?.filter ?? null,
-        htmlFilter: htmlCS?.filter ?? null,
-        bodyFilter: bodyCS?.filter ?? null,
-        heroMaskExists: !!heroMask,
-        heroMaskFilter: heroMask ? window.getComputedStyle(heroMask).filter : null,
-      }
-
-      scrollBlurProbeCount += 1
-
-      // #region agent log
-      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Debug-Session-Id': '1a0fb1',
-        },
-        body: JSON.stringify({
-          sessionId: '1a0fb1',
-          runId: 'scroll-blur',
-          hypothesisId: 'H4',
-          location: 'client.js:probeNonHomeBlurOnScroll',
-          message: 'scroll blur probe computed styles',
-          data,
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-      // #endregion
-    }
+    watch(
+      () => route.path,
+      () => {
+        nudgeNavbarSidebarRepaint()
+      },
+      { immediate: true, flush: 'post' },
+    )
 
     onMounted(() => {
       initProgressBar()
@@ -608,7 +594,7 @@ export default defineClientConfig({
       // #region agent log
       fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'00c032'},body:JSON.stringify({sessionId:'00c032',runId:'run-route',hypothesisId:'H1',location:'client.js:setup:onMounted',message:'client mounted with initial route',data:{path:route.path},timestamp:Date.now()})}).catch(()=>{})
       // #endregion
-      if (route.path === '/') {
+      if (isSiteHomePath(route.path)) {
         setHomeEnhanceSuspended(true)
         microtask(() => {
           try {
@@ -618,14 +604,13 @@ export default defineClientConfig({
           }
         })
       }
-
-      // Probe computed backdrop-filter / filter during scroll on non-home pages.
-      window.addEventListener('scroll', probeNonHomeBlurOnScroll, { passive: true })
     })
 
     onUnmounted(() => {
       cleanupScrollBlur()
-      window.removeEventListener('scroll', probeNonHomeBlurOnScroll)
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('lk-site-non-home')
+      }
     })
 
     watch(
@@ -634,11 +619,11 @@ export default defineClientConfig({
         // #region agent log
         fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'00c032'},body:JSON.stringify({sessionId:'00c032',runId:'run-route',hypothesisId:'H1',location:'client.js:setup:watchRoute',message:'route changed',data:{oldPath,newPath},timestamp:Date.now()})}).catch(()=>{})
         // #endregion
-        if (oldPath === '/') {
+        if (isSiteHomePath(oldPath)) {
           unmountHome()
           setHomeEnhanceSuspended(false)
         }
-        if (newPath === '/') {
+        if (isSiteHomePath(newPath)) {
           setHomeEnhanceSuspended(true)
           microtask(() => {
             try {

@@ -53,7 +53,7 @@ export default defineUserConfig({
   theme: hopeTheme({
     logo: '/avatar.jpg',
     darkmode: 'toggle',
-    pure: true,
+    pure: false,
 
     navbar: [
       { text: 'Home', link: '/' },
