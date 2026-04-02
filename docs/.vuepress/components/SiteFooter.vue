@@ -37,6 +37,12 @@ const year = new Date().getFullYear()
   color: rgba(15, 23, 42, 0.66);
   padding: 8px 20px;
   text-align: center;
+  position: relative;
+  z-index: 1;
+  /* Isolate compositing to reduce scroll-time global blur artifacts. */
+  transform: translateZ(0);
+  will-change: transform;
+  isolation: isolate;
 }
 
 .lk-footer__meta-text {

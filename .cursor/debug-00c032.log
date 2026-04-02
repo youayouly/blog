@@ -134,3 +134,24 @@
 {"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/comments/","newPath":"/"},"timestamp":1775068563477}
 {"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/"},"timestamp":1775068693222}
 {"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/"},"timestamp":1775068748651}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/"},"timestamp":1775069443455}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/comments/","newPath":"/about.html"},"timestamp":1775115843284}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/tech/"},"timestamp":1775115888488}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/tech/","newPath":"/comments/"},"timestamp":1775115913739}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/comments/"},"timestamp":1775115918714}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/comments/","newPath":"/travel/"},"timestamp":1775115923830}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/travel/","newPath":"/study/"},"timestamp":1775115932970}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/study/","newPath":"/study/hk.html"},"timestamp":1775115933642}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/study/hk.html","newPath":"/about.html"},"timestamp":1775115947454}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/"},"timestamp":1775116176453}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/about.html"},"timestamp":1775116181610}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/travel/"},"timestamp":1775116182710}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/travel/"},"timestamp":1775116351024}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/travel/","newPath":"/tech/"},"timestamp":1775116454141}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:onMounted","message":"client mounted with initial route","data":{"path":"/tech/"},"timestamp":1775116464536}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/tech/","newPath":"/about.html"},"timestamp":1775116470971}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/tech/"},"timestamp":1775116471561}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/tech/","newPath":"/about.html"},"timestamp":1775116474928}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/about.html","newPath":"/"},"timestamp":1775116481418}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/","newPath":"/travel/"},"timestamp":1775116483401}
+{"sessionId":"00c032","runId":"run-route","hypothesisId":"H1","location":"client.js:setup:watchRoute","message":"route changed","data":{"oldPath":"/travel/","newPath":"/tech/"},"timestamp":1775116496840}

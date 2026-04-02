@@ -545,6 +545,63 @@ export default defineClientConfig({
         ? queueMicrotask
         : (fn) => Promise.resolve().then(fn)
 
+    let scrollBlurProbeCount = 0
+    const scrollBlurProbeMax = 6
+
+    function probeNonHomeBlurOnScroll() {
+      if (typeof window === 'undefined') return
+      if (scrollBlurProbeCount >= scrollBlurProbeMax) return
+      // Only probe non-home pages (home has its own scroll blur logic).
+      if (route.path === '/') return
+
+      const nav = document.querySelector('.vp-navbar')
+      const footerBar = document.querySelector('.lk-footer__meta-bar')
+      const heroMask = document.querySelector('.vp-hero-mask')
+
+      const navCS = nav ? window.getComputedStyle(nav) : null
+      const footerCS = footerBar ? window.getComputedStyle(footerBar) : null
+      const htmlCS = window.getComputedStyle(document.documentElement)
+      const bodyCS = window.getComputedStyle(document.body)
+
+      const data = {
+        runRoute: route.path,
+        scrollY: window.scrollY,
+        navExists: !!nav,
+        navBackdropFilter: navCS?.backdropFilter ?? null,
+        navFilter: navCS?.filter ?? null,
+        navBg: navCS?.backgroundColor ?? null,
+        navZIndex: navCS?.zIndex ?? null,
+        footerExists: !!footerBar,
+        footerBackdropFilter: footerCS?.backdropFilter ?? null,
+        footerFilter: footerCS?.filter ?? null,
+        htmlFilter: htmlCS?.filter ?? null,
+        bodyFilter: bodyCS?.filter ?? null,
+        heroMaskExists: !!heroMask,
+        heroMaskFilter: heroMask ? window.getComputedStyle(heroMask).filter : null,
+      }
+
+      scrollBlurProbeCount += 1
+
+      // #region agent log
+      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '1a0fb1',
+        },
+        body: JSON.stringify({
+          sessionId: '1a0fb1',
+          runId: 'scroll-blur',
+          hypothesisId: 'H4',
+          location: 'client.js:probeNonHomeBlurOnScroll',
+          message: 'scroll blur probe computed styles',
+          data,
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {})
+      // #endregion
+    }
+
     onMounted(() => {
       initProgressBar()
       initLive2DWidget()
@@ -561,10 +618,14 @@ export default defineClientConfig({
           }
         })
       }
+
+      // Probe computed backdrop-filter / filter during scroll on non-home pages.
+      window.addEventListener('scroll', probeNonHomeBlurOnScroll, { passive: true })
     })
 
     onUnmounted(() => {
       cleanupScrollBlur()
+      window.removeEventListener('scroll', probeNonHomeBlurOnScroll)
     })
 
     watch(

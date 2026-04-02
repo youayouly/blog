@@ -57,6 +57,11 @@ import SiteStatsCard from './SiteStatsCard.vue'
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   box-sizing: border-box;
   overflow-x: hidden;
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+  will-change: transform;
+  isolation: isolate;
 }
 
 .lk-home-side-panel__block {
