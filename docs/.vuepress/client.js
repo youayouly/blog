@@ -1,5 +1,5 @@
 import { defineClientConfig } from 'vuepress/client'
-import { createApp, h, onMounted, onUnmounted, watch } from 'vue'
+import { createApp, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
@@ -57,7 +57,6 @@ let heroBgOverridden = false
 let live2dLoaded = false
 let live2dViewportListenersAttached = false
 const LIVE2D_MODEL_H = 440
-const LIVE2D_VIEWPORT_BOTTOM = 'calc(4rem + 52px + 12px)'
 
 let live2dViewportHandler = null
 
@@ -70,8 +69,8 @@ function applyLive2dViewportScale() {
 
   const vv = window.visualViewport
   const h = vv ? vv.height : window.innerHeight
-  const reservedBottom = 140
-  const reservedTop = 80
+  const reservedBottom = 72
+  const reservedTop = 72
   const avail = Math.max(160, h - reservedTop - reservedBottom)
   const scale = Math.min(1, Math.max(0.55, avail / LIVE2D_MODEL_H))
 
@@ -99,36 +98,19 @@ function detachLive2dViewportListeners() {
   live2dViewportListenersAttached = false
 }
 
-/** Keep widget under ScrollProgressFab (fixed bottom ~4rem, ~52px tall). */
-function positionLive2DWidget(siteHome) {
+/** Viewport bottom-right; right offset clears ScrollProgressFab column (z-index above widget). */
+function positionLive2DWidget() {
   if (typeof window === 'undefined') return
   const container = document.getElementById('live2d-widget')
   if (!container) return
 
-  const home =
-    typeof siteHome === 'boolean'
-      ? siteHome
-      : isSiteHomePath(window.location.pathname)
-
   document.body.appendChild(container)
-
-  if (!home) {
-    Object.assign(container.style, {
-      position: 'fixed',
-      right: '1rem',
-      bottom: LIVE2D_VIEWPORT_BOTTOM,
-      zIndex: '50',
-      display: 'none',
-    })
-    container.style.transform = ''
-    return
-  }
 
   Object.assign(container.style, {
     position: 'fixed',
-    right: 'max(0.5rem, env(safe-area-inset-right, 0px))',
-    bottom:
-      'calc(4rem + 52px + 12px + env(safe-area-inset-bottom, 0px))',
+    right:
+      'calc(1rem + 52px + max(0.25rem, env(safe-area-inset-right, 0px)))',
+    bottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))',
     left: '',
     top: '',
     zIndex: '50',
@@ -142,7 +124,7 @@ function scheduleLive2dReposition() {
   if (typeof window === 'undefined' || !live2dLoaded) return
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      positionLive2DWidget(isSiteHomePath(window.location.pathname))
+      positionLive2DWidget()
     })
   })
 }
@@ -685,6 +667,17 @@ export default defineClientConfig({
 
     watch(
       () => route.path,
+      async () => {
+        await nextTick()
+        if (live2dLoaded) {
+          scheduleLive2dReposition()
+        }
+      },
+      { flush: 'post' },
+    )
+
+    watch(
+      () => route.path,
       (newPath, oldPath) => {
         // #region agent log
         fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'00c032'},body:JSON.stringify({sessionId:'00c032',runId:'run-route',hypothesisId:'H1',location:'client.js:setup:watchRoute',message:'route changed',data:{oldPath,newPath},timestamp:Date.now()})}).catch(()=>{})
@@ -693,7 +686,7 @@ export default defineClientConfig({
           unmountHome()
           setHomeEnhanceSuspended(false)
           if (live2dLoaded) {
-            positionLive2DWidget(false)
+            scheduleLive2dReposition()
           }
         }
         if (isSiteHomePath(newPath)) {

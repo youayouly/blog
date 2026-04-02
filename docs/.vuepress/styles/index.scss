@@ -1094,11 +1094,23 @@ body,
   min-height: 100vh;
 }
 
-/* Live2D：由 client.js 设为 position:fixed + bottom/right；此处只做层级与缩放原点 */
+/* Live2D：fixed 右下贴底；flex 抵消库内「右侧垂直居中」布局 */
 #live2d-widget {
   z-index: 50;
   transform-origin: bottom right;
   pointer-events: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: row;
+  width: fit-content;
+  height: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  canvas {
+    display: block;
+  }
 }
 
 @media (max-width: 959px) {
