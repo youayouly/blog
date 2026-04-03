@@ -25,6 +25,15 @@ function isSiteHomePath(path) {
   return normalized === '/'
 }
 
+/** After hydration: toggles navbar/sidebar glass styles on non-home routes. */
+function syncSiteNonHomeClass(path) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle(
+    'lk-site-non-home',
+    !isSiteHomePath(path),
+  )
+}
+
 /** Edge/Chromium: bump compositor layers for navbar/sidebar after navigation. */
 function nudgeNavbarSidebarRepaint() {
   if (typeof document === 'undefined') return
@@ -533,13 +542,9 @@ export default defineClientConfig({
     watch(
       () => route.path,
       (path) => {
-        if (typeof document === 'undefined') return
-        document.documentElement.classList.toggle(
-          'lk-site-non-home',
-          !isSiteHomePath(path),
-        )
+        syncSiteNonHomeClass(path)
       },
-      { immediate: true },
+      { flush: 'post' },
     )
 
     watch(
@@ -551,6 +556,7 @@ export default defineClientConfig({
     )
 
     onMounted(() => {
+      syncSiteNonHomeClass(route.path)
       initProgressBar()
       initLive2DWidget()
       if (isSiteHomePath(route.path)) {

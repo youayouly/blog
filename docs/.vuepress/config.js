@@ -108,6 +108,8 @@ export default defineUserConfig({
       comment: {
         provider: 'Waline',
         serverURL: 'https://your-waline-server.example.com',
+        // Avoid dynamic import of @waline/client/waline-meta (extra chunk; 404 if deploy/HTML out of sync).
+        metaIcon: false,
         comment: true,
         reaction: true,
         pageview: true,
