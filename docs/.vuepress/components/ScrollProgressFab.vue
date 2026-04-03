@@ -1,48 +1,50 @@
 <template>
-  <Teleport to="body">
-    <Transition name="lk-scroll-fab-fade">
-      <button
-        v-show="visible"
-        type="button"
-        class="lk-scroll-fab"
-        aria-label="Back to top"
-        @click="scrollToTop"
-      >
-        <svg
-          class="lk-scroll-fab__ring"
-          viewBox="0 0 56 56"
-          fill="none"
-          aria-hidden="true"
+  <ClientOnly>
+    <Teleport to="body">
+      <Transition name="lk-scroll-fab-fade">
+        <button
+          v-show="visible"
+          type="button"
+          class="lk-scroll-fab"
+          aria-label="Back to top"
+          @click="scrollToTop"
         >
-          <circle
-            class="lk-scroll-fab__track"
-            cx="28"
-            cy="28"
-            :r="RING_R"
-            stroke-width="3"
-          />
-          <circle
-            class="lk-scroll-fab__progress"
-            cx="28"
-            cy="28"
-            :r="RING_R"
-            stroke-width="3"
-            stroke-linecap="round"
-            :stroke-dasharray="ringDashArray"
-            :stroke-dashoffset="progressOffset"
-            transform="rotate(-90 28 28)"
-          />
-        </svg>
-        <span class="lk-scroll-fab__pct" aria-live="polite">{{ percent }}</span>
-      </button>
-    </Transition>
-  </Teleport>
+          <svg
+            class="lk-scroll-fab__ring"
+            viewBox="0 0 56 56"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              class="lk-scroll-fab__track"
+              cx="28"
+              cy="28"
+              :r="RING_R"
+              stroke-width="3"
+            />
+            <circle
+              class="lk-scroll-fab__progress"
+              cx="28"
+              cy="28"
+              :r="RING_R"
+              stroke-width="3"
+              stroke-linecap="round"
+              :stroke-dasharray="ringDashArray"
+              :stroke-dashoffset="progressOffset"
+              transform="rotate(-90 28 28)"
+            />
+          </svg>
+          <span class="lk-scroll-fab__pct" aria-live="polite">{{ percent }}</span>
+        </button>
+      </Transition>
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useFrontmatter } from 'vuepress/client'
+import { ClientOnly, useFrontmatter } from 'vuepress/client'
 
 const THRESHOLD_PX = 100
 const RING_R = 20

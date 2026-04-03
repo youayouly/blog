@@ -31,6 +31,8 @@ function countArticleMarkdown(rootDir) {
 
 const lkArticleCount = countArticleMarkdown(docsRoot)
 const lkBuildTimeIso = new Date().toISOString()
+/** Same on SSR and client to avoid hydration mismatch in footer copyright year. */
+const lkSiteYear = new Date().getFullYear()
 
 export default defineUserConfig({
   bundler: viteBundler({
@@ -38,6 +40,7 @@ export default defineUserConfig({
       define: {
         __LK_ARTICLE_COUNT__: JSON.stringify(lkArticleCount),
         __LK_BUILD_TIME_ISO__: JSON.stringify(lkBuildTimeIso),
+        __LK_SITE_YEAR__: JSON.stringify(lkSiteYear),
       },
     },
   }),

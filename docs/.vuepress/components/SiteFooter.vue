@@ -19,7 +19,8 @@
 </template>
 
 <script setup>
-const year = new Date().getFullYear()
+// Build-time constant (vite define); do not use new Date() here — SSR vs client could differ.
+const year = __LK_SITE_YEAR__
 </script>
 
 <style scoped>

@@ -552,11 +552,14 @@ export default defineClientConfig({
       () => {
         nudgeNavbarSidebarRepaint()
       },
-      { immediate: true, flush: 'post' },
+      { flush: 'post' },
     )
 
     onMounted(() => {
       syncSiteNonHomeClass(route.path)
+      nextTick(() => {
+        nudgeNavbarSidebarRepaint()
+      })
       initProgressBar()
       initLive2DWidget()
       if (isSiteHomePath(route.path)) {
