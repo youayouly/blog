@@ -36,18 +36,12 @@ function start(dir: Exclude<Direction, null>) {
   direction.value = dir
   visible.value = true
   running.value = true
-  // #region agent log
-  fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1a0fb1'},body:JSON.stringify({sessionId:'1a0fb1',runId:'theme-transition',hypothesisId:'H1',location:'ThemeTransitionOverlay.vue:start',message:'transition started',data:{direction:dir},timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
 }
 
 function onAnimEnd() {
   // 一轮动画结束后隐藏遮罩，但保留最后的主题状态
   visible.value = false
   running.value = false
-  // #region agent log
-  fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1a0fb1'},body:JSON.stringify({sessionId:'1a0fb1',runId:'theme-transition',hypothesisId:'H2',location:'ThemeTransitionOverlay.vue:onAnimEnd',message:'transition ended',data:{direction:direction.value},timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
 }
 
 function handleThemeMutation(mutations: MutationRecord[]) {
@@ -55,9 +49,6 @@ function handleThemeMutation(mutations: MutationRecord[]) {
     if (m.type === 'attributes' && m.attributeName === 'data-theme') {
       const root = m.target as HTMLElement
       const theme = root.getAttribute('data-theme')
-      // #region agent log
-      fetch('http://127.0.0.1:7715/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1a0fb1'},body:JSON.stringify({sessionId:'1a0fb1',runId:'theme-transition',hypothesisId:'H3',location:'ThemeTransitionOverlay.vue:handleThemeMutation',message:'data-theme changed',data:{theme},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
       if (theme === 'dark') {
         start('to-dark')
       } else if (theme === 'light') {
