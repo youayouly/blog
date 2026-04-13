@@ -1,6 +1,6 @@
 import { defineClientConfig } from 'vuepress/client'
 import { createApp, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
 import ProjectNineGrid from './components/ProjectNineGrid.vue'
@@ -20,6 +20,121 @@ import FloatingShapes from './components/FloatingShapes.vue'
 // Note: If external images return 403, we must not trigger requests.
 const images = []
 const heroWallpaperFallbackBg = 'rgba(198, 212, 232, 0.45)'
+const AUTH_USER = 'youayouly'
+const AUTH_PASS = 'LUyi@541000'
+const AUTH_SESSION_KEY = 'lk-auth-session'
+const AUTH_GUARD_KEY = 'lk-auth-guard'
+const AUTH_FAIL_LIMIT = 5
+const AUTH_LOCK_MS = 15 * 60 * 1000
+let authGuardInstalled = false
+
+function normalizePath(path) {
+  return (path || '/').replace(/\/+$/, '') || '/'
+}
+
+function isPublicPage(path) {
+  const normalized = normalizePath(path)
+  return normalized === '/about' || normalized === '/tech'
+}
+
+function readGuardState() {
+  if (typeof window === 'undefined') return { failCount: 0, lockUntil: 0 }
+  try {
+    const raw = window.localStorage.getItem(AUTH_GUARD_KEY)
+    if (!raw) return { failCount: 0, lockUntil: 0 }
+    const parsed = JSON.parse(raw)
+    return {
+      failCount: Number.isFinite(parsed?.failCount) ? parsed.failCount : 0,
+      lockUntil: Number.isFinite(parsed?.lockUntil) ? parsed.lockUntil : 0,
+    }
+  } catch {
+    return { failCount: 0, lockUntil: 0 }
+  }
+}
+
+function writeGuardState(state) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(AUTH_GUARD_KEY, JSON.stringify(state))
+}
+
+function resetGuardState() {
+  writeGuardState({ failCount: 0, lockUntil: 0 })
+}
+
+function remainingLockMs(lockUntil) {
+  return Math.max(0, lockUntil - Date.now())
+}
+
+function formatRemainingMs(ms) {
+  const sec = Math.ceil(ms / 1000)
+  const min = Math.floor(sec / 60)
+  const remSec = sec % 60
+  return min > 0 ? `${min}m ${remSec}s` : `${remSec}s`
+}
+
+function hasAuthSession() {
+  if (typeof window === 'undefined') return false
+  return window.sessionStorage.getItem(AUTH_SESSION_KEY) === 'ok'
+}
+
+function setAuthSession() {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.setItem(AUTH_SESSION_KEY, 'ok')
+}
+
+function recordAuthFailure() {
+  const current = readGuardState()
+  const now = Date.now()
+  const nextFail = now > current.lockUntil ? 1 : current.failCount + 1
+  if (nextFail >= AUTH_FAIL_LIMIT) {
+    writeGuardState({ failCount: 0, lockUntil: now + AUTH_LOCK_MS })
+    return { locked: true, attemptsLeft: 0 }
+  }
+  writeGuardState({ failCount: nextFail, lockUntil: 0 })
+  return { locked: false, attemptsLeft: AUTH_FAIL_LIMIT - nextFail }
+}
+
+function isGuardLocked() {
+  const state = readGuardState()
+  return remainingLockMs(state.lockUntil) > 0
+}
+
+function verifyCredentials(username, password) {
+  return username === AUTH_USER && password === AUTH_PASS
+}
+
+function promptLoginWithGuard() {
+  if (typeof window === 'undefined') return false
+  if (isGuardLocked()) {
+    const lockMs = remainingLockMs(readGuardState().lockUntil)
+    window.alert(`登录尝试过多，请在 ${formatRemainingMs(lockMs)} 后再试。`)
+    return false
+  }
+  const username = window.prompt('受限页面需要登录\n用户名：')
+  if (username === null) return false
+  const password = window.prompt('请输入密码：')
+  if (password === null) return false
+
+  if (verifyCredentials(username, password)) {
+    setAuthSession()
+    resetGuardState()
+    return true
+  }
+
+  const result = recordAuthFailure()
+  if (result.locked) {
+    window.alert('登录失败次数过多，已锁定 15 分钟。')
+  } else {
+    window.alert(`用户名或密码错误，剩余 ${result.attemptsLeft} 次尝试。`)
+  }
+  return false
+}
+
+function ensureRouteAccess(path) {
+  if (isPublicPage(path)) return true
+  if (hasAuthSession()) return true
+  return promptLoginWithGuard()
+}
 
 function setHomeEnhanceSuspended(flag) {
   if (typeof document === 'undefined') return
@@ -163,9 +278,16 @@ function positionLive2DWidget() {
     left: '',
     top: '',
     zIndex: '50',
-    display: '',
   })
+  syncLive2dVisibility(window.location.pathname)
   applyLive2dViewportScale()
+}
+
+function syncLive2dVisibility(path) {
+  if (typeof document === 'undefined') return
+  const container = document.getElementById('live2d-widget')
+  if (!container) return
+  container.style.display = isPublicPage(path) ? 'none' : 'flex'
 }
 
 /** Run after layout + L2D internal DOM so fixed bottom/right are not overwritten. */
@@ -205,6 +327,7 @@ function initLive2DWidget() {
     live2dLoaded = true
     attachLive2dViewportListeners()
     scheduleLive2dReposition()
+    syncLive2dVisibility(window.location.pathname)
   }
 
   if (window.L2Dwidget) {
@@ -588,6 +711,16 @@ export default defineClientConfig({
 
   setup() {
     const route = useRoute()
+    const router = useRouter()
+    if (!authGuardInstalled) {
+      router.beforeEach((to) => {
+        if (isPublicPage(to.path)) return true
+        if (hasAuthSession()) return true
+        return promptLoginWithGuard() ? true : '/about'
+      })
+      authGuardInstalled = true
+    }
+
     const microtask =
       typeof queueMicrotask === 'function'
         ? queueMicrotask
@@ -626,6 +759,9 @@ export default defineClientConfig({
     )
 
     onMounted(() => {
+      if (!ensureRouteAccess(route.path)) {
+        router.replace('/about')
+      }
       syncSiteNonHomeClass(route.path)
       syncLive2dVisibility(route.path)
       syncSplitPageHeader(route.path)
@@ -634,6 +770,7 @@ export default defineClientConfig({
       })
       initProgressBar()
       initLive2DWidget()
+      syncLive2dVisibility(route.path)
       if (isSiteHomePath(route.path)) {
         setHomeEnhanceSuspended(true)
         microtask(() => {
@@ -660,6 +797,7 @@ export default defineClientConfig({
       () => route.path,
       async () => {
         await nextTick()
+        syncLive2dVisibility(route.path)
         if (live2dLoaded) {
           scheduleLive2dReposition()
         }
