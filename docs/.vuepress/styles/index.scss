@@ -1054,6 +1054,44 @@ body,
   }
 }
 
+/* 粒子背景开关：与主题切换同一行、月亮左侧（窄屏与主题按钮同为 hide-in-mobile） */
+.vp-navbar .lk-particles-nav-item {
+  display: flex;
+  align-items: center;
+  margin-inline: 0.1rem 0.25rem !important;
+}
+
+.vp-navbar .lk-particles-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--vp-c-text-1);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease,
+    color 0.2s ease;
+}
+
+.vp-navbar .lk-particles-toggle:hover {
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-navbar .lk-particles-toggle.is-off {
+  opacity: 0.42;
+}
+
+.vp-navbar .lk-particles-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .vp-navbar-logo img {
   width: 40px !important;
   height: 40px !important;
@@ -1233,6 +1271,26 @@ html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
   margin-bottom: 0;
 }
 
+/* About：去掉页头 hr / h1 底边叠线；页头容器不再画底线，正文 h2 顶线单独在下方样式里关掉 */
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+  .vp-page-title
+  h1 {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+  .vp-page-title
+  hr {
+  display: none !important;
+}
+
+/* About：不再在页头容器画底线，避免与正文首条 h2 顶部分隔线叠成「Hi, I'm Luke」上方多一条 */
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed)) .vp-page-title {
+  border-bottom: none !important;
+  padding-bottom: 0;
+}
+
 :is(html.lk-header-split, main.vp-page:has(.lk-about-fullbleed)) .lk-about-fullbleed .about-page-layout {
   margin-top: 0;
 }
@@ -1245,6 +1303,50 @@ html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
 main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title hr,
 html.lk-header-split:has(.lk-proj-hub-fullbleed) .vp-page-title hr {
   margin-bottom: 0;
+}
+
+/* Projects hub：标题行下只保留一条线（避免主题 hr + h1 下边框等叠成双横线） */
+:is(html.lk-header-split:has(.lk-proj-hub-fullbleed), main.vp-page:has(.lk-proj-hub-fullbleed))
+  .vp-page-title
+  h1 {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+:is(html.lk-header-split:has(.lk-proj-hub-fullbleed), main.vp-page:has(.lk-proj-hub-fullbleed))
+  .vp-page-title
+  hr {
+  display: none !important;
+}
+
+:is(html.lk-header-split:has(.lk-proj-hub-fullbleed), main.vp-page:has(.lk-proj-hub-fullbleed)) .vp-page-title {
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding-bottom: 0.55rem;
+}
+
+/* Projects hub：首条 h2 与页头底线左右对齐（抵消正文区水平 padding，按 Hope 常见 2.5rem / 窄屏 1.5rem） */
+.page-projects {
+  --lk-proj-md-pad-x: 2.5rem;
+}
+
+@media (max-width: 719px) {
+  .page-projects {
+    --lk-proj-md-pad-x: 1.5rem;
+  }
+}
+
+main.vp-page:has(.lk-proj-hub-fullbleed)
+  #markdown-content
+  .lk-proj-hub-layout__main
+  > h2:first-of-type {
+  margin-left: calc(-1 * var(--lk-proj-md-pad-x));
+  margin-right: calc(-1 * var(--lk-proj-md-pad-x));
+  padding-left: var(--lk-proj-md-pad-x);
+  padding-right: var(--lk-proj-md-pad-x);
+  width: calc(100% + 2 * var(--lk-proj-md-pad-x));
+  max-width: none;
+  box-sizing: border-box;
+  border-top: none !important;
 }
 
 .lk-proj-hub-fullbleed {
@@ -1647,6 +1749,9 @@ main.vp-page:has(.lk-about-fullbleed),
 .about-right h2 {
   margin-top: 0 !important;
   font-size: 24px;
+  /* 去掉主题给 markdown h2 的顶部分隔线（图2：Hi, I'm Luke 上方那条） */
+  border-top: none !important;
+  padding-top: 0.35rem !important;
 }
 
 .about-right p {

@@ -11,10 +11,6 @@ index: true
 <div class="lk-proj-hub-layout">
   <div class="lk-proj-hub-layout__main">
 
-记录我在 HKU 学习期间完成的编程项目与技术探索。
-
----
-
 ## 项目列表
 
 <ProjectCardsGrid />

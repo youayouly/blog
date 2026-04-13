@@ -16,12 +16,20 @@ import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
 import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.js'
 import FloatingShapes from './components/FloatingShapes.vue'
 import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
+import ParticlesNavbarToggle from './components/ParticlesNavbarToggle.vue'
 
 /** Canvas + rAF: keep out of SSR to avoid Node rAF spin / heap growth during prerender. */
 const NetworkParticlesBgClient = defineComponent({
   name: 'NetworkParticlesBgClient',
   setup() {
     return () => h(ClientOnly, null, () => h(NetworkParticlesBg))
+  },
+})
+
+const ParticlesNavbarToggleClient = defineComponent({
+  name: 'ParticlesNavbarToggleClient',
+  setup() {
+    return () => h(ClientOnly, null, () => h(ParticlesNavbarToggle))
   },
 })
 
@@ -702,6 +710,7 @@ function unmountHome() {
 export default defineClientConfig({
   rootComponents: [
     NetworkParticlesBgClient,
+    ParticlesNavbarToggleClient,
     SiteFooter,
     ScrollProgressFab,
     LoginGateClient,
