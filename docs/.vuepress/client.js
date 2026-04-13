@@ -32,6 +32,14 @@ const ArticleCategoriesAsideClient = defineComponent({
   },
 })
 
+/** Teleport + DOM anchors: render only on client to avoid SSR/prerender vs client markup drift (e.g. About). */
+const LoginGateClient = defineComponent({
+  name: 'LoginGateClient',
+  setup() {
+    return () => h(ClientOnly, null, () => h(LoginGate))
+  },
+})
+
 /* ── Hero 背景：禁用失效外�?+ 降级到本地背景色 ─ */
 // Note: If external images return 403, we must not trigger requests.
 const images = []
@@ -162,11 +170,12 @@ function isRootPathForAboutRedirect(path) {
   return normalized === '/' || /^\/index\.html$/i.test(normalized)
 }
 
-/** Hide Live2D on About and Projects (/tech) only. */
+/** Hide Live2D on About Me, Projects (/tech), and Article (/article); show everywhere else. */
 function shouldHideLive2d(path) {
   const p = normPath(path)
   if (p === '/about' || p.startsWith('/about/')) return true
   if (p === '/tech' || p.startsWith('/tech/')) return true
+  if (p === '/article' || p.startsWith('/article/')) return true
   return false
 }
 
@@ -695,7 +704,7 @@ export default defineClientConfig({
     NetworkParticlesBgClient,
     SiteFooter,
     ScrollProgressFab,
-    LoginGate,
+    LoginGateClient,
     ArticleCategoriesAsideClient,
   ],
 

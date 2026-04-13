@@ -1094,7 +1094,7 @@ body,
   min-height: 100vh;
 }
 
-/* Live2D hidden on About + Projects (/tech) via client.js `lk-live2d-off` */
+/* Live2D hidden on About + Projects + Article via client.js `lk-live2d-off` */
 html.lk-live2d-off #live2d-widget {
   display: none !important;
 }
