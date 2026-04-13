@@ -73,4 +73,4 @@ index: true
 
 ---
 
-> 欢迎在[评论区](/comments/)交流旅行日常照片 📸
+> 欢迎在 [Articles](/article/) 里写随笔，或在 [About](/about) 通过邮箱联系 📸

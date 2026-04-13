@@ -2,6 +2,8 @@
 title: Edge AI Inference
 pageClass: page-projects
 comment: false
+toc: false
+sidebar: false
 ---
 
 # Edge AI Inference

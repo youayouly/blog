@@ -2,6 +2,8 @@
 title: LLM RAG Assistant
 pageClass: page-projects
 comment: false
+toc: false
+sidebar: false
 ---
 
 # LLM RAG Assistant

@@ -2,6 +2,8 @@
 title: Vision ML Pipeline
 pageClass: page-projects
 comment: false
+toc: false
+sidebar: false
 ---
 
 # Vision ML Pipeline

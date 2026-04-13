@@ -2,8 +2,16 @@
 title: About Me
 pageClass: page-about
 comment: false
+toc: false
+sidebar: false
 ---
 
+<div class="lk-about-fullbleed">
+<div class="about-page-layout">
+  <aside class="about-page-layout__rail" aria-label="动态时间线">
+    <AboutTimeline />
+  </aside>
+  <div class="about-page-layout__main">
 <div class="about-profile">
 
   <!-- ── Left column: avatar + name + tags ── -->
@@ -42,23 +50,12 @@ comment: false
 
 </div>
 
-## Areas of Interest
+<AboutArticleRecommend />
 
-| | Area | Details |
-|-|------|---------|
-| 🔌 | Embedded Dev | Hardware programming, RTOS, C / C++ |
-| 🌐 | Frontend Dev | Vue.js, VuePress, UI/UX |
-| ⚙️ | Systems Eng | System design, software architecture |
-| 🎓 | Study Abroad | HK / UK / SG admissions, life tips |
-| ✈️ | Travel | City exploration, Asia-focused |
-| 📸 | Photography | Urban & landscape |
-
-## Education
-
-| | |
-|--|--|
-| 🏫 School | The University of Hong Kong |
-| 📚 Program | ECIC |
-| 📌 Status | Incoming |
-
-> Feel free to reach out — whether it's about tech, study abroad planning, or just life in HK!
+<blockquote class="about-outro"><p>Feel free to reach out — whether it's about tech, study abroad planning, or just life in HK!</p></blockquote>
+  </div>
+  <aside class="about-page-layout__cats" aria-label="文章分类">
+    <AboutCategoriesCard />
+  </aside>
+</div>
+</div>

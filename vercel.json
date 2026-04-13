@@ -2,6 +2,17 @@
   "buildCommand": "npm run build",
   "outputDirectory": "docs/.vuepress/dist",
   "installCommand": "npm install",
+  "redirects": [
+    { "source": "/", "destination": "/about", "permanent": false },
+    { "source": "/index.html", "destination": "/about", "permanent": false },
+    { "source": "/comments", "destination": "/article/", "permanent": false },
+    { "source": "/comments/", "destination": "/article/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/home", "destination": "/home.html" },
+    { "source": "/article", "destination": "/article/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

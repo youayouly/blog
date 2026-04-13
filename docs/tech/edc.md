@@ -2,6 +2,8 @@
 title: Electronic Design Contest
 pageClass: page-projects
 comment: false
+toc: false
+sidebar: false
 ---
 
 # National Undergraduate Electronic Design Contest

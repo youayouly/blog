@@ -2,6 +2,8 @@
 title: National Intelligent Car Competition
 pageClass: page-projects
 comment: false
+toc: false
+sidebar: false
 ---
 
 # National Intelligent Car Competition

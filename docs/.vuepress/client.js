@@ -7,6 +7,13 @@ import ProjectNineGrid from './components/ProjectNineGrid.vue'
 import ProjectCardsGrid from './components/ProjectCardsGrid.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import ScrollProgressFab from './components/ScrollProgressFab.vue'
+import LoginGate from './components/LoginGate.vue'
+import ArticleCategoriesAside from './components/ArticleCategoriesAside.vue'
+import AboutTimeline from './components/AboutTimeline.vue'
+import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
+import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
+import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
+import { isPublicPath, normPath, readAuthed } from './utils/authGate.js'
 import FloatingShapes from './components/FloatingShapes.vue'
 
 /* ── Hero 背景：禁用失效外�?+ 降级到本地背景色 ─ */
@@ -19,10 +26,45 @@ function setHomeEnhanceSuspended(flag) {
   document.documentElement.classList.toggle('lk-home-enhance-suspended', !!flag)
 }
 
-/** VuePress home route (respects trailing slash normalization). */
+/** Theme hero home lives at `/home` (root `/` redirects to About Me). */
 function isSiteHomePath(path) {
   const normalized = (path || '/').replace(/\/+$/, '') || '/'
-  return normalized === '/'
+  const noHtml = normalized.replace(/\.html$/i, '')
+  return noHtml === '/home'
+}
+
+/** Open site root → About Me (navbar Home still uses `/`, so it lands here too). */
+function isRootPathForAboutRedirect(path) {
+  const normalized = (path || '/').replace(/\/+$/, '') || '/'
+  return normalized === '/' || /^\/index\.html$/i.test(normalized)
+}
+
+/** Hide Live2D on About and Projects (/tech) only. */
+function shouldHideLive2d(path) {
+  const p = normPath(path)
+  if (p === '/about' || p.startsWith('/about/')) return true
+  if (p === '/tech' || p.startsWith('/tech/')) return true
+  return false
+}
+
+function syncLive2dVisibility(path) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle('lk-live2d-off', shouldHideLive2d(path))
+}
+
+/** About / Projects / Article：无面包屑，标题与 meta 同一行底对齐 + 下划线（见 index.scss `.lk-header-split`） */
+function syncSplitPageHeader(path) {
+  if (typeof document === 'undefined') return
+  const p = normPath(path)
+  const use =
+    p !== '/home' &&
+    (p === '/about' ||
+      p.startsWith('/about/') ||
+      p === '/tech' ||
+      p.startsWith('/tech/') ||
+      p === '/article' ||
+      p.startsWith('/article/'))
+  document.documentElement.classList.toggle('lk-header-split', use)
 }
 
 /** After hydration: toggles navbar/sidebar glass styles on non-home routes. */
@@ -524,12 +566,24 @@ function unmountHome() {
 
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
-  rootComponents: [SiteFooter, ScrollProgressFab],
+  rootComponents: [SiteFooter, ScrollProgressFab, LoginGate, ArticleCategoriesAside],
 
-  enhance({ app }) {
+  enhance({ app, router }) {
     // Ensure these are usable in markdown as <ProjectNineGrid /> / <ProjectCardsGrid />.
     app.component('ProjectNineGrid', ProjectNineGrid)
     app.component('ProjectCardsGrid', ProjectCardsGrid)
+    app.component('AboutTimeline', AboutTimeline)
+    app.component('AboutArticleRecommend', AboutArticleRecommend)
+    app.component('AboutCategoriesCard', AboutCategoriesCard)
+    app.component('ProjectsRolesCard', ProjectsRolesCard)
+    router.beforeEach((to) => {
+      if (isRootPathForAboutRedirect(to.path)) {
+        return { path: '/about', replace: true }
+      }
+      if (!isPublicPath(to.path) && !readAuthed()) {
+        return { path: '/about', replace: true }
+      }
+    })
   },
 
   setup() {
@@ -549,6 +603,22 @@ export default defineClientConfig({
 
     watch(
       () => route.path,
+      (path) => {
+        syncLive2dVisibility(path)
+      },
+      { flush: 'post', immediate: true },
+    )
+
+    watch(
+      () => route.path,
+      (path) => {
+        syncSplitPageHeader(path)
+      },
+      { flush: 'post', immediate: true },
+    )
+
+    watch(
+      () => route.path,
       () => {
         nudgeNavbarSidebarRepaint()
       },
@@ -557,6 +627,8 @@ export default defineClientConfig({
 
     onMounted(() => {
       syncSiteNonHomeClass(route.path)
+      syncLive2dVisibility(route.path)
+      syncSplitPageHeader(route.path)
       nextTick(() => {
         nudgeNavbarSidebarRepaint()
       })
@@ -579,6 +651,8 @@ export default defineClientConfig({
       detachLive2dViewportListeners()
       if (typeof document !== 'undefined') {
         document.documentElement.classList.remove('lk-site-non-home')
+        document.documentElement.classList.remove('lk-live2d-off')
+        document.documentElement.classList.remove('lk-header-split')
       }
     })
 

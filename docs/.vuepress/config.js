@@ -17,10 +17,21 @@ function countArticleMarkdown(rootDir) {
   const readme = normPath(join(rootDir, 'README.md'))
   let n = 0
   const walk = (dir) => {
-    for (const name of readdirSync(dir)) {
+    let names
+    try {
+      names = readdirSync(dir)
+    } catch {
+      return
+    }
+    for (const name of names) {
       if (name.startsWith('.')) continue
       const full = join(dir, name)
-      const st = statSync(full)
+      let st
+      try {
+        st = statSync(full)
+      } catch {
+        continue
+      }
       if (st.isDirectory()) walk(full)
       else if (name.endsWith('.md') && normPath(full) !== readme) n++
     }
@@ -61,9 +72,10 @@ export default defineUserConfig({
     backToTop: false,
 
     navbar: [
-      { text: 'Home', link: '/' },
+      { text: 'Home', link: '/home' },
       { text: 'About Me', link: '/about' },
       { text: '💻 Projects', link: '/tech/' },
+      { text: '📝 Article', link: '/article/' },
       {
         text: '🎓 Study Abroad',
         prefix: '/study/',
@@ -75,20 +87,13 @@ export default defineUserConfig({
         ],
       },
       { text: '📷 Album', link: '/travel/' },
-      { text: '💬 Comments', link: '/comments/' },
     ],
 
     sidebar: {
-      '/tech/': [
-        { text: 'Overview', link: '/tech/' },
-        { text: 'Personal Blog', link: '/tech/my-blog.html' },
-        { text: 'Xinke ICT Competition', link: '/tech/xinke-sai.html' },
-        { text: 'National Intelligent Car Competition', link: '/tech/smartcar-nationwide.html' },
-        { text: 'Electronic Design Contest', link: '/tech/edc.html' },
-        { text: 'LLM RAG Assistant', link: '/tech/ai-llm-rag.html' },
-        { text: 'Edge AI Inference', link: '/tech/ai-edge-inference.html' },
-        { text: 'Vision ML Pipeline', link: '/tech/ai-vision-pipeline.html' },
-      ],
+      '/about': false,
+      '/about.html': false,
+      '/tech/': false,
+      '/tech.html': false,
       '/study/': [
         {
           text: '🎓 Study Abroad',
@@ -101,12 +106,22 @@ export default defineUserConfig({
         },
       ],
       '/travel/': 'structure',
-      '/comments/': false,
+      '/article/': [
+        { text: 'Articles', link: '/article/' },
+        { text: 'Edge AI 随笔', link: '/article/edge-ai-sketch.html' },
+        { text: 'VuePress 短文', link: '/article/vuepress-stack-notes.html' },
+      ],
       '/': 'structure',
     },
 
     plugins: {
-      // Waline comment system (Comments page)
+      redirect: {
+        config: {
+          '/comments/': '/article/',
+          '/comments': '/article/',
+        },
+      },
+      // Waline: available on pages with `comment: true` in frontmatter
       // TODO: replace `serverURL` with your actual Waline backend address
       comment: {
         provider: 'Waline',

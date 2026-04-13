@@ -2,6 +2,8 @@
 title: Xinke ICT Competition
 pageClass: page-projects
 comment: false
+toc: false
+sidebar: false
 ---
 
 # Xinke ICT Competition

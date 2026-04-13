@@ -1094,6 +1094,11 @@ body,
   min-height: 100vh;
 }
 
+/* Live2D hidden on About + Projects (/tech) via client.js `lk-live2d-off` */
+html.lk-live2d-off #live2d-widget {
+  display: none !important;
+}
+
 /* Live2D：fixed 右下贴底；flex 抵消库内「右侧垂直居中」布局 */
 #live2d-widget {
   z-index: 50;
@@ -1125,150 +1130,450 @@ body,
   min-height: 100vh;
 }
 
-// Comments — dark doodle style (mimic 留言评论 screenshots)
-.page-comments {
-  background: #0b0f1a;
-  min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
+// ── About / Projects / Article：无面包屑，标题 + 元信息同行底对齐，下划线与正文顶缘收紧 ─
+// `html.lk-header-split` 由 client.js 在 /about、/tech、/article 路径切换；:has(...) 便于 SSR 首屏无 JS 时 About / Article 列表 / Projects 首页一致。
+:is(
+    html.lk-header-split,
+    main.vp-page:has(.lk-about-fullbleed),
+    main.vp-page:has(.lk-blog),
+    main.vp-page:has(.lk-proj-cards),
+    main.vp-page:has(.lk-proj-hub-fullbleed)
+  )
+  .vp-breadcrumb {
+  display: none !important;
 }
 
-.page-comments::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url('/comments-bg.svg');
-  background-repeat: repeat;
-  background-size: 160px 160px;
-  opacity: 0.25;
-  pointer-events: none;
-  z-index: 0;
-  filter: saturate(120%);
+:is(
+    html.lk-header-split,
+    main.vp-page:has(.lk-about-fullbleed),
+    main.vp-page:has(.lk-blog),
+    main.vp-page:has(.lk-proj-cards),
+    main.vp-page:has(.lk-proj-hub-fullbleed)
+  )
+  .vp-page-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.35rem 1.25rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0;
 }
 
-.page-comments .theme-container,
-.page-comments main,
-.page-comments .waline-wrapper {
-  position: relative;
-  z-index: 1;
+:is(
+    html.lk-header-split,
+    main.vp-page:has(.lk-about-fullbleed),
+    main.vp-page:has(.lk-blog),
+    main.vp-page:has(.lk-proj-cards),
+    main.vp-page:has(.lk-proj-hub-fullbleed)
+  )
+  .vp-page-title
+  h1 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-bottom: 0 !important;
+  align-self: flex-end;
 }
 
-.lk-comments-hero {
-  padding: 56px 16px 18px;
-  text-align: center;
+:is(
+    html.lk-header-split,
+    main.vp-page:has(.lk-about-fullbleed),
+    main.vp-page:has(.lk-blog),
+    main.vp-page:has(.lk-proj-cards),
+    main.vp-page:has(.lk-proj-hub-fullbleed)
+  )
+  .vp-page-title
+  .page-info {
+  flex: 0 1 auto;
+  margin: 0 !important;
+  justify-content: flex-end;
+  align-items: flex-end;
+  align-self: flex-end;
 }
 
-.lk-comments-hero__title {
-  margin: 0 0 6px;
-  font-size: 42px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: #35d7d0;
-  text-shadow: 0 10px 34px rgba(0, 0, 0, 0.6);
+:is(
+    html.lk-header-split,
+    main.vp-page:has(.lk-about-fullbleed),
+    main.vp-page:has(.lk-blog),
+    main.vp-page:has(.lk-proj-cards),
+    main.vp-page:has(.lk-proj-hub-fullbleed)
+  )
+  .vp-page-title
+  .page-info
+  > span {
+  line-height: 1.35;
+  margin-bottom: 0.12em;
 }
 
-.lk-comments-hero__subtitle {
-  margin: 0 auto;
-  max-width: 680px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 14.5px;
-  line-height: 1.7;
+:is(
+    html.lk-header-split,
+    main.vp-page:has(.lk-about-fullbleed),
+    main.vp-page:has(.lk-blog),
+    main.vp-page:has(.lk-proj-cards),
+    main.vp-page:has(.lk-proj-hub-fullbleed)
+  )
+  .vp-page-title
+  hr {
+  flex: 1 0 100%;
+  order: 3;
+  margin: 0.55rem 0 0;
+  border: none;
+  border-top: 1px solid var(--vp-c-divider);
 }
 
-// Make Waline look consistent in dark mode.
-.page-comments .waline-wrapper {
-  --waline-bg-color: rgba(0, 0, 0, 0.22);
-  --waline-bg-color-light: rgba(255, 255, 255, 0.06);
-  --waline-color: rgba(233, 236, 255, 0.92);
-  --waline-dark-grey: rgba(233, 236, 255, 0.72);
-  --waline-light-grey: rgba(233, 236, 255, 0.56);
-  --waline-border-color: rgba(255, 255, 255, 0.1);
-  --waline-border: 1px solid var(--waline-border-color);
-  --waline-theme-color: #35d7d0;
-  --waline-active-color: #19c7bc;
-  --waline-info-bg-color: rgba(255, 255, 255, 0.06);
-  --waline-info-color: rgba(233, 236, 255, 0.58);
-  --waline-code-bg-color: rgba(255, 255, 255, 0.06);
-  --waline-bq-color: rgba(233, 236, 255, 0.18);
+/* About 三栏：下划线贴齐后，正文顶与左右模块上缘同一水平线 */
+:is(html.lk-header-split, main.vp-page:has(.lk-about-fullbleed)) [vp-content]:not(.custom):has(.lk-about-fullbleed) {
+  padding-top: 0;
 }
 
-.page-comments [data-waline] {
-  --waline-bg-color: rgba(0, 0, 0, 0.22);
-  --waline-bg-color-light: rgba(255, 255, 255, 0.06);
-  --waline-color: rgba(233, 236, 255, 0.92);
-  --waline-dark-grey: rgba(233, 236, 255, 0.72);
-  --waline-light-grey: rgba(233, 236, 255, 0.56);
-  --waline-border-color: rgba(255, 255, 255, 0.1);
-  --waline-border: 1px solid var(--waline-border-color);
-  --waline-theme-color: #35d7d0;
-  --waline-active-color: #19c7bc;
-  --waline-info-bg-color: rgba(255, 255, 255, 0.06);
-  --waline-info-color: rgba(233, 236, 255, 0.58);
-  --waline-code-bg-color: rgba(255, 255, 255, 0.06);
-  --waline-bq-color: rgba(233, 236, 255, 0.18);
+main.vp-page:has(.lk-about-fullbleed) .vp-page-title hr,
+html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
+  margin-bottom: 0;
 }
 
-.page-comments .wl-panel {
-  background: rgba(0, 0, 0, 0.22) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+:is(html.lk-header-split, main.vp-page:has(.lk-about-fullbleed)) .lk-about-fullbleed .about-page-layout {
+  margin-top: 0;
 }
 
-.page-comments .wl-header {
-  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+/* Projects 首页：主列 + 岗位卡（与 About 分隔线 / 正文宽对齐） */
+:is(html.lk-header-split, main.vp-page:has(.lk-proj-hub-fullbleed)) [vp-content]:not(.custom):has(.lk-proj-hub-fullbleed) {
+  padding-top: 0;
 }
 
-.page-comments .wl-header label {
-  color: rgba(53, 215, 208, 0.95) !important;
-  font-weight: 700 !important;
+main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title hr,
+html.lk-header-split:has(.lk-proj-hub-fullbleed) .vp-page-title hr {
+  margin-bottom: 0;
 }
 
-.page-comments .wl-editor,
-.page-comments .wl-input {
-  background: rgba(0, 0, 0, 0.18) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+.lk-proj-hub-fullbleed {
+  --lk-proj-roles-w: 260px;
+  --lk-proj-col-gap: 16px;
+  --lk-proj-push: calc(var(--lk-proj-roles-w) + var(--lk-proj-col-gap));
+  width: calc(100% + var(--lk-proj-push));
+  max-width: none;
+  margin-left: 0;
+  margin-right: calc(-1 * var(--lk-proj-push));
+  box-sizing: border-box;
 }
 
-.page-comments .wl-card .wl-panel {
-  background: rgba(0, 0, 0, 0.16) !important;
+.theme-container:has(.lk-proj-hub-fullbleed),
+main.vp-page:has(.lk-proj-hub-fullbleed),
+[vp-content]:has(.lk-proj-hub-fullbleed) {
+  overflow-x: visible;
 }
 
-.page-comments [data-waline] {
-  max-width: 900px;
-  margin: 0 auto;
+.lk-proj-hub-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--lk-proj-roles-w);
+  gap: var(--lk-proj-col-gap);
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0;
+  box-sizing: border-box;
 }
 
-.page-comments .wl-btn {
-  border-radius: 10px;
+.lk-proj-hub-layout__main {
+  min-width: 0;
+}
+
+.lk-proj-hub-layout__roles {
+  min-width: 0;
+}
+
+/* Projects 全路径：关闭侧栏后仍可能残留右侧 TOC 占位 */
+.theme-container.page-projects [vp-toc] {
+  display: none !important;
+}
+
+@media (max-width: 959px) {
+  .lk-proj-hub-fullbleed {
+    width: 100%;
+    max-width: 100%;
+    margin-right: 0;
+  }
+
+  .lk-proj-hub-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .lk-proj-hub-layout__main {
+    order: 1;
+  }
+
+  .lk-proj-hub-layout__roles {
+    order: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  :is(
+      html.lk-header-split,
+      main.vp-page:has(.lk-about-fullbleed),
+      main.vp-page:has(.lk-blog),
+      main.vp-page:has(.lk-proj-cards),
+      main.vp-page:has(.lk-proj-hub-fullbleed)
+    )
+    .vp-page-title {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  :is(
+      html.lk-header-split,
+      main.vp-page:has(.lk-about-fullbleed),
+      main.vp-page:has(.lk-blog),
+      main.vp-page:has(.lk-proj-cards),
+      main.vp-page:has(.lk-proj-hub-fullbleed)
+    )
+    .vp-page-title
+    .page-info {
+    justify-content: flex-start;
+  }
+
+  :is(
+      html.lk-header-split,
+      main.vp-page:has(.lk-about-fullbleed),
+      main.vp-page:has(.lk-blog),
+      main.vp-page:has(.lk-proj-cards),
+      main.vp-page:has(.lk-proj-hub-fullbleed)
+    )
+    .vp-page-title
+    h1 {
+    align-self: flex-start;
+  }
+}
+
+// ── Article index — classic tech-blog list ─────────────────────────────────
+.page-article-index .vp-page,
+.page-article-index .theme-hope-content {
+  max-width: 44rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lk-blog {
+  padding: 0.25rem 0 2.5rem;
+}
+
+/* 列表页导语（主题区标题由 `.vp-page-title` 提供，与 About / Projects 同一套页头） */
+.lk-blog__intro {
+  margin: 0 0 1.75rem;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--vp-c-text-2);
+  max-width: 36rem;
+}
+
+.lk-blog__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lk-blog__item {
+  display: grid;
+  grid-template-columns: 6.25rem minmax(0, 1fr);
+  gap: 1rem 1.25rem;
+  padding: 1.35rem 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+@media (max-width: 640px) {
+  .lk-blog__item {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+}
+
+.lk-blog__date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--vp-c-text-3);
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.2rem;
+}
+
+.lk-blog__body {
+  min-width: 0;
+}
+
+.lk-blog__post-title {
+  display: block;
+  margin: 0 0 0.45rem;
+  font-size: 1.15rem;
   font-weight: 700;
+  line-height: 1.35;
+  color: var(--vp-c-text-1);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-.page-comments .wl-btn.primary {
-  background: #35d7d0 !important;
-  border-color: #35d7d0 !important;
-  color: #051316 !important;
+.lk-blog__post-title:hover {
+  color: #4a90d9;
 }
 
-.page-comments .wl-btn:not(.primary) {
-  background: rgba(53, 215, 208, 0.08) !important;
-  border-color: rgba(53, 215, 208, 0.22) !important;
-  color: rgba(53, 215, 208, 0.95) !important;
+[data-theme='dark'] .lk-blog__post-title:hover {
+  color: #7eb8ea;
 }
 
-.page-comments .wl-content {
-  color: rgba(233, 236, 255, 0.92) !important;
+.lk-blog__excerpt {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
 }
 
-.page-comments .wl-content a {
-  color: #35d7d0 !important;
+.lk-blog__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.65rem;
 }
 
-// ── About Page — Two-column layout ───────────────────────────────────────────
+.lk-blog__tag {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.lk-blog__read {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4a90d9;
+}
+
+[data-theme='dark'] .lk-blog__read {
+  color: #7eb8ea;
+}
+
+@media (max-width: 640px) {
+  .lk-blog__read {
+    margin-left: 0;
+  }
+}
+
+// Article detail pages — readable measure
+.page-article-post .vp-page,
+.page-article-post .theme-hope-content {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// ── About Page — no theme sidebar (图2); 三栏：时间线 | 主内容 | 分类 ───────
+.theme-container.no-sidebar .toggle-sidebar-wrapper {
+  display: none !important;
+}
+
+/*
+ * About 三栏与标题下分隔线对齐：`.vp-page-title` 与 `[vp-content]:not(.custom)` 均为
+ * max-width: var(--content-width); padding-inline: 2.5rem。正文区域宽度即「线」的内侧宽。
+ * 左右栏固定 px，通过负 margin + 加宽 wrapper 把侧栏摆到线的垂直边界外侧，中间列天然等于线宽。
+ */
+.lk-about-fullbleed {
+  --lk-about-rail-w: 220px;
+  --lk-about-cats-w: 260px;
+  --lk-about-col-gap: 16px;
+  --lk-about-pull: calc(var(--lk-about-rail-w) + var(--lk-about-col-gap));
+  --lk-about-push: calc(var(--lk-about-cats-w) + var(--lk-about-col-gap));
+  width: calc(100% + var(--lk-about-pull) + var(--lk-about-push));
+  max-width: none;
+  margin-left: calc(-1 * var(--lk-about-pull));
+  margin-right: calc(-1 * var(--lk-about-push));
+  box-sizing: border-box;
+}
+
+.theme-container:has(.lk-about-fullbleed),
+main.vp-page:has(.lk-about-fullbleed),
+[vp-content]:has(.lk-about-fullbleed) {
+  overflow-x: visible;
+}
+
+.about-page-layout {
+  display: grid;
+  grid-template-columns: var(--lk-about-rail-w) minmax(0, 1fr) var(--lk-about-cats-w);
+  gap: var(--lk-about-col-gap);
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+.about-page-layout__main {
+  min-width: 0;
+}
+
+/* Closing line：与短文卡片内文左缘对齐（卡片 padding 1rem） */
+.about-outro {
+  margin: 1.75rem 0 0;
+  padding: 0 0 0 1rem;
+  border: none;
+  color: var(--vp-c-text-2, #64748b);
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+}
+
+.about-page-layout__rail {
+  min-width: 0;
+}
+
+.about-page-layout__cats {
+  min-width: 0;
+}
+
+@media (max-width: 959px) {
+  .lk-about-fullbleed {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .about-page-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .about-page-layout__rail {
+    order: 1;
+  }
+
+  .about-page-layout__main {
+    order: 2;
+  }
+
+  .about-page-layout__cats {
+    order: 3;
+  }
+
+  .about-outro {
+    padding-left: 0;
+  }
+}
+
+// ── About Page — profile (inside main column) ────────────────────────────────
 .about-profile {
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 40px;
   align-items: start;
-  margin-bottom: 40px;
+  margin-bottom: 28px;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -1570,253 +1875,6 @@ body,
 
 [data-theme='dark'] .vp-footer a {
   color: rgba(226, 232, 240, 0.78) !important;
-}
-
-// ── Comments page (Waline skin) ─────────────────────────────────────────────
-.page-comments {
-  background:
-    radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.06) 0, transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(148, 163, 184, 0.08) 0, transparent 55%),
-    #020617;
-}
-
-.page-comments .theme-hope-content {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem 3.5rem;
-}
-
-.lk-comments-hero {
-  text-align: center;
-  margin-bottom: 1.75rem;
-}
-
-.lk-comments-hero__title {
-  font-size: 2.2rem;
-  letter-spacing: 0.08em;
-  color: #a5f3fc;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-}
-
-.lk-comments-hero__subtitle {
-  margin-top: 0.75rem;
-  font-size: 0.98rem;
-  color: rgba(226, 232, 240, 0.82);
-}
-
-.lk-comments-layout {
-  max-width: 960px;
-  margin: 0 auto 1.5rem;
-  padding: 0 0.25rem;
-}
-
-.lk-comments-layout__hint {
-  margin: 0;
-  font-size: 0.9rem;
-  color: rgba(148, 163, 184, 0.9);
-  text-align: center;
-}
-
-// Waline main panel
-.page-comments .wl-panel {
-  margin: 0 auto;
-  max-width: 960px;
-  border-radius: 20px;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(51, 65, 85, 0.9);
-  box-shadow:
-    0 22px 40px rgba(15, 23, 42, 0.85),
-    0 0 0 1px rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: 20px 22px 18px;
-}
-
-.page-comments .wl-editor,
-.page-comments .wl-header,
-.page-comments .wl-comment {
-  background: transparent;
-}
-
-// Input info row (nickname / email / site)
-.page-comments .wl-header {
-  padding: 10px 12px 4px;
-  margin-bottom: 4px;
-  border-radius: 14px;
-  border: 1px solid rgba(71, 85, 105, 0.94);
-  background: radial-gradient(circle at 0 0, rgba(30, 64, 175, 0.55), transparent 65%);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 10px;
-  row-gap: 6px;
-}
-
-.page-comments .wl-header-item {
-  position: relative;
-}
-
-.page-comments .wl-header-item input {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background-color: rgba(15, 23, 42, 0.85);
-  color: rgba(226, 232, 240, 0.95);
-  font-size: 0.86rem;
-}
-
-.page-comments .wl-header-item input::placeholder {
-  color: rgba(148, 163, 184, 0.9);
-}
-
-// Main editor
-.page-comments .wl-editor {
-  margin-top: 10px;
-  border-radius: 18px;
-  border: 1px solid rgba(71, 85, 105, 0.94);
-  background-color: rgba(15, 23, 42, 0.9);
-}
-
-.page-comments .wl-editor textarea,
-.page-comments .wl-editor .wl-editor-input {
-  background: transparent;
-  border: none;
-  color: rgba(226, 232, 240, 0.96);
-  font-size: 0.94rem;
-}
-
-.page-comments .wl-editor textarea::placeholder {
-  color: rgba(148, 163, 184, 0.9);
-}
-
-.page-comments .wl-editor-footer {
-  border-top: 1px solid rgba(51, 65, 85, 0.85);
-  padding: 8px 10px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.page-comments .wl-editor-icons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(148, 163, 184, 0.96);
-  font-size: 0.96rem;
-}
-
-.page-comments .wl-editor-icons svg {
-  width: 18px;
-  height: 18px;
-}
-
-.page-comments .wl-editor-footer button,
-.page-comments .wl-editor-footer .wl-editor-submit {
-  border-radius: 999px !important;
-  padding: 6px 18px !important;
-  border: none !important;
-  background: linear-gradient(135deg, #22d3ee, #4ade80) !important;
-  color: #020617 !important;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.page-comments .wl-editor-footer button[disabled],
-.page-comments .wl-editor-footer .wl-editor-submit[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-// Comment list
-.page-comments .wl-comments {
-  margin-top: 16px;
-}
-
-.page-comments .wl-comment-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-  color: rgba(148, 163, 184, 0.96);
-}
-
-.page-comments .wl-comment-header-left {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.page-comments .wl-comment-count {
-  font-weight: 600;
-  color: rgba(226, 232, 240, 0.96);
-}
-
-.page-comments .wl-comment-sort button {
-  margin-left: 6px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: none;
-  background: rgba(15, 23, 42, 0.7);
-  color: rgba(148, 163, 184, 0.96);
-  font-size: 0.8rem;
-}
-
-.page-comments .wl-comment-sort button.wl-active {
-  background: rgba(148, 163, 184, 0.24);
-  color: rgba(226, 232, 240, 0.96);
-}
-
-.page-comments .wl-card {
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(30, 64, 175, 0.55);
-  padding: 10px 12px 8px;
-  margin-bottom: 10px;
-}
-
-.page-comments .wl-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: rgba(148, 163, 184, 0.96);
-}
-
-.page-comments .wl-card-author {
-  font-weight: 600;
-  color: rgba(226, 232, 240, 0.96);
-}
-
-.page-comments .wl-card-content {
-  margin-top: 6px;
-  color: rgba(226, 232, 240, 0.96);
-  font-size: 0.9rem;
-}
-
-.page-comments .wl-card-footer {
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: rgba(148, 163, 184, 0.9);
-}
-
-// Responsive tweaks
-@media (max-width: 768px) {
-  .page-comments .theme-hope-content {
-    padding: 1.75rem 1rem 3rem;
-  }
-
-  .page-comments .wl-panel {
-    padding: 14px 12px 14px;
-    border-radius: 16px;
-  }
-
-  .page-comments .wl-header {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
 }
 
 // Chromium / Edge: stale compositor tiles for backdrop-filter on non-home routes.
