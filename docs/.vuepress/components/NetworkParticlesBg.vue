@@ -84,6 +84,7 @@ function resize() {
 let running = true
 
 function tick() {
+  if (typeof window === 'undefined') return
   if (!running || !active.value) return
   const c = canvasRef.value
   const ctx = c?.getContext('2d')
@@ -154,6 +155,7 @@ let mq = null
 let mqHandler = null
 
 function startLayer() {
+  if (typeof window === 'undefined') return
   if (reducedMotion.value || !active.value) return
   requestAnimationFrame(() => resize())
   running = true
@@ -198,6 +200,7 @@ onUnmounted(() => {
 })
 
 watch(active, (on) => {
+  if (typeof window === 'undefined') return
   if (reducedMotion.value) return
   if (on) startLayer()
   else stopLayer()

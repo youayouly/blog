@@ -13,7 +13,7 @@ This site is built with **VuePress 2** and **vuepress-theme-hope**: a static-fir
 ## Stack
 
 - **VuePress 2** (Vite bundler) for content and build pipeline  
-- **vuepress-theme-hope** for navbar, sidebar, dark mode, and optional Waline on selected pages  
+- **vuepress-theme-hope** for navbar, sidebar, dark mode, and optional comment plugins on selected pages  
 - **Sass** (`docs/.vuepress/styles/index.scss`) for global layout and Chromium-safe glass styles  
 - Typical deploy targets: static hosts (e.g. Vercel, Netlify, Cloudflare Pages) with Git-triggered builds  
 

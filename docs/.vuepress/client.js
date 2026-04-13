@@ -1,5 +1,5 @@
-import { defineClientConfig } from 'vuepress/client'
-import { createApp, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { ClientOnly, defineClientConfig } from 'vuepress/client'
+import { createApp, defineComponent, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
@@ -17,6 +17,21 @@ import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.
 import FloatingShapes from './components/FloatingShapes.vue'
 import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
 
+/** Canvas + rAF: keep out of SSR to avoid Node rAF spin / heap growth during prerender. */
+const NetworkParticlesBgClient = defineComponent({
+  name: 'NetworkParticlesBgClient',
+  setup() {
+    return () => h(ClientOnly, null, () => h(NetworkParticlesBg))
+  },
+})
+
+const ArticleCategoriesAsideClient = defineComponent({
+  name: 'ArticleCategoriesAsideClient',
+  setup() {
+    return () => h(ClientOnly, null, () => h(ArticleCategoriesAside))
+  },
+})
+
 /* ── Hero 背景：禁用失效外�?+ 降级到本地背景色 ─ */
 // Note: If external images return 403, we must not trigger requests.
 const images = []
@@ -29,14 +44,6 @@ const AUTH_FAIL_LIMIT = 5
 const AUTH_LOCK_MS = 15 * 60 * 1000
 let authGuardInstalled = false
 
-function normalizePath(path) {
-  return (path || '/').replace(/\/+$/, '') || '/'
-}
-
-function isPublicPage(path) {
-  const normalized = normalizePath(path)
-  return normalized === '/about' || normalized === '/tech'
-}
 
 function readGuardState() {
   if (typeof window === 'undefined') return { failCount: 0, lockUntil: 0 }
@@ -132,7 +139,7 @@ function promptLoginWithGuard() {
 }
 
 function ensureRouteAccess(path) {
-  if (isPublicPage(path)) return true
+  if (isPublicPath(path)) return true
   if (hasAuthSession()) return true
   return promptLoginWithGuard()
 }
@@ -685,11 +692,11 @@ function unmountHome() {
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
   rootComponents: [
-    NetworkParticlesBg,
+    NetworkParticlesBgClient,
     SiteFooter,
     ScrollProgressFab,
     LoginGate,
-    ArticleCategoriesAside,
+    ArticleCategoriesAsideClient,
   ],
 
   enhance({ app, router }) {
@@ -715,7 +722,8 @@ export default defineClientConfig({
     const router = useRouter()
     if (!authGuardInstalled) {
       router.beforeEach((to) => {
-        if (isPublicPage(to.path)) return true
+        if (typeof window === 'undefined') return true
+        if (isPublicPath(to.path)) return true
         if (hasAuthSession()) return true
         return promptLoginWithGuard() ? true : '/about'
       })

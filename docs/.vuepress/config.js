@@ -45,7 +45,21 @@ const lkBuildTimeIso = new Date().toISOString()
 /** Same on SSR and client to avoid hydration mismatch in footer copyright year. */
 const lkSiteYear = new Date().getFullYear()
 
+/** Set `LK_BUILD_TRACE=1` (e.g. `npm run build:trace`) to log each page as it passes `extendsPage`. */
+function lkBuildTracePlugin() {
+  return {
+    name: 'lk-build-trace',
+    extendsPage: async (page) => {
+      if (process.env.LK_BUILD_TRACE === '1') {
+        const rel = page.filePathRelative ?? '(virtual)'
+        console.error(`[lk-build] extendsPage -> ${rel}  route=${page.path}`)
+      }
+    },
+  }
+}
+
 export default defineUserConfig({
+  plugins: [lkBuildTracePlugin()],
   bundler: viteBundler({
     viteOptions: {
       define: {
