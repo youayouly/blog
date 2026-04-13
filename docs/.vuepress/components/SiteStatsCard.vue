@@ -24,15 +24,23 @@
       <li class="lk-stats__row">
         <span class="lk-stats__key">本站访客数</span>
         <span class="lk-stats__val">
-          <span v-if="!busuanziState.uv" class="lk-stats__spin" aria-label="加载中" />
-          <template v-else>{{ busuanziState.uv }}</template>
+          <span
+            v-if="!busuanziState.uv && !busuanziState.pollSettled && !busuanziState.loadFailed"
+            class="lk-stats__spin"
+            aria-label="加载中"
+          />
+          <template v-else>{{ busuanziState.uv || '—' }}</template>
         </span>
       </li>
       <li class="lk-stats__row">
         <span class="lk-stats__key">本站总浏览量</span>
         <span class="lk-stats__val">
-          <span v-if="!busuanziState.pv" class="lk-stats__spin" aria-label="加载中" />
-          <template v-else>{{ busuanziState.pv }}</template>
+          <span
+            v-if="!busuanziState.pv && !busuanziState.pollSettled && !busuanziState.loadFailed"
+            class="lk-stats__spin"
+            aria-label="加载中"
+          />
+          <template v-else>{{ busuanziState.pv || '—' }}</template>
         </span>
       </li>
       <li class="lk-stats__row">

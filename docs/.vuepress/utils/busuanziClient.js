@@ -4,14 +4,66 @@ export const busuanziState = reactive({
   uv: '',
   pv: '',
   ready: false,
+  /** Script failed to load (onerror) */
+  loadFailed: false,
+  /** Polling ended without filling both counters */
+  pollSettled: false,
 })
 
 let pollTimer = null
 let pollTries = 0
+let waitMaxTimer = null
+
+const POLL_MAX_TRIES = 60
+const POLL_INTERVAL_MS = 400
+/** Give up waiting for DOM text (blocked script / API mismatch) */
+const BUSUANZI_MAX_WAIT_MS = 12000
+
+function clearPoll() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+function clearWaitMax() {
+  if (waitMaxTimer) {
+    clearTimeout(waitMaxTimer)
+    waitMaxTimer = null
+  }
+}
+
+function settleMissingAsDash() {
+  busuanziState.pollSettled = true
+  busuanziState.ready = true
+  if (!busuanziState.uv) busuanziState.uv = '—'
+  if (!busuanziState.pv) busuanziState.pv = '—'
+}
+
+function finishIfBothOrGiveUp() {
+  const hasUv = Boolean(busuanziState.uv)
+  const hasPv = Boolean(busuanziState.pv)
+  if (hasUv && hasPv) {
+    clearPoll()
+    clearWaitMax()
+    busuanziState.pollSettled = true
+    busuanziState.ready = true
+    return true
+  }
+  return false
+}
 
 function startPolling() {
   if (pollTimer) return
   pollTries = 0
+  clearWaitMax()
+  waitMaxTimer = setTimeout(() => {
+    waitMaxTimer = null
+    if (finishIfBothOrGiveUp()) return
+    clearPoll()
+    settleMissingAsDash()
+  }, BUSUANZI_MAX_WAIT_MS)
+
   pollTimer = setInterval(() => {
     pollTries += 1
     const uvEl = document.getElementById('busuanzi_value_site_uv')
@@ -22,27 +74,36 @@ function startPolling() {
       busuanziState.uv = Number(uv).toLocaleString('zh-CN')
       busuanziState.ready = true
     }
-    if (pv) busuanziState.pv = Number(pv).toLocaleString('zh-CN')
-    if ((busuanziState.uv && busuanziState.pv) || pollTries > 60) {
-      clearInterval(pollTimer)
-      pollTimer = null
+    if (pv) {
+      busuanziState.pv = Number(pv).toLocaleString('zh-CN')
+      busuanziState.ready = true
     }
-  }, 400)
+    if (finishIfBothOrGiveUp()) return
+    if (pollTries > POLL_MAX_TRIES) {
+      clearPoll()
+      clearWaitMax()
+      settleMissingAsDash()
+    }
+  }, POLL_INTERVAL_MS)
 }
 
 export function ensureBusuanzi() {
   if (typeof document === 'undefined') return
 
+  if (busuanziState.loadFailed) return
+
   if (!document.getElementById('busuanzi_value_site_uv')) {
     const uv = document.createElement('span')
     uv.id = 'busuanzi_value_site_uv'
-    uv.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;clip:rect(0,0,0,0)'
+    uv.style.cssText =
+      'position:absolute;width:0;height:0;overflow:hidden;clip:rect(0,0,0,0)'
     document.body.appendChild(uv)
   }
   if (!document.getElementById('busuanzi_value_site_pv')) {
     const pv = document.createElement('span')
     pv.id = 'busuanzi_value_site_pv'
-    pv.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;clip:rect(0,0,0,0)'
+    pv.style.cssText =
+      'position:absolute;width:0;height:0;overflow:hidden;clip:rect(0,0,0,0)'
     document.body.appendChild(pv)
   }
 
@@ -52,6 +113,14 @@ export function ensureBusuanzi() {
     s.async = true
     s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
     s.onload = () => startPolling()
+    s.onerror = () => {
+      busuanziState.loadFailed = true
+      clearPoll()
+      clearWaitMax()
+      busuanziState.uv = '—'
+      busuanziState.pv = '—'
+      settleMissingAsDash()
+    }
     document.head.appendChild(s)
   } else {
     startPolling()

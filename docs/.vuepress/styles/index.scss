@@ -1101,7 +1101,7 @@ html.lk-live2d-off #live2d-widget {
 
 /* Live2D：fixed 右下贴底；flex 抵消库内「右侧垂直居中」布局 */
 #live2d-widget {
-  z-index: 50;
+  z-index: 55;
   transform-origin: bottom right;
   pointer-events: auto;
   display: flex;
@@ -1118,9 +1118,11 @@ html.lk-live2d-off #live2d-widget {
   }
 }
 
+/* 与 L2D `mobile.show: true` 对齐：窄屏缩小占位，避免整站 display:none 误伤登录后首页 */
 @media (max-width: 959px) {
   #live2d-widget {
-    display: none !important;
+    transform-origin: bottom right !important;
+    max-width: min(100vw - 4.5rem, 200px);
   }
 }
 

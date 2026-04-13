@@ -13,8 +13,9 @@ import AboutTimeline from './components/AboutTimeline.vue'
 import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
 import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
 import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
-import { isPublicPath, normPath, readAuthed } from './utils/authGate.js'
+import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.js'
 import FloatingShapes from './components/FloatingShapes.vue'
+import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
 
 /* ── Hero 背景：禁用失效外�?+ 降级到本地背景色 ─ */
 // Note: If external images return 403, we must not trigger requests.
@@ -277,17 +278,10 @@ function positionLive2DWidget() {
     bottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))',
     left: '',
     top: '',
-    zIndex: '50',
+    zIndex: '55',
   })
   syncLive2dVisibility(window.location.pathname)
   applyLive2dViewportScale()
-}
-
-function syncLive2dVisibility(path) {
-  if (typeof document === 'undefined') return
-  const container = document.getElementById('live2d-widget')
-  if (!container) return
-  container.style.display = isPublicPage(path) ? 'none' : 'flex'
 }
 
 /** Run after layout + L2D internal DOM so fixed bottom/right are not overwritten. */
@@ -317,7 +311,7 @@ function initLive2DWidget() {
         height: 440,
       },
       mobile: {
-        show: false,
+        show: true,
       },
       react: {
         opacityDefault: 1,
@@ -677,6 +671,7 @@ function mountHome() {
   mountHomeBodyGrid()
   mountFloatingShapes()
   initScrollBlur()
+  rescueLive2dFromHomeGrid()
   scheduleLive2dReposition()
 }
 
@@ -689,7 +684,13 @@ function unmountHome() {
 
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
-  rootComponents: [SiteFooter, ScrollProgressFab, LoginGate, ArticleCategoriesAside],
+  rootComponents: [
+    NetworkParticlesBg,
+    SiteFooter,
+    ScrollProgressFab,
+    LoginGate,
+    ArticleCategoriesAside,
+  ],
 
   enhance({ app, router }) {
     // Ensure these are usable in markdown as <ProjectNineGrid /> / <ProjectCardsGrid />.
@@ -798,6 +799,19 @@ export default defineClientConfig({
       async () => {
         await nextTick()
         syncLive2dVisibility(route.path)
+        rescueLive2dFromHomeGrid()
+        if (live2dLoaded) {
+          scheduleLive2dReposition()
+        }
+      },
+      { flush: 'post' },
+    )
+
+    watch(
+      () => authedRef.value,
+      async () => {
+        await nextTick()
+        rescueLive2dFromHomeGrid()
         if (live2dLoaded) {
           scheduleLive2dReposition()
         }
@@ -822,6 +836,8 @@ export default defineClientConfig({
               mountHome()
             } finally {
               setHomeEnhanceSuspended(false)
+              rescueLive2dFromHomeGrid()
+              if (live2dLoaded) scheduleLive2dReposition()
             }
           })
         }

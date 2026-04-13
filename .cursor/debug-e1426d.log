@@ -6,3 +6,7 @@
 {"sessionId":"e1426d","runId":"post-fix","hypothesisId":"H5","location":"LoginGate.vue","message":"gotoAbout pre-release hold","data":{"path":"/about.html","gateExitHold":true},"timestamp":1776085549021}
 {"sessionId":"e1426d","runId":"post-fix","hypothesisId":"H5","location":"LoginGate.vue","message":"gotoAbout pre-release hold","data":{"path":"/about.html","gateExitHold":true},"timestamp":1776085551854}
 {"sessionId":"e1426d","runId":"post-fix","hypothesisId":"H5","location":"LoginGate.vue","message":"gotoAbout pre-release hold","data":{"path":"/about.html","gateExitHold":true},"timestamp":1776085554721}
+{"sessionId":"e1426d","location":"client.js:setup:onMounted","message":"client bundle parsed and setup mounted","data":{"syncLive2dType":"function"},"timestamp":1776093130577,"hypothesisId":"H1-verify","runId":"post-fix"}
+{"sessionId":"e1426d","location":"client.js:setup:onMounted","message":"client bundle parsed and setup mounted","data":{"syncLive2dType":"function"},"timestamp":1776093720221,"hypothesisId":"H1-verify","runId":"post-fix"}
+{"sessionId":"e1426d","location":"client.js:setup:onMounted","message":"client bundle parsed and setup mounted","data":{"syncLive2dType":"function"},"timestamp":1776093721680,"hypothesisId":"H1-verify","runId":"post-fix"}
+{"sessionId":"e1426d","location":"client.js:setup:onMounted","message":"client bundle parsed and setup mounted","data":{"syncLive2dType":"function"},"timestamp":1776093723318,"hypothesisId":"H1-verify","runId":"post-fix"}
