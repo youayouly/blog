@@ -771,7 +771,6 @@ export default defineClientConfig({
       })
       initProgressBar()
       initLive2DWidget()
-      syncLive2dVisibility(route.path)
       if (isSiteHomePath(route.path)) {
         setHomeEnhanceSuspended(true)
         microtask(() => {

@@ -121,17 +121,7 @@ export default defineUserConfig({
           '/comments': '/article/',
         },
       },
-      // Waline: available on pages with `comment: true` in frontmatter
-      // TODO: replace `serverURL` with your actual Waline backend address
-      comment: {
-        provider: 'Waline',
-        serverURL: 'https://your-waline-server.example.com',
-        // Avoid dynamic import of @waline/client/waline-meta (extra chunk; 404 if deploy/HTML out of sync).
-        metaIcon: false,
-        comment: true,
-        reaction: true,
-        pageview: true,
-      },
+      comment: false,
     },
   }),
 })
