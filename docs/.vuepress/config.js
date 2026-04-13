@@ -61,21 +61,8 @@ export default defineUserConfig({
     backToTop: false,
 
     navbar: [
-      { text: 'Home', link: '/' },
       { text: 'About Me', link: '/about' },
-      { text: '💻 Projects', link: '/tech/' },
-      {
-        text: '🎓 Study Abroad',
-        prefix: '/study/',
-        children: [
-          { text: 'Overview', link: '' },
-          { text: '🇭🇰 Hong Kong', link: 'hk' },
-          { text: '🇬🇧 United Kingdom', link: 'uk' },
-          { text: '🇸🇬 Singapore', link: 'singapore' },
-        ],
-      },
-      { text: '📷 Album', link: '/travel/' },
-      { text: '💬 Comments', link: '/comments/' },
+      { text: 'Projects', link: '/tech/' },
     ],
 
     sidebar: {
@@ -101,8 +88,15 @@ export default defineUserConfig({
         },
       ],
       '/travel/': 'structure',
-      '/comments/': false,
-      '/': 'structure',
+      '/': [
+        {
+          text: 'Directory',
+          children: [
+            { text: 'About Me', link: '/about' },
+            { text: 'Projects', link: '/tech/' },
+          ],
+        },
+      ],
     },
 
     plugins: {

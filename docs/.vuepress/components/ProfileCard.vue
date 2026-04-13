@@ -2,11 +2,11 @@
   <aside class="lk-card" :class="{ 'lk-card--embedded': embedded }">
     <!-- Avatar — click/hover rotates clockwise; release reverses counter-clockwise -->
     <div class="lk-card__avatar-wrap">
-      <img class="lk-card__avatar" src="/avatar.jpg" alt="Luke · 陆毅" />
+      <img class="lk-card__avatar" src="/avatar.jpg" alt="Luke" />
     </div>
 
     <!-- Name with gradient text -->
-    <div class="lk-card__name">Luke · 陆毅</div>
+    <div class="lk-card__name">Luke</div>
     <div class="lk-card__sub">Incoming HKU ECIC</div>
 
     <!-- Tags -->
