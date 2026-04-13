@@ -6,7 +6,7 @@ import HomeSidePanel from './components/HomeSidePanel.vue'
 import ProjectNineGrid from './components/ProjectNineGrid.vue'
 import ProjectCardsGrid from './components/ProjectCardsGrid.vue'
 import SiteFooter from './components/SiteFooter.vue'
-import ScrollProgressFab from './components/ScrollProgressFab.vue'
+import BackToTopArrow from './components/BackToTopArrow.vue'
 import LoginGate from './components/LoginGate.vue'
 import ArticleCategoriesAside from './components/ArticleCategoriesAside.vue'
 import AboutTimeline from './components/AboutTimeline.vue'
@@ -14,6 +14,11 @@ import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
 import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
 import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
 import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.js'
+import {
+  LIVE2D_PREF_EVENT,
+  LIVE2D_PREF_KEY,
+  readLive2dPref,
+} from './utils/live2dPref.js'
 import FloatingShapes from './components/FloatingShapes.vue'
 import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
 import ParticlesNavbarToggle from './components/ParticlesNavbarToggle.vue'
@@ -178,18 +183,23 @@ function isRootPathForAboutRedirect(path) {
   return normalized === '/' || /^\/index\.html$/i.test(normalized)
 }
 
-/** Hide Live2D on About Me, Projects (/tech), and Article (/article); show everywhere else. */
-function shouldHideLive2d(path) {
-  const p = normPath(path)
-  if (p === '/about' || p.startsWith('/about/')) return true
-  if (p === '/tech' || p.startsWith('/tech/')) return true
-  if (p === '/article' || p.startsWith('/article/')) return true
-  return false
+/** 看板娘显隐仅由导航栏开关 + localStorage（`live2dPref.js`）控制，全站路由一致。 */
+function applyLive2dUserClass() {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle('lk-live2d-user-off', !readLive2dPref())
 }
 
-function syncLive2dVisibility(path) {
-  if (typeof document === 'undefined') return
-  document.documentElement.classList.toggle('lk-live2d-off', shouldHideLive2d(path))
+function syncLive2dPref() {
+  applyLive2dUserClass()
+  if (readLive2dPref()) {
+    tryMountLive2dModel()
+    nudgeLive2dForCurrentRoute()
+  }
+}
+
+function onLive2dPrefStorage(e) {
+  if (typeof window === 'undefined') return
+  if (e.key === LIVE2D_PREF_KEY || e.key === null) syncLive2dPref()
 }
 
 /** About / Projects / Article：无面包屑，标题与 meta 同一行底对齐 + 下划线（见 index.scss `.lk-header-split`） */
@@ -244,6 +254,8 @@ let heroBgOverridden = false
 
 /* ── Live2D：挂 body + fixed 视口右下，避免随首页网格卸载而销毁 ───────────── */
 let live2dLoaded = false
+/** 仅表示已插入 unpkg 脚本（模型可能尚未 init，见 tryMountLive2dModel） */
+let live2dScriptInjected = false
 let live2dViewportListenersAttached = false
 const LIVE2D_MODEL_H = 440
 
@@ -287,7 +299,7 @@ function detachLive2dViewportListeners() {
   live2dViewportListenersAttached = false
 }
 
-/** Viewport bottom-right; right offset clears ScrollProgressFab column (z-index above widget). */
+/** Viewport bottom-right; right offset clears back-to-top arrow (z-index above widget). */
 function positionLive2DWidget() {
   if (typeof window === 'undefined') return
   const container = document.getElementById('live2d-widget')
@@ -304,7 +316,6 @@ function positionLive2DWidget() {
     top: '',
     zIndex: '55',
   })
-  syncLive2dVisibility(window.location.pathname)
   applyLive2dViewportScale()
 }
 
@@ -318,48 +329,73 @@ function scheduleLive2dReposition() {
   })
 }
 
-function initLive2DWidget() {
+/** 用户关闭看板娘时不 init；开启后由 `syncLive2dPref` 再触发。 */
+function tryMountLive2dModel() {
   if (typeof window === 'undefined' || live2dLoaded) return
+  if (!window.L2Dwidget) return
+  if (!readLive2dPref()) return
 
-  function mountWithGlobal() {
-    if (!window.L2Dwidget || live2dLoaded) return
-    window.L2Dwidget.init({
-      model: {
-        // 使用官方 Koharu 女孩模型，可按需替换为其他模型包
-        jsonPath:
-          'https://unpkg.com/live2d-widget-model-koharu@1.0.5/assets/koharu.model.json',
-      },
-      display: {
-        position: 'right',
-        width: 220,
-        height: 440,
-      },
-      mobile: {
-        show: true,
-      },
-      react: {
-        opacityDefault: 1,
-        opacityOnHover: 1,
-      },
-    })
-    live2dLoaded = true
-    attachLive2dViewportListeners()
-    scheduleLive2dReposition()
-    syncLive2dVisibility(window.location.pathname)
+  window.L2Dwidget.init({
+    model: {
+      jsonPath:
+        'https://unpkg.com/live2d-widget-model-koharu@1.0.5/assets/koharu.model.json',
+    },
+    display: {
+      position: 'right',
+      width: 220,
+      height: 440,
+    },
+    mobile: {
+      show: true,
+    },
+    react: {
+      opacityDefault: 1,
+      opacityOnHover: 1,
+    },
+  })
+  live2dLoaded = true
+  attachLive2dViewportListeners()
+  applyLive2dUserClass()
+  scheduleLive2dReposition()
+  try {
+    window.dispatchEvent(new Event('resize'))
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 尽早加载脚本；真正 init 延迟到非隐藏页（tryMountLive2dModel） */
+function initLive2DScript() {
+  if (typeof window === 'undefined' || live2dScriptInjected) return
+  live2dScriptInjected = true
+
+  const onLibReady = () => {
+    tryMountLive2dModel()
   }
 
   if (window.L2Dwidget) {
-    mountWithGlobal()
+    onLibReady()
     return
   }
 
   const script = document.createElement('script')
   script.src = 'https://unpkg.com/live2d-widget@3.1.4/lib/L2Dwidget.min.js'
   script.async = true
-  script.onload = () => {
-    mountWithGlobal()
-  }
+  script.onload = onLibReady
   document.body.appendChild(script)
+}
+
+/** 路由切换后：补一次 init + 定位（从隐藏页进首页时） */
+function nudgeLive2dForCurrentRoute() {
+  if (typeof window === 'undefined') return
+  tryMountLive2dModel()
+  rescueLive2dFromHomeGrid()
+  if (live2dLoaded) {
+    scheduleLive2dReposition()
+    requestAnimationFrame(() => {
+      applyLive2dViewportScale()
+    })
+  }
 }
 
 function isDarkMode() {
@@ -691,6 +727,7 @@ function unmountFloatingShapes() {
 
 /* ── Mount / unmount all home-page enhancements ─────────────────────────── */
 function mountHome() {
+  tryMountLive2dModel()
   mountTypewriter('Welcome to my blog!')
   mountHomeBodyGrid()
   mountFloatingShapes()
@@ -712,7 +749,7 @@ export default defineClientConfig({
     NetworkParticlesBgClient,
     ParticlesNavbarToggleClient,
     SiteFooter,
-    ScrollProgressFab,
+    BackToTopArrow,
     LoginGateClient,
     ArticleCategoriesAsideClient,
   ],
@@ -764,14 +801,6 @@ export default defineClientConfig({
     watch(
       () => route.path,
       (path) => {
-        syncLive2dVisibility(path)
-      },
-      { flush: 'post', immediate: true },
-    )
-
-    watch(
-      () => route.path,
-      (path) => {
         syncSplitPageHeader(path)
       },
       { flush: 'post', immediate: true },
@@ -790,13 +819,18 @@ export default defineClientConfig({
         router.replace('/about')
       }
       syncSiteNonHomeClass(route.path)
-      syncLive2dVisibility(route.path)
+      syncLive2dPref()
       syncSplitPageHeader(route.path)
       nextTick(() => {
         nudgeNavbarSidebarRepaint()
       })
       initProgressBar()
-      initLive2DWidget()
+      initLive2DScript()
+      nextTick(() => {
+        tryMountLive2dModel()
+      })
+      window.addEventListener('storage', onLive2dPrefStorage)
+      window.addEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
       if (isSiteHomePath(route.path)) {
         setHomeEnhanceSuspended(true)
         microtask(() => {
@@ -812,9 +846,14 @@ export default defineClientConfig({
     onUnmounted(() => {
       cleanupScrollBlur()
       detachLive2dViewportListeners()
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', onLive2dPrefStorage)
+        window.removeEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
+      }
       if (typeof document !== 'undefined') {
         document.documentElement.classList.remove('lk-site-non-home')
         document.documentElement.classList.remove('lk-live2d-off')
+        document.documentElement.classList.remove('lk-live2d-user-off')
         document.documentElement.classList.remove('lk-header-split')
       }
     })
@@ -823,11 +862,7 @@ export default defineClientConfig({
       () => route.path,
       async () => {
         await nextTick()
-        syncLive2dVisibility(route.path)
-        rescueLive2dFromHomeGrid()
-        if (live2dLoaded) {
-          scheduleLive2dReposition()
-        }
+        nudgeLive2dForCurrentRoute()
       },
       { flush: 'post' },
     )
@@ -836,10 +871,7 @@ export default defineClientConfig({
       () => authedRef.value,
       async () => {
         await nextTick()
-        rescueLive2dFromHomeGrid()
-        if (live2dLoaded) {
-          scheduleLive2dReposition()
-        }
+        nudgeLive2dForCurrentRoute()
       },
       { flush: 'post' },
     )

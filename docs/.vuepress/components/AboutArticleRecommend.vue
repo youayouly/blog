@@ -111,4 +111,26 @@ const articles = recommendedArticles
 [data-theme='dark'] .lk-about-articles__title {
   color: #7eb8ea;
 }
+
+[data-theme='dark'] .lk-about-articles__heading {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .lk-about-articles__lead {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .lk-about-articles__lead strong {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .lk-about-articles__excerpt {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .lk-about-articles__tag {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border-color: rgba(96, 165, 250, 0.28);
+}
 </style>
