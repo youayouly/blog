@@ -32,10 +32,6 @@ const showLoginEntry = computed(() => {
   return p === '/about' || p.startsWith('/about/')
 })
 
-const accountActionLabel = computed(() =>
-  isLoggedIn.value ? '切换头像' : '账户登录',
-)
-
 function closeLoginModal() {
   showLoginModal.value = false
 }
@@ -328,11 +324,6 @@ onUnmounted(() => {
     </div>
   </Teleport>
 
-  <Teleport v-if="logoutAnchorReady" :to="`#${ANCHOR_ID}`">
-    <button type="button" class="lk-account-nav-btn" :title="accountActionLabel" @click="onAccountEntryClick">
-      {{ accountActionLabel }}
-    </button>
-  </Teleport>
 </template>
 
 <style scoped>

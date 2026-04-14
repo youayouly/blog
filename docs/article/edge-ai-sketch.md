@@ -4,6 +4,7 @@ description: 设备端推理前的最小检查清单草稿。
 date: 2026-04-12
 pageClass: page-article-post
 comment: false
+toc: false
 ---
 
 # Edge AI 部署流水线的几笔记录

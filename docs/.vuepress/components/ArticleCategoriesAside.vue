@@ -11,8 +11,8 @@ const categories = ARTICLE_CATEGORIES
 const showAside = computed(() => {
   const p = normPath(route.path)
   if (!p.startsWith('/article/')) return false
-  if (p === '/article' || p === '/article/') return false
-  if (p === '/article/index') return false
+  // 文章区右侧分类卡按需求彻底关闭。
+  if (p.startsWith('/article')) return false
   return true
 })
 </script>
