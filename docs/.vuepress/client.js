@@ -1,6 +1,6 @@
 import { ClientOnly, defineClientConfig } from 'vuepress/client'
 import { createApp, defineComponent, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
 import HomeSidePanel from './components/HomeSidePanel.vue'
 import ProjectNineGrid from './components/ProjectNineGrid.vue'
@@ -57,113 +57,6 @@ const LoginGateClient = defineComponent({
 // Note: If external images return 403, we must not trigger requests.
 const images = []
 const heroWallpaperFallbackBg = 'rgba(198, 212, 232, 0.45)'
-const AUTH_USER = 'youayouly'
-const AUTH_PASS = 'LUyi@541000'
-const AUTH_SESSION_KEY = 'lk-auth-session'
-const AUTH_GUARD_KEY = 'lk-auth-guard'
-const AUTH_FAIL_LIMIT = 5
-const AUTH_LOCK_MS = 15 * 60 * 1000
-let authGuardInstalled = false
-
-
-function readGuardState() {
-  if (typeof window === 'undefined') return { failCount: 0, lockUntil: 0 }
-  try {
-    const raw = window.localStorage.getItem(AUTH_GUARD_KEY)
-    if (!raw) return { failCount: 0, lockUntil: 0 }
-    const parsed = JSON.parse(raw)
-    return {
-      failCount: Number.isFinite(parsed?.failCount) ? parsed.failCount : 0,
-      lockUntil: Number.isFinite(parsed?.lockUntil) ? parsed.lockUntil : 0,
-    }
-  } catch {
-    return { failCount: 0, lockUntil: 0 }
-  }
-}
-
-function writeGuardState(state) {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(AUTH_GUARD_KEY, JSON.stringify(state))
-}
-
-function resetGuardState() {
-  writeGuardState({ failCount: 0, lockUntil: 0 })
-}
-
-function remainingLockMs(lockUntil) {
-  return Math.max(0, lockUntil - Date.now())
-}
-
-function formatRemainingMs(ms) {
-  const sec = Math.ceil(ms / 1000)
-  const min = Math.floor(sec / 60)
-  const remSec = sec % 60
-  return min > 0 ? `${min}m ${remSec}s` : `${remSec}s`
-}
-
-function hasAuthSession() {
-  if (typeof window === 'undefined') return false
-  return window.sessionStorage.getItem(AUTH_SESSION_KEY) === 'ok'
-}
-
-function setAuthSession() {
-  if (typeof window === 'undefined') return
-  window.sessionStorage.setItem(AUTH_SESSION_KEY, 'ok')
-}
-
-function recordAuthFailure() {
-  const current = readGuardState()
-  const now = Date.now()
-  const nextFail = now > current.lockUntil ? 1 : current.failCount + 1
-  if (nextFail >= AUTH_FAIL_LIMIT) {
-    writeGuardState({ failCount: 0, lockUntil: now + AUTH_LOCK_MS })
-    return { locked: true, attemptsLeft: 0 }
-  }
-  writeGuardState({ failCount: nextFail, lockUntil: 0 })
-  return { locked: false, attemptsLeft: AUTH_FAIL_LIMIT - nextFail }
-}
-
-function isGuardLocked() {
-  const state = readGuardState()
-  return remainingLockMs(state.lockUntil) > 0
-}
-
-function verifyCredentials(username, password) {
-  return username === AUTH_USER && password === AUTH_PASS
-}
-
-function promptLoginWithGuard() {
-  if (typeof window === 'undefined') return false
-  if (isGuardLocked()) {
-    const lockMs = remainingLockMs(readGuardState().lockUntil)
-    window.alert(`登录尝试过多，请在 ${formatRemainingMs(lockMs)} 后再试。`)
-    return false
-  }
-  const username = window.prompt('受限页面需要登录\n用户名：')
-  if (username === null) return false
-  const password = window.prompt('请输入密码：')
-  if (password === null) return false
-
-  if (verifyCredentials(username, password)) {
-    setAuthSession()
-    resetGuardState()
-    return true
-  }
-
-  const result = recordAuthFailure()
-  if (result.locked) {
-    window.alert('登录失败次数过多，已锁定 15 分钟。')
-  } else {
-    window.alert(`用户名或密码错误，剩余 ${result.attemptsLeft} 次尝试。`)
-  }
-  return false
-}
-
-function ensureRouteAccess(path) {
-  if (isPublicPath(path)) return true
-  if (hasAuthSession()) return true
-  return promptLoginWithGuard()
-}
 
 function setHomeEnhanceSuspended(flag) {
   if (typeof document === 'undefined') return
@@ -184,6 +77,26 @@ function isRootPathForAboutRedirect(path) {
 }
 
 /** 看板娘显隐仅由导航栏开关 + localStorage（`live2dPref.js`）控制，全站路由一致。 */
+function isLive2dHiddenPath(path) {
+  const p = normPath(path)
+  return (
+    p === '/about' ||
+    p.startsWith('/about/') ||
+    p === '/tech' ||
+    p.startsWith('/tech/') ||
+    p === '/article' ||
+    p.startsWith('/article/')
+  )
+}
+
+function applyLive2dRouteClass(path) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle(
+    'lk-live2d-route-hidden',
+    isLive2dHiddenPath(path),
+  )
+}
+
 function applyLive2dUserClass() {
   if (typeof document === 'undefined') return
   document.documentElement.classList.toggle('lk-live2d-user-off', !readLive2dPref())
@@ -191,6 +104,7 @@ function applyLive2dUserClass() {
 
 function syncLive2dPref() {
   applyLive2dUserClass()
+  if (isLive2dHiddenPath(window.location.pathname)) return
   if (readLive2dPref()) {
     tryMountLive2dModel()
     nudgeLive2dForCurrentRoute()
@@ -307,11 +221,15 @@ function positionLive2DWidget() {
 
   document.body.appendChild(container)
 
+  const isMobile = window.matchMedia('(max-width: 959px)').matches
   Object.assign(container.style, {
     position: 'fixed',
-    right:
-      'calc(1rem + 52px + max(0.25rem, env(safe-area-inset-right, 0px)))',
-    bottom: 'max(0.25rem, env(safe-area-inset-bottom, 0px))',
+    right: isMobile
+      ? 'max(0.25rem, env(safe-area-inset-right, 0px))'
+      : 'calc(1rem + 52px + max(0.25rem, env(safe-area-inset-right, 0px)))',
+    bottom: isMobile
+      ? 'max(0.5rem, env(safe-area-inset-bottom, 0px))'
+      : 'max(0.25rem, env(safe-area-inset-bottom, 0px))',
     left: '',
     top: '',
     zIndex: '55',
@@ -333,6 +251,7 @@ function scheduleLive2dReposition() {
 function tryMountLive2dModel() {
   if (typeof window === 'undefined' || live2dLoaded) return
   if (!window.L2Dwidget) return
+  if (isLive2dHiddenPath(window.location.pathname)) return
   if (!readLive2dPref()) return
 
   window.L2Dwidget.init({
@@ -388,6 +307,8 @@ function initLive2DScript() {
 /** 路由切换后：补一次 init + 定位（从隐藏页进首页时） */
 function nudgeLive2dForCurrentRoute() {
   if (typeof window === 'undefined') return
+  applyLive2dRouteClass(window.location.pathname)
+  if (isLive2dHiddenPath(window.location.pathname)) return
   tryMountLive2dModel()
   rescueLive2dFromHomeGrid()
   if (live2dLoaded) {
@@ -774,16 +695,6 @@ export default defineClientConfig({
 
   setup() {
     const route = useRoute()
-    const router = useRouter()
-    if (!authGuardInstalled) {
-      router.beforeEach((to) => {
-        if (typeof window === 'undefined') return true
-        if (isPublicPath(to.path)) return true
-        if (hasAuthSession()) return true
-        return promptLoginWithGuard() ? true : '/about'
-      })
-      authGuardInstalled = true
-    }
 
     const microtask =
       typeof queueMicrotask === 'function'
@@ -796,6 +707,14 @@ export default defineClientConfig({
         syncSiteNonHomeClass(path)
       },
       { flush: 'post' },
+    )
+
+    watch(
+      () => route.path,
+      (path) => {
+        applyLive2dRouteClass(path)
+      },
+      { flush: 'post', immediate: true },
     )
 
     watch(
@@ -815,10 +734,8 @@ export default defineClientConfig({
     )
 
     onMounted(() => {
-      if (!ensureRouteAccess(route.path)) {
-        router.replace('/about')
-      }
       syncSiteNonHomeClass(route.path)
+      applyLive2dRouteClass(route.path)
       syncLive2dPref()
       syncSplitPageHeader(route.path)
       nextTick(() => {
@@ -854,6 +771,7 @@ export default defineClientConfig({
         document.documentElement.classList.remove('lk-site-non-home')
         document.documentElement.classList.remove('lk-live2d-off')
         document.documentElement.classList.remove('lk-live2d-user-off')
+        document.documentElement.classList.remove('lk-live2d-route-hidden')
         document.documentElement.classList.remove('lk-header-split')
       }
     })

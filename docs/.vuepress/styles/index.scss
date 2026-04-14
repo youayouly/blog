@@ -1194,6 +1194,15 @@ html.lk-live2d-user-off #live2d-widget {
   display: none !important;
 }
 
+/* Live2D：About / Projects / Article 路由强制隐藏（忽略用户开关） */
+html.lk-live2d-route-hidden #live2d-widget {
+  display: none !important;
+}
+
+html.lk-live2d-route-hidden .vp-navbar .lk-live2d-toggle {
+  display: none !important;
+}
+
 /* Live2D：fixed 右下贴底；flex 抵消库内「右侧垂直居中」布局 */
 #live2d-widget {
   z-index: 55;
@@ -1218,6 +1227,7 @@ html.lk-live2d-user-off #live2d-widget {
   #live2d-widget {
     transform-origin: bottom right !important;
     max-width: min(100vw - 4.5rem, 200px);
+    opacity: 0.9;
   }
 }
 

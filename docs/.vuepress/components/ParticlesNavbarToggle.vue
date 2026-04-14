@@ -27,6 +27,7 @@
         </svg>
       </button>
       <button
+        v-if="showLive2dToggle"
         type="button"
         class="lk-live2d-toggle"
         :class="{ 'is-off': !live2dOn }"
@@ -73,6 +74,20 @@ const enabled = ref(true)
 const live2dOn = ref(true)
 const route = useRoute()
 
+function isLive2dHiddenPath(path) {
+  const p = String(path || '/').replace(/\/+$/, '') || '/'
+  return (
+    p === '/about' ||
+    p.startsWith('/about/') ||
+    p === '/tech' ||
+    p.startsWith('/tech/') ||
+    p === '/article' ||
+    p.startsWith('/article/')
+  )
+}
+
+const showLive2dToggle = computed(() => !isLive2dHiddenPath(route.path))
+
 function syncFromStorage() {
   enabled.value = readParticlesPref()
 }
@@ -92,6 +107,7 @@ function onClick() {
 }
 
 function onLive2dClick() {
+  if (!showLive2dToggle.value) return
   writeLive2dPref(!live2dOn.value)
   live2dOn.value = readLive2dPref()
 }
