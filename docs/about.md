@@ -16,7 +16,7 @@ sidebar: false
 
   <div class="about-left">
     <div class="about-card about-card--profile">
-      <img class="about-avatar-large" src="/avatar.jpg" alt="Luke" />
+      <SiteAvatar class-name="about-avatar-large" alt="Luke" />
       <div class="about-name">Lu Yi · Luke</div>
       <div class="about-contact about-contact--minimal about-contact--in-profile" aria-label="Contact links">
         <a class="about-contact-link" href="mailto:youayouly@gmail.com" title="Email" aria-label="Email">

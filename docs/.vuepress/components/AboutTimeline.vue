@@ -54,6 +54,7 @@ const rows = computed(() => {
   font-weight: 700;
   color: #0a0a0a;
   letter-spacing: 0.04em;
+  text-align: left;
 }
 
 .lk-about-timeline__list {
@@ -69,7 +70,7 @@ const rows = computed(() => {
   position: absolute;
   top: 0.35rem;
   bottom: 0.35rem;
-  right: 10px;
+  left: 10px;
   width: 2px;
   background: rgba(15, 23, 42, 0.22);
   border-radius: 1px;
@@ -78,7 +79,7 @@ const rows = computed(() => {
 .lk-about-timeline__item {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 22px;
+  grid-template-columns: 22px minmax(0, 1fr);
   gap: 0.35rem;
   align-items: start;
   padding: 0.55rem 0;
@@ -91,15 +92,15 @@ const rows = computed(() => {
 .lk-about-timeline__body {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
+  align-items: flex-start;
+  text-align: left;
   gap: 0.2rem;
-  padding-right: 0.15rem;
+  padding-left: 0.15rem;
   min-width: 0;
 }
 
 .lk-about-timeline__year {
-  align-self: flex-end;
+  align-self: flex-start;
   margin-bottom: 0.15rem;
   padding: 0.12rem 0.45rem;
   border-radius: 6px;
@@ -144,6 +145,7 @@ const rows = computed(() => {
   display: flex;
   justify-content: center;
   padding-top: 1.35rem;
+  order: -1;
 }
 
 .lk-about-timeline__item:first-child .lk-about-timeline__rail {

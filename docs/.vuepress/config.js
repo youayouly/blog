@@ -74,12 +74,12 @@ export default defineUserConfig({
   description: 'Incoming HKU ECIC Student · Tech, Study Abroad, Travel & Life',
 
   head: [
-    ['link', { rel: 'icon', type: 'image/jpeg', href: '/avatar.jpg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/gallery/avatar-bread.svg' }],
     ['meta', { name: 'theme-color', content: '#4a90d9' }],
   ],
 
   theme: hopeTheme({
-    logo: '/avatar.jpg',
+    logo: '/gallery/avatar-bread.svg',
     darkmode: 'toggle',
     pure: false,
     appearance: 'dark', // ✅ 默认暗黑

@@ -13,6 +13,7 @@ import AboutTimeline from './components/AboutTimeline.vue'
 import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
 import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
 import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
+import SiteAvatar from './components/SiteAvatar.vue'
 import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.js'
 import {
   LIVE2D_PREF_EVENT,
@@ -683,6 +684,7 @@ export default defineClientConfig({
     app.component('AboutArticleRecommend', AboutArticleRecommend)
     app.component('AboutCategoriesCard', AboutCategoriesCard)
     app.component('ProjectsRolesCard', ProjectsRolesCard)
+    app.component('SiteAvatar', SiteAvatar)
     router.beforeEach((to) => {
       if (isRootPathForAboutRedirect(to.path)) {
         return { path: '/about', replace: true }

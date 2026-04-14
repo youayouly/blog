@@ -1356,6 +1356,32 @@ html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
 :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed)) .vp-page-title {
   border-bottom: none !important;
   padding-bottom: 0;
+  justify-content: center !important;
+}
+
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+  .vp-page-title
+  h1 {
+  width: var(--lk-about-rail-w) !important;
+  flex: 0 0 var(--lk-about-rail-w) !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+  .vp-page-title
+  .page-info {
+  margin-left: auto !important;
+}
+
+@media (max-width: 959px) {
+  :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+    .vp-page-title
+    h1 {
+    width: auto !important;
+    flex: 0 1 auto !important;
+    margin-inline: auto !important;
+  }
 }
 
 :is(html.lk-header-split, main.vp-page:has(.lk-about-fullbleed)) .lk-about-fullbleed .about-page-layout {

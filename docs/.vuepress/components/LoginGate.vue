@@ -2,6 +2,15 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { normPath, setAuthed, syncAuthedFromStorage, useIsLoggedIn } from '../utils/authGate.js'
+import {
+  AVATAR_PREF_EVENT,
+  AVATAR_PREF_KEY,
+  avatarChoices,
+  readAvatar,
+  syncAvatarFromStorage,
+  useAvatarSrc,
+  writeAvatar,
+} from '../utils/avatarPref.js'
 
 const EXPECT_USER = 'youayouly'
 const EXPECT_PASS = 'LUyi@541000'
@@ -13,32 +22,43 @@ const password = ref('')
 const errorMsg = ref('')
 const logoutAnchorReady = ref(false)
 const showLoginModal = ref(false)
-
+const showAvatarModal = ref(false)
 const isLoggedIn = useIsLoggedIn()
+const currentAvatar = useAvatarSrc()
 
-/** Login entry only on About; protected routes are handled by client.js beforeEach. */
 const showLoginEntry = computed(() => {
   if (isLoggedIn.value) return false
   const p = normPath(route.path)
   return p === '/about' || p.startsWith('/about/')
 })
 
-function openLoginModal() {
-  if (!showLoginEntry.value) return
-  showLoginModal.value = true
-}
+const accountActionLabel = computed(() =>
+  isLoggedIn.value ? '切换头像' : '账户登录',
+)
 
 function closeLoginModal() {
   showLoginModal.value = false
 }
 
-watch(
-  () => route.path,
-  () => {
-    errorMsg.value = ''
-    syncAuthedFromStorage()
-  },
-)
+function closeAvatarModal() {
+  showAvatarModal.value = false
+}
+
+function openLoginModal() {
+  if (!showLoginEntry.value) return
+  showLoginModal.value = true
+}
+
+function openAvatarModal() {
+  if (!isLoggedIn.value) return
+  syncAvatarFromStorage()
+  showAvatarModal.value = true
+}
+
+function onAccountEntryClick() {
+  if (isLoggedIn.value) openAvatarModal()
+  else openLoginModal()
+}
 
 function onSubmit(e) {
   e.preventDefault()
@@ -53,8 +73,8 @@ function onSubmit(e) {
   errorMsg.value = '用户名或密码不正确'
 }
 
-/** Navigate away then clear session; try/catch so navigation errors do not block logout. */
 async function logout() {
+  closeAvatarModal()
   try {
     await router.replace('/about')
   } catch {
@@ -64,23 +84,47 @@ async function logout() {
 }
 
 const ANCHOR_ID = 'lk-logout-anchor'
-
-/**
- * Theme Hope navbar brand (see dist HTML):
- * <a class="route-link vp-brand" href="/"><img class="vp-nav-logo" ...><span class="vp-site-name">...</span></a>
- * Intercept clicks on the logo image only; clicking the site name still follows the link home.
- */
 let brandLinkEl = null
 let brandLogoCaptureHandler = null
 
+function applyAvatarToDom(src) {
+  if (typeof document === 'undefined') return
+  const avatar = src || readAvatar()
+
+  for (const img of document.querySelectorAll('img.vp-nav-logo')) {
+    img.setAttribute('src', avatar)
+  }
+  for (const img of document.querySelectorAll('.about-avatar-large, .lk-card__avatar')) {
+    img.setAttribute('src', avatar)
+  }
+
+  const icon = document.querySelector('link[rel="icon"]')
+  if (icon) {
+    icon.setAttribute('href', avatar)
+    const isSvg = avatar.endsWith('.svg')
+    const isPng = avatar.endsWith('.png')
+    icon.setAttribute('type', isSvg ? 'image/svg+xml' : isPng ? 'image/png' : 'image/jpeg')
+  }
+}
+
+function syncAvatarEverywhere() {
+  syncAvatarFromStorage()
+  applyAvatarToDom(currentAvatar.value)
+}
+
+function selectAvatar(src) {
+  if (!isLoggedIn.value) return
+  writeAvatar(src)
+  syncAvatarEverywhere()
+}
+
 function handleNavbarBrandLogoClick(e) {
-  if (!showLoginEntry.value) return
   const t = e.target
   if (!t || typeof t.matches !== 'function' || !t.matches('img.vp-nav-logo')) return
   e.preventDefault()
   e.stopPropagation()
   if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation()
-  openLoginModal()
+  onAccountEntryClick()
 }
 
 function bindNavbarLogoTrigger() {
@@ -130,14 +174,23 @@ function scheduleEnsureLogoutAnchor() {
     anchorRaf = requestAnimationFrame(() => {
       anchorRaf = null
       ensureLogoutAnchor()
+      syncAvatarEverywhere()
     })
   } else {
-    nextTick(ensureLogoutAnchor)
+    nextTick(() => {
+      ensureLogoutAnchor()
+      syncAvatarEverywhere()
+    })
   }
+}
+
+function onAvatarStorage(e) {
+  if (!e || e.key === AVATAR_PREF_KEY || e.key === null) syncAvatarEverywhere()
 }
 
 onMounted(() => {
   syncAuthedFromStorage()
+  syncAvatarEverywhere()
   nextTick(ensureLogoutAnchor)
   if (typeof MutationObserver !== 'undefined') {
     const nav = document.getElementById('navbar')
@@ -148,17 +201,23 @@ onMounted(() => {
       navbarObserver.observe(nav, { childList: true, subtree: true })
     }
   }
+  window.addEventListener('storage', onAvatarStorage)
+  window.addEventListener(AVATAR_PREF_EVENT, syncAvatarEverywhere)
 })
 
 watch(
   () => route.fullPath,
   () => {
     closeLoginModal()
+    closeAvatarModal()
     scheduleEnsureLogoutAnchor()
   },
 )
 
-watch(isLoggedIn, () => scheduleEnsureLogoutAnchor())
+watch(isLoggedIn, (v) => {
+  if (!v) closeAvatarModal()
+  scheduleEnsureLogoutAnchor()
+})
 
 watch(showLoginEntry, (v) => {
   if (!v) closeLoginModal()
@@ -178,6 +237,8 @@ onUnmounted(() => {
     navbarObserver.disconnect()
     navbarObserver = null
   }
+  window.removeEventListener('storage', onAvatarStorage)
+  window.removeEventListener(AVATAR_PREF_EVENT, syncAvatarEverywhere)
 })
 </script>
 
@@ -229,9 +290,47 @@ onUnmounted(() => {
     </div>
   </Teleport>
 
-  <Teleport v-if="isLoggedIn && logoutAnchorReady" :to="`#${ANCHOR_ID}`">
-    <button type="button" class="lk-logout-nav-btn" title="清除登录状态" @click="logout">
-      退出登录
+  <Teleport to="body">
+    <div
+      v-if="isLoggedIn && showAvatarModal"
+      class="lk-login-modal-wrap"
+      role="dialog"
+      aria-modal="true"
+      aria-label="切换头像"
+      @click.self="closeAvatarModal"
+    >
+      <div class="lk-login-entry-card lk-avatar-card">
+        <button type="button" class="lk-login-close" aria-label="关闭头像选择框" @click="closeAvatarModal">
+          ×
+        </button>
+        <h2 class="lk-login-entry-title">切换头像</h2>
+        <p class="lk-login-entry-hint">登录后可在这里切换头像，未登录时不可修改。</p>
+        <div class="lk-avatar-grid">
+          <button
+            v-for="item in avatarChoices"
+            :key="item.src"
+            type="button"
+            class="lk-avatar-option"
+            :class="{ 'is-active': currentAvatar === item.src }"
+            :title="item.label"
+            @click="selectAvatar(item.src)"
+          >
+            <img :src="item.src" :alt="item.label" />
+            <span>{{ item.label }}</span>
+          </button>
+        </div>
+        <div class="lk-avatar-actions">
+          <button type="button" class="lk-logout-nav-btn" title="退出登录" @click="logout">
+            退出登录
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <Teleport v-if="logoutAnchorReady" :to="`#${ANCHOR_ID}`">
+    <button type="button" class="lk-account-nav-btn" :title="accountActionLabel" @click="onAccountEntryClick">
+      {{ accountActionLabel }}
     </button>
   </Teleport>
 </template>
@@ -337,6 +436,55 @@ onUnmounted(() => {
 .lk-login-entry-submit:hover {
   filter: brightness(1.06);
 }
+
+.lk-avatar-card {
+  width: min(15rem, calc(100vw - 2.25rem));
+  padding: 0.7rem 0.65rem 0.65rem;
+  border-radius: 10px;
+}
+
+.lk-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.lk-avatar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 7px;
+  border: 1px solid rgba(100, 116, 139, 0.42);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(226, 232, 240, 0.96);
+  cursor: pointer;
+}
+
+.lk-avatar-option img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.lk-avatar-option span {
+  font-size: 0.6rem;
+  line-height: 1.2;
+}
+
+.lk-avatar-option.is-active {
+  border-color: rgba(74, 144, 217, 0.85);
+  box-shadow: 0 0 0 1px rgba(74, 144, 217, 0.22);
+}
+
+.lk-avatar-actions {
+  margin-top: 0.45rem;
+  display: flex;
+  justify-content: flex-end;
+}
 </style>
 
 <style>
@@ -355,6 +503,7 @@ onUnmounted(() => {
   line-height: 1;
 }
 
+.lk-account-nav-btn,
 .lk-logout-nav-btn {
   margin: 0;
   padding: 0.15rem 0.45rem;
@@ -369,6 +518,7 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+.lk-account-nav-btn:hover,
 .lk-logout-nav-btn:hover {
   border-color: rgba(148, 163, 184, 0.55);
   color: rgba(248, 250, 252, 0.96);
@@ -399,14 +549,22 @@ onUnmounted(() => {
   color: rgba(15, 23, 42, 0.92);
 }
 
+[data-theme='light'] .lk-account-nav-btn,
 [data-theme='light'] .lk-logout-nav-btn {
   border-color: rgba(100, 116, 139, 0.35);
   color: rgba(51, 65, 85, 0.9);
   background: rgba(241, 245, 249, 0.9);
 }
 
+[data-theme='light'] .lk-account-nav-btn:hover,
 [data-theme='light'] .lk-logout-nav-btn:hover {
   border-color: rgba(71, 85, 105, 0.45);
   background: rgba(226, 232, 240, 0.95);
+}
+
+[data-theme='light'] .lk-avatar-option {
+  background: rgba(248, 250, 252, 0.9);
+  color: rgba(30, 41, 59, 0.94);
+  border-color: rgba(148, 163, 184, 0.45);
 }
 </style>

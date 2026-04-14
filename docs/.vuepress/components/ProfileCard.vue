@@ -2,7 +2,7 @@
   <aside class="lk-card" :class="{ 'lk-card--embedded': embedded }">
     <!-- Avatar — click/hover rotates clockwise; release reverses counter-clockwise -->
     <div class="lk-card__avatar-wrap">
-      <img class="lk-card__avatar" src="/avatar.jpg" alt="Luke" />
+      <img class="lk-card__avatar" :src="avatarSrc" alt="Luke" />
     </div>
 
     <!-- Name with gradient text -->
@@ -93,7 +93,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { syncAvatarFromStorage, useAvatarSrc } from '../utils/avatarPref.js'
 
 defineProps({
   /** 嵌入侧栏控制面板时：去大阴影与 min-height，占满所在列 */
@@ -103,11 +104,16 @@ defineProps({
 // Put your WeChat QR image at docs/.vuepress/public/wechat-qr.jpg
 const qrSrc = ref('/wechat-qr.jpg')
 const qrFailed = ref(false)
+const avatarSrc = useAvatarSrc()
 
 function onQrError(e) {
   e.target.style.display = 'none'
   qrFailed.value = true
 }
+
+onMounted(() => {
+  syncAvatarFromStorage()
+})
 </script>
 
 <style scoped>
