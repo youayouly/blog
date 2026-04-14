@@ -1,9 +1,5 @@
 <template>
-  <div
-    v-show="anchored"
-    ref="wrapRef"
-    class="vp-nav-item hide-in-mobile lk-particles-nav-item"
-  >
+  <div v-show="anchored" ref="wrapRef" class="vp-nav-item lk-particles-nav-item">
     <div class="lk-navbar-fx-group" role="group" aria-label="页面效果开关">
       <button
         type="button"
@@ -28,6 +24,7 @@
       </button>
       <button
         v-if="showLive2dToggle"
+        ref="live2dBtnRef"
         type="button"
         class="lk-live2d-toggle"
         :class="{ 'is-off': !live2dOn }"
@@ -55,6 +52,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useIsLoggedIn } from '../utils/authGate.js'
 import {
   PARTICLES_PREF_EVENT,
   PARTICLES_PREF_KEY,
@@ -73,6 +71,8 @@ const anchored = ref(false)
 const enabled = ref(true)
 const live2dOn = ref(true)
 const route = useRoute()
+const isLoggedIn = useIsLoggedIn()
+const live2dBtnRef = ref(null)
 
 function isLive2dHiddenPath(path) {
   const p = String(path || '/').replace(/\/+$/, '') || '/'
@@ -86,7 +86,9 @@ function isLive2dHiddenPath(path) {
   )
 }
 
-const showLive2dToggle = computed(() => !isLive2dHiddenPath(route.path))
+const showLive2dToggle = computed(
+  () => isLoggedIn.value && !isLive2dHiddenPath(route.path),
+)
 
 function syncFromStorage() {
   enabled.value = readParticlesPref()
@@ -122,21 +124,148 @@ const live2dHint = computed(() =>
 
 let mo = null
 
+// #region agent log
+function agentLog(hypothesisId, location, message, data) {
+  if (typeof fetch === 'undefined') return
+  fetch('http://127.0.0.1:7655/ingest/296c82e7-8e39-4cb8-9b2f-c70e9a1e3f41', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7f7323' },
+    body: JSON.stringify({
+      sessionId: '7f7323',
+      hypothesisId,
+      location,
+      message,
+      data: data || {},
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {})
+}
+// #endregion
+
+function isMobileViewport() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(max-width: 719px)').matches
+}
+
+function findSidebarToggle(end) {
+  if (!end) return null
+  return (
+    end.querySelector('button.vp-toggle-sidebar-button') ||
+    end.querySelector('.vp-toggle-sidebar-button') ||
+    end.querySelector('button[aria-label*="Menu" i]') ||
+    end.querySelector('button[aria-label*="菜单" i]') ||
+    end.querySelector('button[aria-label*="Toggle" i]')
+  )
+}
+
+/** 插在导航栏右侧按钮列最末一个按钮之前（汉堡 / 关闭等），保证不塞进侧栏抽屉 */
+function findFxInsertBefore(end, el) {
+  if (!end) return null
+  const directButtons = [...end.querySelectorAll(':scope > button')].filter((n) => n !== el)
+  if (directButtons.length) return directButtons[directButtons.length - 1]
+  const t = findSidebarToggle(end)
+  if (t && t !== el && t.parentNode === end) return t
+  return null
+}
+
+/** 把主题月亮移入本组件的 flex 行：DOM 顺序为 星 → 月 → 人，桌面用 CSS order 还原为 星 → 人 → 月 */
+function hoistColorModeIntoGroup() {
+  const el = wrapRef.value
+  if (!el) return
+  const group = el.querySelector('.lk-navbar-fx-group')
+  const sw = document.getElementById('color-mode-switch')
+  if (!group || !sw) {
+    agentLog('H2', 'ParticlesNavbarToggle.vue:hoist', 'hoist skip: missing group or #color-mode-switch', {
+      hasGroup: !!group,
+      hasSw: !!sw,
+    })
+    return
+  }
+  const colorWrap = sw.closest('.vp-nav-item')
+  if (!colorWrap || colorWrap === el || el.contains(colorWrap)) {
+    agentLog('H3', 'ParticlesNavbarToggle.vue:hoist', 'hoist skip: bad colorWrap', {
+      hasColorWrap: !!colorWrap,
+      sameAsEl: colorWrap === el,
+      alreadyInside: colorWrap ? el.contains(colorWrap) : false,
+    })
+    return
+  }
+  /* Hope 默认把主题包在 `.hide-in-mobile` 里；搬到顶栏后必须在窄屏可见 */
+  colorWrap.classList.remove('hide-in-mobile')
+  colorWrap.classList.add('lk-navbar-theme-slot')
+
+  const liveBtn = live2dBtnRef.value
+  const mode = liveBtn && liveBtn.parentNode === group ? 'insertBeforeLive2d' : 'appendToGroup'
+  if (liveBtn && liveBtn.parentNode === group) {
+    group.insertBefore(colorWrap, liveBtn)
+  } else {
+    group.appendChild(colorWrap)
+  }
+  agentLog('H4', 'ParticlesNavbarToggle.vue:hoist', 'hoist applied', {
+    mode,
+    hasLiveBtn: !!liveBtn,
+    swInNavbar: !!document.querySelector('#navbar #color-mode-switch'),
+    swInSidebar: !!document.querySelector('#sidebar #color-mode-switch'),
+    strippedHideInMobile: true,
+  })
+}
+
 function tryAnchor() {
   const el = wrapRef.value
   if (!el) return false
+
   const end = document.querySelector('#navbar .vp-navbar-end')
   if (!end) return false
-  if (el.parentNode !== end) {
-    const colorBtn = end.querySelector('#color-mode-switch')
-    const colorWrap = colorBtn?.closest('.vp-nav-item') ?? null
-    end.insertBefore(el, colorWrap)
+
+  const insertBefore = findFxInsertBefore(end, el)
+  const endChildSummary = [...end.children].map((n) => ({
+    tag: n.tagName,
+    cls: (n.className && String(n.className).slice(0, 80)) || '',
+  }))
+  const directBtnCount = [...end.querySelectorAll(':scope > button')].filter((n) => n !== el).length
+  agentLog('H1', 'ParticlesNavbarToggle.vue:tryAnchor', 'anchor placement', {
+    mobile: isMobileViewport(),
+    directBtnCount,
+    hasInsertBefore: !!insertBefore,
+    insertTag: insertBefore?.tagName,
+    insertCls: insertBefore?.className && String(insertBefore.className).slice(0, 80),
+    endChildCount: end.children.length,
+    endChildSummary: endChildSummary.slice(0, 12),
+  })
+  if (insertBefore && insertBefore.parentNode === end) {
+    if (el.parentNode !== end || el.nextSibling !== insertBefore) {
+      end.insertBefore(el, insertBefore)
+    }
+  } else if (el.parentNode !== end) {
+    end.appendChild(el)
   }
+
+  hoistColorModeIntoGroup()
   anchored.value = true
-  if (mo) {
-    mo.disconnect()
-    mo = null
-  }
+  const sw = document.getElementById('color-mode-switch')
+  agentLog('H5', 'ParticlesNavbarToggle.vue:tryAnchor', 'post-anchor state', {
+    elParent: el.parentNode?.id || el.parentNode?.className,
+    rootContainsSw: !!(wrapRef.value && sw && wrapRef.value.contains(sw)),
+    path: route.path,
+    loggedIn: isLoggedIn.value,
+    showL2d: showLive2dToggle.value,
+  })
+  // #region agent log
+  const navScreen = document.querySelector('#nav-screen')
+  const drawerColorBlocks = navScreen
+    ? navScreen.querySelectorAll('.vp-color-mode').length
+    : 0
+  const drawerTitles = navScreen
+    ? navScreen.querySelectorAll('.vp-color-mode-title').length
+    : 0
+  const modeSwitches = document.querySelectorAll('button#color-mode-switch').length
+  agentLog('H6', 'ParticlesNavbarToggle.vue:tryAnchor', 'nav-screen theme duplicate probe', {
+    hasNavScreen: !!navScreen,
+    drawerVpColorModeCount: drawerColorBlocks,
+    drawerTitleCount: drawerTitles,
+    duplicateIdSwitchCount: modeSwitches,
+  })
+  // #endregion
   return true
 }
 
@@ -144,11 +273,18 @@ onMounted(async () => {
   syncFromStorage()
   syncLive2dFromStorage()
   await nextTick()
-  if (!tryAnchor()) {
+  const ok = tryAnchor()
+  const root = wrapRef.value
+  const sw = typeof document !== 'undefined' ? document.getElementById('color-mode-switch') : null
+  const hoisted = !!(root && sw && root.contains(sw))
+  if (!ok || isMobileViewport() || !hoisted) {
     mo = new MutationObserver(() => {
       tryAnchor()
     })
     mo.observe(document.body, { childList: true, subtree: true })
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', tryAnchor)
   }
   window.addEventListener('storage', onStorage)
   window.addEventListener(PARTICLES_PREF_EVENT, syncFromStorage)
@@ -158,6 +294,9 @@ onMounted(async () => {
 onUnmounted(() => {
   mo?.disconnect()
   mo = null
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', tryAnchor)
+  }
   window.removeEventListener('storage', onStorage)
   window.removeEventListener(PARTICLES_PREF_EVENT, syncFromStorage)
   window.removeEventListener(LIVE2D_PREF_EVENT, syncLive2dFromStorage)
@@ -171,4 +310,14 @@ watch(
   },
   { flush: 'post' },
 )
+
+watch(isLoggedIn, async () => {
+  await nextTick()
+  tryAnchor()
+})
+
+watch(showLive2dToggle, async () => {
+  await nextTick()
+  hoistColorModeIntoGroup()
+})
 </script>

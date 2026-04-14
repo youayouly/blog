@@ -1052,9 +1052,25 @@ body,
       margin: 0 0.5rem !important;
     }
   }
+
+  /* 手机：品牌区略向左收，避免三角形头像与菜单贴太紧 */
+  .vp-navbar .vp-navbar-start {
+    margin-left: 0 !important;
+    padding-left: max(0.35rem, env(safe-area-inset-left)) !important;
+  }
+
+  .vp-navbar .vp-brand {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  /* Hope NavScreen 底部会再渲染一套带标题的 ColorMode；主题按钮已提到顶栏，抽屉里不再重复 */
+  #nav-screen .vp-color-mode {
+    display: none !important;
+  }
 }
 
-/* 粒子 + 看板娘：与主题切换同一行、月亮左侧（窄屏与主题按钮同为 hide-in-mobile） */
+/* 粒子 + 看板娘 + 主题：同一行（月亮 DOM 由脚本移入 `.lk-navbar-fx-group`，窄屏顺序见下方 order） */
 .vp-navbar .lk-particles-nav-item {
   display: flex;
   align-items: center;
@@ -1065,6 +1081,50 @@ body,
   display: inline-flex;
   align-items: center;
   gap: 0.05rem;
+}
+
+/* 主题月亮容器被移入同一 flex 行后的排版（DOM：星 → 月 → 人） */
+.vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 从 Hope 搬过来的主题容器曾带 `.hide-in-mobile`；进顶栏后必须可见 */
+.vp-navbar .lk-navbar-fx-group > .vp-nav-item.lk-navbar-theme-slot {
+  display: inline-flex !important;
+}
+
+@media (min-width: 720px) {
+  .vp-navbar .lk-navbar-fx-group > .lk-particles-toggle {
+    order: 1;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .lk-live2d-toggle {
+    order: 2;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+    order: 3;
+  }
+}
+
+@media (max-width: 719px) {
+  .vp-navbar .lk-navbar-fx-group > .lk-particles-toggle {
+    order: 1;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+    order: 2;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .lk-live2d-toggle {
+    order: 3;
+  }
+
+  .vp-navbar .lk-navbar-fx-group {
+    gap: 0.15rem;
+  }
 }
 
 .vp-navbar .lk-particles-toggle {
@@ -1381,6 +1441,37 @@ html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
     width: auto !important;
     flex: 0 1 auto !important;
     margin-inline: auto !important;
+  }
+}
+
+@media (max-width: 719px) {
+  :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed)) .vp-page-title {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.35rem;
+    text-align: center;
+  }
+
+  :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+    .vp-page-title
+    h1 {
+    width: 100% !important;
+    max-width: 22rem;
+    margin: 0 auto !important;
+    text-align: center !important;
+    align-self: center !important;
+  }
+
+  :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+    .vp-page-title
+    .page-info {
+    width: 100% !important;
+    max-width: 22rem;
+    margin: 0 auto !important;
+    justify-content: center !important;
+    align-items: center !important;
+    align-self: center !important;
   }
 }
 
@@ -1824,6 +1915,21 @@ main.vp-page:has(.lk-about-fullbleed),
   }
 }
 
+/* 手机：个人卡与正文先出现，「动态」时间线栏压到整页最底 */
+@media (max-width: 719px) {
+  .about-page-layout__main {
+    order: 1;
+  }
+
+  .about-page-layout__cats {
+    order: 2;
+  }
+
+  .about-page-layout__rail {
+    order: 3;
+  }
+}
+
 // ── About Page — profile：双卡片、底对齐；中间间距略收、右侧略加宽 ───────────
 .about-profile {
   --about-profile-gap-x: clamp(1.75rem, 4.2vw, 3.25rem);
@@ -1835,8 +1941,9 @@ main.vp-page:has(.lk-about-fullbleed),
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
+    justify-items: start;
+    text-align: left;
+    row-gap: 1.15rem;
   }
 }
 
@@ -1845,6 +1952,12 @@ main.vp-page:has(.lk-about-fullbleed),
   flex-direction: column;
   align-items: center;
   height: 100%;
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    width: 100%;
+    max-width: 22rem;
+  }
 }
 
 .about-right {
