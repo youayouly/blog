@@ -1093,6 +1093,9 @@ body,
 /* 从 Hope 搬过来的主题容器曾带 `.hide-in-mobile`；进顶栏后必须可见 */
 .vp-navbar .lk-navbar-fx-group > .vp-nav-item.lk-navbar-theme-slot {
   display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 @media (min-width: 720px) {
@@ -1125,6 +1128,11 @@ body,
   .vp-navbar .lk-navbar-fx-group {
     gap: 0.15rem;
   }
+
+  .vp-navbar .lk-navbar-fx-group > .vp-nav-item.lk-navbar-theme-slot {
+    margin: 0 !important;
+    transform: none !important;
+  }
 }
 
 .vp-navbar .lk-particles-toggle {
@@ -1143,6 +1151,28 @@ body,
     background 0.2s ease,
     opacity 0.2s ease,
     color 0.2s ease;
+}
+
+/* 粒子星标和主题月亮统一尺寸/内边距，避免上下或左右错位 */
+.vp-navbar .lk-navbar-theme-slot #color-mode-switch {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 50%;
+  line-height: 1;
+  transform: translateY(2px);
+}
+
+.vp-navbar .lk-navbar-theme-slot #color-mode-switch .icon {
+  width: 1.12rem;
+  height: 1.12rem;
+  display: block;
 }
 
 .vp-navbar .lk-particles-toggle:hover {
