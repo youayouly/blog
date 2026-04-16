@@ -1099,30 +1099,46 @@ body,
 }
 
 @media (min-width: 720px) {
-  .vp-navbar .lk-navbar-fx-group > .lk-particles-toggle {
+  .vp-navbar .lk-navbar-fx-group > .lk-access-toggle {
     order: 1;
   }
 
-  .vp-navbar .lk-navbar-fx-group > .lk-live2d-toggle {
+  .vp-navbar .lk-navbar-fx-group > .lk-nav-hide-toggle {
     order: 2;
   }
 
-  .vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+  .vp-navbar .lk-navbar-fx-group > .lk-particles-toggle {
     order: 3;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .lk-live2d-toggle {
+    order: 4;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+    order: 5;
   }
 }
 
 @media (max-width: 719px) {
-  .vp-navbar .lk-navbar-fx-group > .lk-particles-toggle {
+  .vp-navbar .lk-navbar-fx-group > .lk-access-toggle {
     order: 1;
   }
 
-  .vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+  .vp-navbar .lk-navbar-fx-group > .lk-nav-hide-toggle {
     order: 2;
   }
 
-  .vp-navbar .lk-navbar-fx-group > .lk-live2d-toggle {
+  .vp-navbar .lk-navbar-fx-group > .lk-particles-toggle {
     order: 3;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .vp-nav-item {
+    order: 4;
+  }
+
+  .vp-navbar .lk-navbar-fx-group > .lk-live2d-toggle {
+    order: 5;
   }
 
   .vp-navbar .lk-navbar-fx-group {
@@ -1135,6 +1151,8 @@ body,
   }
 }
 
+.vp-navbar .lk-access-toggle,
+.vp-navbar .lk-nav-hide-toggle,
 .vp-navbar .lk-particles-toggle {
   display: inline-flex;
   align-items: center;
@@ -1175,19 +1193,36 @@ body,
   display: block;
 }
 
+.vp-navbar .lk-access-toggle:hover,
+.vp-navbar .lk-nav-hide-toggle:hover,
 .vp-navbar .lk-particles-toggle:hover {
   background: var(--vp-c-bg-soft);
 }
 
+.vp-navbar .lk-access-toggle.is-off,
 .vp-navbar .lk-particles-toggle.is-off {
   opacity: 0.42;
 }
 
+.vp-navbar .lk-nav-hide-toggle.is-active {
+  color: #f472b6;
+}
+
+.vp-navbar .lk-access-toggle.is-active {
+  color: #f472b6;
+}
+
+.vp-navbar .lk-access-toggle svg,
+.vp-navbar .lk-nav-hide-toggle svg,
 .vp-navbar .lk-particles-toggle svg,
 .vp-navbar .lk-particles-toggle .lk-particles-toggle__star {
   width: 1.12rem;
   height: 1.12rem;
   display: block;
+}
+
+.vp-navbar .lk-access-toggle.is-off svg {
+  opacity: 0.5;
 }
 
 .vp-navbar .lk-particles-toggle.is-off .lk-particles-toggle__star {

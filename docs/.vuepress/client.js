@@ -20,6 +20,14 @@ import {
   LIVE2D_PREF_KEY,
   readLive2dPref,
 } from './utils/live2dPref.js'
+import {
+  accessControlledPageOptions,
+  HIDDEN_NAV_ITEMS_EVENT,
+  PROTECTED_ACCESS_EVENT,
+  navbarPageOptions,
+  readHiddenNavItems,
+  readProtectedAccessItems,
+} from './utils/navPrefs.js'
 import FloatingShapes from './components/FloatingShapes.vue'
 import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
 import ParticlesNavbarToggle from './components/ParticlesNavbarToggle.vue'
@@ -75,6 +83,80 @@ function isSiteHomePath(path) {
 function isRootPathForAboutRedirect(path) {
   const normalized = (path || '/').replace(/\/+$/, '') || '/'
   return normalized === '/' || /^\/index\.html$/i.test(normalized)
+}
+
+function canAccessPath(path) {
+  const blockedIds = new Set(readProtectedAccessItems())
+  const matched = accessControlledPageOptions.find((item) => item.matches(path))
+  // Access control panel decides what is blocked.
+  // Login is only required to operate the UI, not to view pages that are not blocked.
+  if (matched) return !blockedIds.has(matched.id)
+  if (isPublicPath(path)) return true
+  return readAuthed()
+}
+
+function normalizeAnchorPath(href) {
+  if (!href || typeof window === 'undefined') return ''
+  try {
+    const url = new URL(href, window.location.origin)
+    return normPath(url.pathname)
+  } catch {
+    return ''
+  }
+}
+
+function findNavHideTarget(anchor) {
+  return (
+    anchor.closest('.vp-navbar-item') ||
+    anchor.closest('.vp-dropdown-wrapper') ||
+    anchor.closest('.vp-sidebar-item') ||
+    anchor.closest('.vp-dropdown-item') ||
+    anchor.closest('.vp-nav-item') ||
+    anchor.closest('li') ||
+    anchor
+  )
+}
+
+function clearManagedNavbarVisibility() {
+  if (typeof document === 'undefined') return
+  for (const el of document.querySelectorAll('[data-lk-hidden-nav-item="1"]')) {
+    el.style.display = ''
+    el.removeAttribute('data-lk-hidden-nav-item')
+    el.removeAttribute('data-lk-hidden-nav-id')
+  }
+}
+
+function applyHiddenNavbarItems() {
+  if (typeof document === 'undefined') return
+  clearManagedNavbarVisibility()
+
+  const hiddenIds = new Set(readHiddenNavItems())
+  if (!hiddenIds.size) return
+
+  const matchers = navbarPageOptions.filter((item) => hiddenIds.has(item.id))
+  const roots = [document.getElementById('navbar'), document.getElementById('nav-screen')].filter(Boolean)
+
+  for (const root of roots) {
+    for (const anchor of root.querySelectorAll('a[href]')) {
+      const path = normalizeAnchorPath(anchor.getAttribute('href') || anchor.href)
+      if (!path) continue
+      const matched = matchers.find((item) => item.matches(path))
+      if (!matched) continue
+      const target = findNavHideTarget(anchor)
+      target.style.display = 'none'
+      target.setAttribute('data-lk-hidden-nav-item', '1')
+      target.setAttribute('data-lk-hidden-nav-id', matched.id)
+    }
+  }
+}
+
+function ensureNavbarHideObserver() {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return
+  if (navbarHideObserver) return
+  navbarHideObserver = new MutationObserver(() => {
+    applyHiddenNavbarItems()
+  })
+  navbarHideObserver.observe(document.body, { childList: true, subtree: true })
 }
 
 /** 看板娘显隐仅由导航栏开关 + localStorage（`live2dPref.js`）控制，全站路由一致。 */
@@ -160,6 +242,7 @@ function nudgeNavbarSidebarRepaint() {
 
 let scrollBlurHandler = null
 let themeObserver = null
+let navbarHideObserver = null
 /** 已成功展示的图片下标（仅 onload 成功后更新） */
 let wallpaperDisplayIndex = -1
 /** 正在为其发起 Image 加载的下标，避免重复请求 */
@@ -689,7 +772,7 @@ export default defineClientConfig({
       if (isRootPathForAboutRedirect(to.path)) {
         return { path: '/about', replace: true }
       }
-      if (!isPublicPath(to.path) && !readAuthed()) {
+      if (!canAccessPath(to.path)) {
         return { path: '/about', replace: true }
       }
     })
@@ -702,6 +785,17 @@ export default defineClientConfig({
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : (fn) => Promise.resolve().then(fn)
+
+    const syncHiddenNav = () => {
+      applyHiddenNavbarItems()
+    }
+
+    const syncProtectedAccess = () => {
+      if (typeof window === 'undefined') return
+      if (!canAccessPath(route.path)) {
+        window.location.replace('/about.html')
+      }
+    }
 
     watch(
       () => route.path,
@@ -731,6 +825,9 @@ export default defineClientConfig({
       () => route.path,
       () => {
         nudgeNavbarSidebarRepaint()
+        nextTick(() => {
+          applyHiddenNavbarItems()
+        })
       },
       { flush: 'post' },
     )
@@ -740,8 +837,11 @@ export default defineClientConfig({
       applyLive2dRouteClass(route.path)
       syncLive2dPref()
       syncSplitPageHeader(route.path)
+      ensureNavbarHideObserver()
+      applyHiddenNavbarItems()
       nextTick(() => {
         nudgeNavbarSidebarRepaint()
+        applyHiddenNavbarItems()
       })
       initProgressBar()
       initLive2DScript()
@@ -750,6 +850,10 @@ export default defineClientConfig({
       })
       window.addEventListener('storage', onLive2dPrefStorage)
       window.addEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
+      window.addEventListener('storage', syncHiddenNav)
+      window.addEventListener(HIDDEN_NAV_ITEMS_EVENT, syncHiddenNav)
+      window.addEventListener('storage', syncProtectedAccess)
+      window.addEventListener(PROTECTED_ACCESS_EVENT, syncProtectedAccess)
       if (isSiteHomePath(route.path)) {
         setHomeEnhanceSuspended(true)
         microtask(() => {
@@ -768,6 +872,10 @@ export default defineClientConfig({
       if (typeof window !== 'undefined') {
         window.removeEventListener('storage', onLive2dPrefStorage)
         window.removeEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
+        window.removeEventListener('storage', syncHiddenNav)
+        window.removeEventListener(HIDDEN_NAV_ITEMS_EVENT, syncHiddenNav)
+        window.removeEventListener('storage', syncProtectedAccess)
+        window.removeEventListener(PROTECTED_ACCESS_EVENT, syncProtectedAccess)
       }
       if (typeof document !== 'undefined') {
         document.documentElement.classList.remove('lk-site-non-home')
@@ -776,6 +884,9 @@ export default defineClientConfig({
         document.documentElement.classList.remove('lk-live2d-route-hidden')
         document.documentElement.classList.remove('lk-header-split')
       }
+      navbarHideObserver?.disconnect()
+      navbarHideObserver = null
+      clearManagedNavbarVisibility()
     })
 
     watch(

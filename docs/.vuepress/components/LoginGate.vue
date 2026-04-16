@@ -254,7 +254,7 @@ onUnmounted(() => {
         </button>
         <h2 class="lk-login-entry-title">登录</h2>
         <p class="lk-login-entry-hint">
-          登录后可访问首页、留学、相册等；About、Projects、Articles 无需登录。
+          登录后可访问首页、留学、相册等，也可以在顶部图标区控制其他页面访问权限和隐藏导航页面。
         </p>
         <form class="lk-login-entry-form" @submit="onSubmit">
           <label class="lk-login-entry-label">
