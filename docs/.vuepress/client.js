@@ -214,6 +214,44 @@ function syncSplitPageHeader(path) {
   document.documentElement.classList.toggle('lk-header-split', use)
 }
 
+function debugAboutHeaderMetrics(runId) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  const p = normPath(window.location.pathname || '')
+  if (!(p === '/about' || p.startsWith('/about/'))) return
+
+  const pageTitle = document.querySelector('.vp-page-title')
+  const pageTitleH1 = document.querySelector('.vp-page-title h1')
+  const aboutLayout = document.querySelector('.lk-about-fullbleed .about-page-layout')
+  const navbar = document.querySelector('.vp-navbar')
+
+  const pageTitleRect = pageTitle?.getBoundingClientRect?.() || null
+  const h1Rect = pageTitleH1?.getBoundingClientRect?.() || null
+  const layoutRect = aboutLayout?.getBoundingClientRect?.() || null
+  const navbarRect = navbar?.getBoundingClientRect?.() || null
+
+  const data = {
+    path: p,
+    hasHeaderSplitClass: document.documentElement.classList.contains('lk-header-split'),
+    hasPageTitle: !!pageTitle,
+    hasPageTitleH1: !!pageTitleH1,
+    hasAboutLayout: !!aboutLayout,
+    pageTitlePaddingTop: pageTitle ? window.getComputedStyle(pageTitle).paddingTop : null,
+    pageTitleMarginTop: pageTitle ? window.getComputedStyle(pageTitle).marginTop : null,
+    h1Transform: pageTitleH1 ? window.getComputedStyle(pageTitleH1).transform : null,
+    layoutTransform: aboutLayout ? window.getComputedStyle(aboutLayout).transform : null,
+    navbarBottom: navbarRect ? Math.round(navbarRect.bottom) : null,
+    titleTop: pageTitleRect ? Math.round(pageTitleRect.top) : null,
+    h1Top: h1Rect ? Math.round(h1Rect.top) : null,
+    layoutTop: layoutRect ? Math.round(layoutRect.top) : null,
+    gapNavbarToTitle: navbarRect && pageTitleRect ? Math.round(pageTitleRect.top - navbarRect.bottom) : null,
+    gapTitleToLayout: pageTitleRect && layoutRect ? Math.round(layoutRect.top - pageTitleRect.bottom) : null,
+  }
+
+  // #region agent log
+  fetch('http://127.0.0.1:7655/ingest/296c82e7-8e39-4cb8-9b2f-c70e9a1e3f41',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'53a7cd'},body:JSON.stringify({sessionId:'53a7cd',runId,hypothesisId:'H1-H4',location:'docs/.vuepress/client.js:debugAboutHeaderMetrics',message:'About header/layout metrics snapshot',data,timestamp:Date.now()})}).catch(()=>{})
+  // #endregion
+}
+
 /** After hydration: toggles navbar/sidebar glass styles on non-home routes. */
 function syncSiteNonHomeClass(path) {
   if (typeof document === 'undefined') return
@@ -817,6 +855,9 @@ export default defineClientConfig({
       () => route.path,
       (path) => {
         syncSplitPageHeader(path)
+        nextTick(() => {
+          debugAboutHeaderMetrics('run-before-fix-route-watch')
+        })
       },
       { flush: 'post', immediate: true },
     )
@@ -837,6 +878,9 @@ export default defineClientConfig({
       applyLive2dRouteClass(route.path)
       syncLive2dPref()
       syncSplitPageHeader(route.path)
+      nextTick(() => {
+        debugAboutHeaderMetrics('run-before-fix-mounted')
+      })
       ensureNavbarHideObserver()
       applyHiddenNavbarItems()
       nextTick(() => {
@@ -894,6 +938,7 @@ export default defineClientConfig({
       async () => {
         await nextTick()
         nudgeLive2dForCurrentRoute()
+        debugAboutHeaderMetrics('run-before-fix-route-post-nexttick')
       },
       { flush: 'post' },
     )

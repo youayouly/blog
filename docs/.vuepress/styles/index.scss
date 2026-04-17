@@ -1481,7 +1481,18 @@ html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
 :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed)) .vp-page-title {
   border-bottom: none !important;
   padding-bottom: 0;
+  padding-inline: 0 !important;
+  width: 100% !important;
+  max-width: var(--content-width) !important;
+  margin: 0 auto !important;
   justify-content: center !important;
+}
+
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
+  .theme-hope-content {
+  padding-inline: 0 !important;
+  max-width: var(--content-width) !important;
+  margin: 0 auto !important;
 }
 
 :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed))
@@ -1537,6 +1548,40 @@ html.lk-header-split:has(.lk-about-fullbleed) .vp-page-title hr {
     justify-content: center !important;
     align-items: center !important;
     align-self: center !important;
+  }
+}
+
+/* About（当前生效结构：.lk-about-fullbleed）：
+ * 压缩标题与导航间距 + 标题轻微右移 + 三栏整体上提
+ */
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed), .page-about) .vp-page-title {
+  padding-top: 0.2rem !important;
+  margin-top: 0 !important;
+}
+
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed), .page-about)
+  .vp-page-title
+  h1 {
+  transform: translate(12px, -6px);
+}
+
+:is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed), .page-about)
+  .lk-about-fullbleed
+  .about-page-layout {
+  transform: translateY(0);
+}
+
+@media (max-width: 959px) {
+  :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed), .page-about)
+    .vp-page-title
+    h1 {
+    transform: translate(6px, -4px);
+  }
+
+  :is(html.lk-header-split:has(.lk-about-fullbleed), main.vp-page:has(.lk-about-fullbleed), .page-about)
+    .lk-about-fullbleed
+    .about-page-layout {
+    transform: translateY(0);
   }
 }
 
@@ -1991,6 +2036,113 @@ main.vp-page:has(.lk-about-fullbleed),
   }
 
   .about-page-layout__rail {
+    order: 3;
+  }
+}
+
+// ── About Page (Apple-style layout system) ─────────────────────────────────
+.lk-shell-container {
+  --lk-shell-max-width: 1280px;
+  width: min(100%, var(--lk-shell-max-width));
+  margin-inline: auto;
+  padding-inline: 32px;
+  box-sizing: border-box;
+}
+
+.page-about {
+  --lk-space-24: 24px;
+  --lk-space-32: 32px;
+  --lk-space-64: 64px;
+  --lk-about-top-gap: 40px;
+  --lk-about-title-shift-x: 14px;
+  --lk-about-content-lift: 10px;
+}
+
+.page-about .vp-page-title {
+  display: none !important;
+}
+
+.page-about [vp-content]:not(.custom) {
+  padding-top: 0 !important;
+}
+
+.page-about .theme-hope-content {
+  max-width: none !important;
+  padding-inline: 0 !important;
+}
+
+.lk-about__container {
+  padding-top: var(--lk-about-top-gap);
+  padding-bottom: var(--lk-space-64);
+}
+
+.lk-about__title-wrap {
+  margin: 0 0 var(--lk-space-32);
+}
+
+.lk-about__title {
+  margin: 0;
+  font-size: clamp(2rem, 2.8vw, 2.75rem);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  transform: translateX(var(--lk-about-title-shift-x));
+}
+
+.lk-about-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 280px;
+  gap: var(--lk-space-24);
+  align-items: start;
+  transform: translateY(calc(-1 * var(--lk-about-content-lift)));
+}
+
+.lk-about-grid__left,
+.lk-about-grid__main,
+.lk-about-grid__right {
+  min-width: 0;
+  align-self: start;
+}
+
+.lk-about-grid__main {
+  display: grid;
+  gap: var(--lk-space-32);
+}
+
+.lk-about-grid__main .about-profile {
+  margin-bottom: 0;
+}
+
+.lk-about-grid__main .about-outro {
+  margin-top: 0;
+}
+
+@media (max-width: 959px) {
+  .lk-shell-container {
+    padding-inline: 24px;
+  }
+
+  .lk-about__container {
+    --lk-about-title-shift-x: 8px;
+    --lk-about-content-lift: 0px;
+    padding-top: var(--lk-space-32);
+    padding-bottom: var(--lk-space-64);
+  }
+
+  .lk-about-grid {
+    grid-template-columns: 1fr;
+    gap: var(--lk-space-24);
+  }
+
+  .lk-about-grid__main {
+    order: 1;
+  }
+
+  .lk-about-grid__left {
+    order: 2;
+  }
+
+  .lk-about-grid__right {
     order: 3;
   }
 }
