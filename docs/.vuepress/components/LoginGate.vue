@@ -11,6 +11,7 @@ import {
   useAvatarSrc,
   writeAvatar,
 } from '../utils/avatarPref.js'
+import { writeSiteApiCreds, clearSiteApiCreds } from '../utils/siteApiCreds.js'
 
 const EXPECT_USER = 'youayouly'
 const EXPECT_PASS = 'LUyi@541000'
@@ -61,6 +62,7 @@ function onSubmit(e) {
   errorMsg.value = ''
   if (username.value === EXPECT_USER && password.value === EXPECT_PASS) {
     setAuthed(true)
+    writeSiteApiCreds(username.value, password.value)
     username.value = ''
     password.value = ''
     showLoginModal.value = false
@@ -77,6 +79,7 @@ async function logout() {
     /* ignore navigation failure */
   }
   setAuthed(false)
+  clearSiteApiCreds()
 }
 
 const ANCHOR_ID = 'lk-logout-anchor'

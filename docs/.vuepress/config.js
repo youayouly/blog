@@ -66,6 +66,7 @@ export default defineUserConfig({
         __LK_ARTICLE_COUNT__: JSON.stringify(lkArticleCount),
         __LK_BUILD_TIME_ISO__: JSON.stringify(lkBuildTimeIso),
         __LK_SITE_YEAR__: JSON.stringify(lkSiteYear),
+        __LK_PUBLISH_API_URL__: JSON.stringify(process.env.LK_PUBLISH_API_URL || ''),
       },
     },
   }),
