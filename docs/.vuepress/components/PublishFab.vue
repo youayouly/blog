@@ -543,7 +543,7 @@ async function doPublish() {
   width: min(34rem, 100%);
   max-height: 90vh;
   margin-top: 1rem;
-  padding: 1rem;
+  padding: 0;
   border-radius: 12px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg);
@@ -553,6 +553,7 @@ async function doPublish() {
   flex-direction: column;
   min-height: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .lk-publish-push-sheet {
@@ -576,10 +577,9 @@ async function doPublish() {
 .lk-publish-panel__scroll {
   flex: 1 1 auto;
   min-height: 0;
-  max-height: calc(90vh - 200px);
   overflow-y: auto;
-  padding-right: 0.15rem;
-  margin-right: -0.15rem;
+  padding: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .lk-publish-panel__head {
@@ -587,7 +587,9 @@ async function doPublish() {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  padding: 1rem;
+  padding-bottom: 0;
+  flex-shrink: 0;
 }
 
 .lk-publish-push-sheet .lk-publish-panel__head {
@@ -772,13 +774,11 @@ async function doPublish() {
   justify-content: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
-  flex: 0 0 auto;
-  margin-top: 0.75rem;
+  flex-shrink: 0;
+  padding: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg);
-  position: sticky;
-  bottom: 0;
 }
 
 .lk-publish-primary,
