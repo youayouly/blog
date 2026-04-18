@@ -4,6 +4,8 @@
   "outputDirectory": "docs/.vuepress/dist",
   "installCommand": "npm install",
   "rewrites": [
+    { "source": "/api/publish", "destination": "/api/publish.mjs" },
+    { "source": "/api/history", "destination": "/api/history.mjs" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/home", "destination": "/home.html" },
     { "source": "/article", "destination": "/article/index.html" }
