@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clean *)",
+      "Bash(grep -E \"\\\\.\\(json|js|ts|config\\)$\")",
+      "Bash(grep -E \"\\\\.\\(js|ts|config|json\\)$\")",
+      "Bash(xargs grep *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(mv publish.js publish.mjs)",
+      "Bash(mv history.js history.mjs)"
+    ]
+  }
+}

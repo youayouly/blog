@@ -1,0 +1,2 @@
+{"sessionId":"97a5f3","location":"PublishFab.vue:onMounted","message":"client mount","data":{"isLoggedIn":true,"publishApiBaseLen":0,"apiUrl":"/api/publish","historyUrl":"/api/history","origin":"http://localhost:8080","pathname":"/about.html","hasApiUser":true},"hypothesisId":"H1-H3","timestamp":1776500408494}
+{"sessionId":"97a5f3","location":"PublishFab.vue:loadHistory","message":"history fetch response","data":{"historyUrl":"/api/history","status":404,"ok":false,"target":"article","slug":"langchain"},"hypothesisId":"H2-H3","timestamp":1776501377270}
