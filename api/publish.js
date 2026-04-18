@@ -1,15 +1,5 @@
 /**
  * Vercel Serverless Function: 发布 Markdown 文件到 GitHub
- *
- * 请求体: { target, filename, content, commitMessage, authUser, authPass }
- * 响应: { ok: boolean, path?: string, url?: string, error?: string }
- *
- * 环境变量:
- * - GITHUB_TOKEN: GitHub Personal Access Token (需要 repo 权限)
- * - GITHUB_REPO: 仓库名 (owner/repo 格式)
- * - GITHUB_BRANCH: 分支名 (可选，默认 main)
- * - LK_SITE_USER: 站点登录用户名
- * - LK_SITE_PASS: 站点登录密码
  */
 
 const ALLOWED_TARGETS = {
@@ -17,40 +7,40 @@ const ALLOWED_TARGETS = {
   tech: 'docs/tech',
 }
 
-const ALLOWED_EXTENSIONS = ['.md', '.markdown']
 const GITHUB_API_BASE = 'https://api.github.com'
 
 function json(status, body) {
-  return new Response(JSON.stringify(body), {
-    status,
+  return {
+    statusCode: status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
-  })
+    body: JSON.stringify(body),
+  }
 }
 
 function validateFilename(filename) {
   if (!filename || typeof filename !== 'string') return false
   const base = filename.toLowerCase()
-  if (!ALLOWED_EXTENSIONS.some((ext) => base.endsWith(ext))) return false
+  if (!base.endsWith('.md') && !base.endsWith('.markdown')) return false
   const nameWithoutExt = base.replace(/\.(md|markdown)$/, '')
   return /^[a-z0-9][a-z0-9-]{0,100}$/.test(nameWithoutExt)
 }
 
-export default async function handler(request) {
+module.exports = async function handler(req, res) {
   // CORS preflight
-  if (request.method === 'OPTIONS') {
-    return json(204, {})
+  if (req.method === 'OPTIONS') {
+    return res.status(204).json({})
   }
 
-  if (request.method !== 'POST') {
-    return json(405, { ok: false, error: 'Method not allowed' })
+  if (req.method !== 'POST') {
+    return res.status(405).json({ ok: false, error: 'Method not allowed' })
   }
 
-  // 环境变量校验
+  // 环境变量
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const LK_SITE_USER = process.env.LK_SITE_USER
   const LK_SITE_PASS = process.env.LK_SITE_PASS
@@ -59,26 +49,21 @@ export default async function handler(request) {
 
   if (!GITHUB_TOKEN || !LK_SITE_USER || !LK_SITE_PASS || !GITHUB_REPO) {
     console.error('Missing required environment variables')
-    return json(500, { ok: false, error: 'Server misconfiguration' })
+    return res.status(500).json({ ok: false, error: 'Server misconfiguration' })
   }
 
-  let body
-  try {
-    body = await request.json()
-  } catch {
-    return json(400, { ok: false, error: 'Invalid JSON body' })
-  }
+  const body = req.body
 
   const { target, filename, content, commitMessage, authUser, authPass } = body
 
   // 用户鉴权
   if (authUser !== LK_SITE_USER || authPass !== LK_SITE_PASS) {
-    return json(401, { ok: false, error: 'Authentication failed' })
+    return res.status(401).json({ ok: false, error: 'Authentication failed' })
   }
 
   // target 白名单校验
   if (!target || !ALLOWED_TARGETS[target]) {
-    return json(400, {
+    return res.status(400).json({
       ok: false,
       error: `Invalid target. Allowed: ${Object.keys(ALLOWED_TARGETS).join(', ')}`,
     })
@@ -86,7 +71,7 @@ export default async function handler(request) {
 
   // filename 格式校验
   if (!validateFilename(filename)) {
-    return json(400, {
+    return res.status(400).json({
       ok: false,
       error: 'Invalid filename. Must be lowercase letters, numbers, hyphens, ending with .md',
     })
@@ -94,12 +79,12 @@ export default async function handler(request) {
 
   // content 非空校验
   if (!content || typeof content !== 'string' || !content.trim()) {
-    return json(400, { ok: false, error: 'Content cannot be empty' })
+    return res.status(400).json({ ok: false, error: 'Content cannot be empty' })
   }
 
   // commitMessage 非空校验
   if (!commitMessage || typeof commitMessage !== 'string' || !commitMessage.trim()) {
-    return json(400, { ok: false, error: 'Commit message is required' })
+    return res.status(400).json({ ok: false, error: 'Commit message is required' })
   }
 
   // 构建完整路径
@@ -109,11 +94,11 @@ export default async function handler(request) {
     : `${filename.toLowerCase()}.md`
   const filePath = `${dir}/${normalizedFilename}`
 
-  // 获取当前文件 SHA（用于更新）
-  let currentSha = null
-  const getShaUrl = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`
-
   try {
+    // 获取当前文件 SHA（用于更新）
+    let currentSha = null
+    const getShaUrl = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`
+
     const shaRes = await fetch(getShaUrl, {
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -156,13 +141,13 @@ export default async function handler(request) {
 
     if (!ghRes.ok) {
       console.error('GitHub API error:', ghData)
-      return json(502, {
+      return res.status(502).json({
         ok: false,
         error: ghData.message || `GitHub API error (${ghRes.status})`,
       })
     }
 
-    return json(200, {
+    return res.status(200).json({
       ok: true,
       path: filePath,
       sha: ghData.content?.sha || ghData.commit?.sha,
@@ -170,6 +155,6 @@ export default async function handler(request) {
     })
   } catch (err) {
     console.error('GitHub request failed:', err)
-    return json(502, { ok: false, error: 'Failed to connect to GitHub' })
+    return res.status(502).json({ ok: false, error: 'Failed to connect to GitHub' })
   }
 }
