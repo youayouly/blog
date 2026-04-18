@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vuepress dev docs",
     "build": "node --max-old-space-size=8192 ./node_modules/vuepress/bin/vuepress.js build docs --clean-cache --clean-temp",
-    "build:trace": "node scripts/build-with-page-trace.mjs"
+    "build:trace": "node scripts/build-with-page-trace.mjs",
+    "push": "node scripts/push.mjs",
+    "check": "node scripts/check-publish.mjs"
   },
   "keywords": [],
   "author": "",
