@@ -541,19 +541,25 @@ async function doPublish() {
 
 .lk-publish-panel {
   width: min(34rem, 100%);
-  max-height: 90vh;
+  max-height: 80vh;
   margin-top: 1rem;
   padding: 0;
   border-radius: 12px;
   border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-1);
+  background: #fff;
+  color: #333;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   min-height: 0;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+[data-theme='dark'] .lk-publish-panel {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
 }
 
 .lk-publish-push-sheet {
@@ -575,8 +581,9 @@ async function doPublish() {
 }
 
 .lk-publish-panel__scroll {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 1 auto;
+  max-height: calc(80vh - 150px);
+  min-height: 100px;
   overflow-y: auto;
   padding: 1rem;
   padding-bottom: 0.5rem;
@@ -587,8 +594,7 @@ async function doPublish() {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 1rem;
-  padding-bottom: 0;
+  padding: 1rem 1rem 0.5rem;
   flex-shrink: 0;
 }
 
@@ -775,10 +781,14 @@ async function doPublish() {
   gap: 0.5rem;
   flex-wrap: wrap;
   flex-shrink: 0;
-  padding: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg);
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+[data-theme='dark'] .lk-publish-actions {
+  border-top-color: #334155;
+  background: #0f172a;
 }
 
 .lk-publish-primary,
