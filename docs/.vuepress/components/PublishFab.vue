@@ -29,6 +29,8 @@ const open = ref(false)
 const pushSheetOpen = ref(false)
 const target = ref('article')
 const slug = ref('')
+const articleTitle = ref('')
+const articleExcerpt = ref('')
 const content = ref('')
 const commitMsg = ref('')
 const dragging = ref(false)
@@ -235,6 +237,16 @@ async function doPublish() {
     setMsg('文件名（slug）需为小写字母、数字、连字符。', 'err')
     return
   }
+  const title = articleTitle.value.trim()
+  if (!title) {
+    setMsg('请填写文章标题。', 'err')
+    return
+  }
+  const excerpt = articleExcerpt.value.trim()
+  if (!excerpt) {
+    setMsg('请填写文章摘要。', 'err')
+    return
+  }
   if (!content.value.trim()) {
     setMsg('正文为空。', 'err')
     return
@@ -260,6 +272,8 @@ async function doPublish() {
         authPass: pass,
         target: target.value,
         filename: `${s}.md`,
+        title,
+        excerpt,
         content: content.value,
         commitMessage: cm.slice(0, 500),
       }),
@@ -357,6 +371,29 @@ async function doPublish() {
                   type="text"
                   autocomplete="off"
                   placeholder="例如 my-new-note"
+                />
+              </div>
+
+              <div class="lk-publish-field">
+                <label class="lk-publish-label" for="lk-publish-title">文章标题</label>
+                <input
+                  id="lk-publish-title"
+                  v-model="articleTitle"
+                  class="lk-publish-input"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="例如：Edge AI 部署流水线记录"
+                />
+              </div>
+
+              <div class="lk-publish-field">
+                <label class="lk-publish-label" for="lk-publish-excerpt">文章摘要</label>
+                <textarea
+                  id="lk-publish-excerpt"
+                  v-model="articleExcerpt"
+                  class="lk-publish-input"
+                  rows="2"
+                  placeholder="简短描述文章内容"
                 />
               </div>
 

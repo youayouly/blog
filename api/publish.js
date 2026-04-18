@@ -1,5 +1,6 @@
 /**
  * Vercel Serverless Function: 发布 Markdown 文件到 GitHub
+ * 同时更新文章列表页
  */
 
 const ALLOWED_TARGETS = {
@@ -17,13 +18,100 @@ function validateFilename(filename) {
   return /^[a-z0-9][a-z0-9-]{0,100}$/.test(nameWithoutExt)
 }
 
+async function getFileSha(token, repo, path, branch) {
+  try {
+    const url = `${GITHUB_API_BASE}/repos/${repo}/contents/${path}?ref=${branch}`
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'VuePress-Publish-API/1.0',
+      },
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return data.sha
+    }
+  } catch {}
+  return null
+}
+
+async function getFileContent(token, repo, path, branch) {
+  try {
+    const url = `${GITHUB_API_BASE}/repos/${repo}/contents/${path}?ref=${branch}`
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'VuePress-Publish-API/1.0',
+      },
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.content) {
+        return Buffer.from(data.content, 'base64').toString('utf-8')
+      }
+    }
+  } catch {}
+  return null
+}
+
+async function updateFile(token, repo, path, content, message, branch, sha) {
+  const url = `${GITHUB_API_BASE}/repos/${repo}/contents/${path}`
+  const body = {
+    message,
+    content: Buffer.from(content).toString('base64'),
+    branch,
+  }
+  if (sha) body.sha = sha
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'VuePress-Publish-API/1.0',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  return res
+}
+
+function generateArticleListItem(slug, title, excerpt, date) {
+  return `    <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/${slug}.html">
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="${date}">${date}</time>
+          <h3 class="lk-blog__post-title">${title}</h3>
+          <p class="lk-blog__excerpt">${excerpt}</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>`
+}
+
+function updateArticleList(originalContent, newItem) {
+  // 找到 <ol class="lk-blog__list"> 后面插入新条目
+  const listStart = originalContent.indexOf('<ol class="lk-blog__list">')
+  if (listStart === -1) return null
+
+  const afterListStart = originalContent.indexOf('>', listStart) + 1
+
+  // 在列表开始后插入新条目
+  const before = originalContent.slice(0, afterListStart)
+  const after = originalContent.slice(afterListStart)
+
+  return before + '\n' + newItem + '\n' + after
+}
+
 module.exports = async function handler(req, res) {
-  // 设置 CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-  // CORS preflight
   if (req.method === 'OPTIONS') {
     return res.status(204).send('')
   }
@@ -33,7 +121,6 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 环境变量
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN
     const LK_SITE_USER = process.env.LK_SITE_USER
     const LK_SITE_PASS = process.env.LK_SITE_PASS
@@ -41,120 +128,95 @@ module.exports = async function handler(req, res) {
     const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main'
 
     if (!GITHUB_TOKEN || !LK_SITE_USER || !LK_SITE_PASS || !GITHUB_REPO) {
-      return res.status(500).json({
-        ok: false,
-        error: 'Server misconfiguration',
-        debug: {
-          hasToken: !!GITHUB_TOKEN,
-          hasUser: !!LK_SITE_USER,
-          hasPass: !!LK_SITE_PASS,
-          hasRepo: !!GITHUB_REPO,
-        }
-      })
+      return res.status(500).json({ ok: false, error: 'Server misconfiguration' })
     }
 
     const body = req.body || {}
-    const { target, filename, content, commitMessage, authUser, authPass } = body
+    const { target, filename, title, excerpt, content, commitMessage, authUser, authPass } = body
 
     // 用户鉴权
     if (authUser !== LK_SITE_USER || authPass !== LK_SITE_PASS) {
       return res.status(401).json({ ok: false, error: 'Authentication failed' })
     }
 
-    // target 白名单校验
+    // 校验
     if (!target || !ALLOWED_TARGETS[target]) {
-      return res.status(400).json({
-        ok: false,
-        error: `Invalid target. Allowed: ${Object.keys(ALLOWED_TARGETS).join(', ')}`,
-      })
+      return res.status(400).json({ ok: false, error: 'Invalid target' })
     }
-
-    // filename 格式校验
     if (!validateFilename(filename)) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Invalid filename',
-      })
+      return res.status(400).json({ ok: false, error: 'Invalid filename' })
+    }
+    if (!title || !excerpt || !content || !commitMessage) {
+      return res.status(400).json({ ok: false, error: 'Missing required fields' })
     }
 
-    // content 非空校验
-    if (!content || typeof content !== 'string' || !content.trim()) {
-      return res.status(400).json({ ok: false, error: 'Content cannot be empty' })
-    }
-
-    // commitMessage 非空校验
-    if (!commitMessage || typeof commitMessage !== 'string' || !commitMessage.trim()) {
-      return res.status(400).json({ ok: false, error: 'Commit message is required' })
-    }
-
-    // 构建完整路径
     const dir = ALLOWED_TARGETS[target]
     const normalizedFilename = filename.toLowerCase().endsWith('.md')
       ? filename.toLowerCase()
       : `${filename.toLowerCase()}.md`
+    const slug = normalizedFilename.replace(/\.md$/, '')
     const filePath = `${dir}/${normalizedFilename}`
 
-    // 获取当前文件 SHA（用于更新）
-    let currentSha = null
-    try {
-      const getShaUrl = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`
-      const shaRes = await fetch(getShaUrl, {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'VuePress-Publish-API/1.0',
-        },
-      })
-      if (shaRes.ok) {
-        const shaData = await shaRes.json()
-        currentSha = shaData.sha
+    // 获取当前日期
+    const now = new Date()
+    const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
+
+    // 1. 创建/更新文章文件
+    let articleSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, filePath, GITHUB_BRANCH)
+
+    // 添加 frontmatter
+    const articleContent = `---
+title: ${title}
+date: ${dateStr}
+---
+
+${content}`
+
+    const articleRes = await updateFile(
+      GITHUB_TOKEN, GITHUB_REPO, filePath, articleContent,
+      `${commitMessage} (创建文章: ${title})`, GITHUB_BRANCH, articleSha
+    )
+
+    if (!articleRes.ok) {
+      const err = await articleRes.json().catch(() => ({}))
+      return res.status(502).json({ ok: false, error: err.message || 'Failed to create article' })
+    }
+
+    // 2. 如果是 article 分区，更新列表页
+    let listUpdated = false
+    if (target === 'article') {
+      try {
+        const listPath = 'docs/article/README.md'
+        const listContent = await getFileContent(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+
+        if (listContent) {
+          const newItem = generateArticleListItem(slug, title, excerpt, dateStr)
+          const updatedList = updateArticleList(listContent, newItem)
+
+          if (updatedList) {
+            const listSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+            await updateFile(
+              GITHUB_TOKEN, GITHUB_REPO, listPath, updatedList,
+              `更新文章列表: ${title}`, GITHUB_BRANCH, listSha
+            )
+            listUpdated = true
+          }
+        }
+      } catch (e) {
+        console.error('Failed to update list:', e)
       }
-    } catch (e) {
-      // 文件不存在，忽略错误
     }
 
-    // GitHub Contents API 请求
-    const putUrl = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${filePath}`
-    const putBody = {
-      message: commitMessage.slice(0, 500),
-      content: Buffer.from(content).toString('base64'),
-      branch: GITHUB_BRANCH,
-    }
-    if (currentSha) {
-      putBody.sha = currentSha
-    }
-
-    const ghRes = await fetch(putUrl, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github+json',
-        'User-Agent': 'VuePress-Publish-API/1.0',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(putBody),
-    })
-
-    const ghData = await ghRes.json()
-
-    if (!ghRes.ok) {
-      return res.status(502).json({
-        ok: false,
-        error: ghData.message || `GitHub API error (${ghRes.status})`,
-      })
-    }
+    const articleData = await articleRes.json()
 
     return res.status(200).json({
       ok: true,
       path: filePath,
-      sha: ghData.content?.sha || ghData.commit?.sha,
-      url: ghData.content?.html_url,
+      url: articleData.content?.html_url,
+      listUpdated,
     })
   } catch (err) {
     console.error('Handler error:', err)
-    return res.status(500).json({
-      ok: false,
-      error: err.message || 'Internal server error',
-    })
+    return res.status(500).json({ ok: false, error: err.message || 'Internal server error' })
   }
 }
