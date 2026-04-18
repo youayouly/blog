@@ -19,7 +19,18 @@
       "Bash(npm run *)",
       "Bash(curl -I http://localhost:3000/assets/style-BEcYgR1d.css)",
       "Bash(node *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(gh api *)",
+      "WebSearch",
+      "Bash(npx vercel *)",
+      "Bash(curl -s -I https://luyi.me)",
+      "Bash(curl -s https://www.luyi.me/article/)",
+      "Bash(git ls-tree *)",
+      "Bash(grep \"docs/article/.*\\\\.md$\")",
+      "Bash(git checkout *)",
+      "Bash(head -n -2 docs/article/README.md)",
+      "Bash(cat)",
+      "Bash(mv /tmp/readme_temp.md docs/article/README.md)"
     ]
   }
 }
