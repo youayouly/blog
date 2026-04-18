@@ -2,14 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "docs/.vuepress/dist",
   "installCommand": "npm install",
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
-    { "source": "/api/publish", "destination": "/api/publish.js" },
-    { "source": "/api/history", "destination": "/api/history.js" },
+    { "source": "/api/publish", "destination": "/api/publish" },
+    { "source": "/api/history", "destination": "/api/history" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/home", "destination": "/home.html" },
     { "source": "/article", "destination": "/article/index.html" }
