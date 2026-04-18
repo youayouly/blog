@@ -13,7 +13,11 @@
       "Bash(mv history.js history.mjs)",
       "Bash(node -c api/publish.js)",
       "Bash(curl -s \"https://raw.githubusercontent.com/youayouly/blog/main/docs/article/test-article.md\")",
-      "Bash(curl -s http://localhost:3000/article/)"
+      "Bash(curl -s http://localhost:3000/article/)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(npm run *)",
+      "Bash(curl -I http://localhost:3000/assets/style-BEcYgR1d.css)"
     ]
   }
 }

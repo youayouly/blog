@@ -72,7 +72,5 @@ comment: false
         />
       </a>
     </li>
-    <li class="lk-blog__item">
-    <li class="lk-blog__item">
-</ol>
+  </ol>
 </div>
