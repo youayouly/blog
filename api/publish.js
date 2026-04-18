@@ -78,11 +78,16 @@ async function updateFile(token, repo, path, content, message, branch, sha) {
   return res
 }
 
-function generateArticleListItem(slug, title, excerpt, date) {
+function generateArticleListItem(slug, title, excerpt, date, itemIndex) {
   // 默认封面图
   const defaultCover = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80'
 
-  return `    <li class="lk-blog__item">
+  // 交替布局：偶数索引文字在左图片在右，奇数索引图片在左文字在右
+  const isEven = itemIndex % 2 === 0
+
+  if (isEven) {
+    // 文字在左，图片在右
+    return `    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/${slug}.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="${date}">${date}</time>
@@ -95,20 +100,39 @@ function generateArticleListItem(slug, title, excerpt, date) {
         <img class="lk-blog__cover" src="${defaultCover}" alt="" />
       </a>
     </li>`
+  } else {
+    // 图片在左，文字在右
+    return `    <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/${slug}.html">
+        <img class="lk-blog__cover" src="${defaultCover}" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="${date}">${date}</time>
+          <h3 class="lk-blog__post-title">${title}</h3>
+          <p class="lk-blog__excerpt">${excerpt}</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>`
+  }
 }
 
 function updateArticleList(originalContent, newItem) {
-  // 找到 <ol class="lk-blog__list"> 后面插入新条目
-  const listStart = originalContent.indexOf('<ol class="lk-blog__list">')
-  if (listStart === -1) return null
+  // 找到 </ol> 标签，在其前面插入新条目（添加到列表末尾）
+  const listEnd = originalContent.indexOf('</ol>')
+  if (listEnd === -1) return null
 
-  const afterListStart = originalContent.indexOf('>', listStart) + 1
-
-  // 在列表开始后插入新条目
-  const before = originalContent.slice(0, afterListStart)
-  const after = originalContent.slice(afterListStart)
+  const before = originalContent.slice(0, listEnd)
+  const after = originalContent.slice(listEnd)
 
   return before + '\n' + newItem + '\n' + after
+}
+
+function countExistingItems(content) {
+  // 计算 <li class="lk-blog__item"> 的数量
+  const matches = content.match(/<li class="lk-blog__item/g)
+  return matches ? matches.length : 0
 }
 
 module.exports = async function handler(req, res) {
@@ -194,7 +218,8 @@ ${content}`
         const listContent = await getFileContent(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
 
         if (listContent) {
-          const newItem = generateArticleListItem(slug, title, excerpt, dateStr)
+          const existingCount = countExistingItems(listContent)
+          const newItem = generateArticleListItem(slug, title, excerpt, dateStr, existingCount)
           const updatedList = updateArticleList(listContent, newItem)
 
           if (updatedList) {
