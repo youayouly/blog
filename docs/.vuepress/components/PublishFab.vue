@@ -784,18 +784,24 @@ async function doPublish() {
 .lk-publish-primary,
 .lk-publish-secondary {
   border-radius: 8px;
-  padding: 0.45rem 1rem;
+  padding: 0.5rem 1.2rem;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-1);
+  border: 1px solid #ddd;
+  background: #f5f5f5;
+  color: #333;
+  transition: all 0.2s ease;
 }
 
 .lk-publish-primary {
-  background: var(--vp-c-brand-1);
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-bg);
+  background: #4a90d9 !important;
+  border-color: #4a90d9 !important;
+  color: #fff !important;
+}
+
+.lk-publish-primary:hover {
+  background: #357abd !important;
 }
 
 .lk-publish-primary:disabled,
