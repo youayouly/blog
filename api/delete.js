@@ -76,14 +76,40 @@ async function getFileContent(token, repo, path, branch) {
 }
 
 function removeItemFromList(content, slug) {
-  // 使用正则匹配包含特定 slug 的完整列表项
-  // 匹配从 <li 到对应的 </li>，必须包含特定 href
-  const pattern = new RegExp(
-    `<li[^>]*>[\\s\\S]*?href="/article/${slug}\\.html"[\\s\\S]*?</li>`,
-    'g'
-  )
-  const result = content.replace(pattern, '')
-  return result
+  // 逐行解析，精确删除包含特定 slug 的 <li> 块
+  const lines = content.split('\n')
+  const result = []
+  let inTargetLi = false
+  let liDepth = 0
+  let targetHref = `href="/article/${slug}.html"`
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // 检测是否进入目标 <li>
+    if (!inTargetLi && line.includes('<li') && line.includes(targetHref)) {
+      inTargetLi = true
+      liDepth = 0
+    }
+
+    if (inTargetLi) {
+      // 计算嵌套深度
+      const openMatches = line.match(/<li[^>]*>/g)
+      const closeMatches = line.match(/<\/li>/g)
+      if (openMatches) liDepth += openMatches.length
+      if (closeMatches) liDepth -= closeMatches.length
+
+      // 当深度归零且遇到 </li>，结束删除
+      if (liDepth <= 0 && line.includes('</li>')) {
+        inTargetLi = false
+      }
+      continue // 跳过当前行
+    }
+
+    result.push(line)
+  }
+
+  return result.join('\n')
 }
 
 // 检测是否是本地开发环境
