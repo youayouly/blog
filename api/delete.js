@@ -72,36 +72,13 @@ async function getFileContent(token, repo, path, branch) {
 }
 
 function removeItemFromList(content, slug) {
-  // 匹配并删除包含该 slug 的 <li> 元素
-  // 使用更精确的正则，确保只匹配包含特定 href 的 li
-  const lines = content.split('\n')
-  const result = []
-  let skipMode = false
-  let depth = 0
-
-  for (const line of lines) {
-    // 检查是否是需要删除的文章
-    if (line.includes(`<a class="lk-blog__card" href="/article/${slug}.html">`)) {
-      skipMode = true
-      depth = 0
-    }
-
-    if (skipMode) {
-      // 计算 <li> 标签深度
-      if (line.includes('<li')) depth++
-      if (line.includes('</li>')) {
-        depth--
-        if (depth <= 0) {
-          skipMode = false
-        }
-      }
-      continue // 跳过当前行
-    }
-
-    result.push(line)
-  }
-
-  return result.join('\n')
+  // 使用正则匹配整个 <li> 块，从 <li 开始到对应的 </li> 结束
+  // 匹配包含特定 slug 的完整列表项
+  const pattern = new RegExp(
+    `\\s*<li[^>]*class="lk-blog__item[^"]*"[^>]*>[\\s\\S]*?href="/article/${slug}\\.html"[\\s\\S]*?</li>`,
+    'g'
+  )
+  return content.replace(pattern, '')
 }
 
 module.exports = async function handler(req, res) {
