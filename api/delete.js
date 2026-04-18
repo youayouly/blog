@@ -1,6 +1,10 @@
 /**
  * Vercel Serverless Function: 批量删除 Markdown 文件
+ * 本地开发时：同时删除本地文件
  */
+
+const fs = require('fs')
+const path = require('path')
 
 const ALLOWED_TARGETS = {
   article: 'docs/article',
@@ -81,6 +85,50 @@ function removeItemFromList(content, slug) {
   return content.replace(pattern, '')
 }
 
+// 检测是否是本地开发环境
+function isLocalDev() {
+  return process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === 'development'
+}
+
+// 删除本地文件
+function deleteLocal(filePath) {
+  try {
+    const fullPath = path.join(process.cwd(), filePath)
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath)
+      return true
+    }
+  } catch (e) {
+    console.error('删除本地文件失败:', e.message)
+  }
+  return false
+}
+
+// 保存到本地文件
+function saveToLocal(filePath, content) {
+  try {
+    const fullPath = path.join(process.cwd(), filePath)
+    fs.writeFileSync(fullPath, content, 'utf-8')
+    return true
+  } catch (e) {
+    console.error('保存本地文件失败:', e.message)
+    return false
+  }
+}
+
+// 读取本地文件
+function readLocal(filePath) {
+  try {
+    const fullPath = path.join(process.cwd(), filePath)
+    if (fs.existsSync(fullPath)) {
+      return fs.readFileSync(fullPath, 'utf-8')
+    }
+  } catch (e) {
+    console.error('读取本地文件失败:', e.message)
+  }
+  return null
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -144,6 +192,11 @@ module.exports = async function handler(req, res) {
         )
         if (delRes.ok) {
           deleted++
+          // 本地开发：同时删除本地文件
+          if (isLocalDev()) {
+            const localDeleted = deleteLocal(filePath)
+            console.log(`[本地删除] ${filePath}: ${localDeleted ? '成功' : '失败'}`)
+          }
         } else {
           errors.push(`${slug}: delete failed`)
         }
@@ -156,7 +209,11 @@ module.exports = async function handler(req, res) {
     if (target === 'article' && deleted > 0) {
       try {
         const listPath = 'docs/article/README.md'
-        let listContent = await getFileContent(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+        // 本地开发：优先读取本地文件
+        let listContent = isLocalDev() ? readLocal(listPath) : null
+        if (!listContent) {
+          listContent = await getFileContent(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+        }
 
         if (listContent) {
           // 移除每个被删除文章的列表项
@@ -181,6 +238,12 @@ module.exports = async function handler(req, res) {
                 branch: GITHUB_BRANCH,
               }),
             })
+
+            // 本地开发：同时保存到本地
+            if (isLocalDev()) {
+              const localSaved = saveToLocal(listPath, listContent)
+              console.log(`[本地保存] ${listPath}: ${localSaved ? '成功' : '失败'}`)
+            }
           }
         }
       } catch (e) {

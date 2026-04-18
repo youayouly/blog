@@ -102,14 +102,21 @@ async function batchDelete() {
       return
     }
     message.value = `已删除 ${data.deleted || slugs.length} 篇文章`
+
+    // 从 DOM 中移除被删除的文章卡片
+    slugs.forEach(slug => {
+      const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
+      if (item) {
+        item.remove()
+      }
+    })
+
     selectedItems.value.clear()
 
     // 同步本地文件
     try {
       await fetch('/api/sync', { method: 'POST' })
     } catch {}
-
-    setTimeout(() => location.reload(), 500)
   } catch (e) {
     message.value = e.message || '网络错误'
   } finally {
