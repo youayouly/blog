@@ -1,8 +1,10 @@
 {
+  "devCommand": "npm run dev -- --port $PORT",
   "buildCommand": "npm run build",
   "outputDirectory": "docs/.vuepress/dist",
   "installCommand": "npm install",
   "rewrites": [
+    { "source": "/api/sync", "destination": "/api/sync" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/home", "destination": "/home.html" },
     { "source": "/article", "destination": "/article/index.html" },
