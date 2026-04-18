@@ -526,9 +526,11 @@ async function doPublish() {
   z-index: 10060;
   background: rgba(0, 0, 0, 0.45);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem 2rem;
+  padding: 1rem;
+  overflow: auto;
+}
   overflow: auto;
 }
 
@@ -541,9 +543,9 @@ async function doPublish() {
 
 .lk-publish-panel {
   width: min(34rem, 100%);
-  max-height: min(calc(100vh - 2rem), 46rem);
-  margin-top: 2.5rem;
-  padding: 1.25rem 1.35rem;
+  max-height: 85vh;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
   border-radius: 12px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg);
@@ -557,7 +559,7 @@ async function doPublish() {
 
 .lk-publish-push-sheet {
   width: min(22rem, 100vw - 4.5rem);
-  max-height: min(calc(100vh - 5rem), 32rem);
+  max-height: 80vh;
   margin-right: 0.25rem;
   margin-bottom: 0.25rem;
   padding: 1rem 1.1rem;
