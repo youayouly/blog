@@ -72,18 +72,6 @@ comment: false
         />
       </a>
     </li>
-      <li class="lk-blog__item">
-      <a class="lk-blog__card" href="/article/langchain.html">
-        <img class="lk-blog__cover" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80" alt="" />
-        <div class="lk-blog__text">
-          <time class="lk-blog__date" datetime="2026-04-18 17:40">2026-04-18 17:40</time>
-          <h3 class="lk-blog__post-title">大模型</h3>
-          <p class="lk-blog__excerpt">模型部署和搭建</p>
-          <div class="lk-blog__meta">
-            <span class="lk-blog__read" aria-hidden="true">Read →</span>
-          </div>
-        </div>
-      </a>
-    </li>
+      
 </ol>
 </div>
