@@ -1,7 +1,11 @@
 /**
  * Vercel Serverless Function: 发布 Markdown 文件到 GitHub
  * 同时更新文章列表页
+ * 本地开发时：同时保存到本地文件
  */
+
+const fs = require('fs')
+const path = require('path')
 
 const ALLOWED_TARGETS = {
   article: 'docs/article',
@@ -136,6 +140,40 @@ function countExistingItems(content) {
   return matches ? matches.length : 0
 }
 
+// 检测是否是本地开发环境
+function isLocalDev() {
+  return process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === 'development'
+}
+
+// 保存到本地文件
+function saveToLocal(filePath, content) {
+  try {
+    const fullPath = path.join(process.cwd(), filePath)
+    const dir = path.dirname(fullPath)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+    fs.writeFileSync(fullPath, content, 'utf-8')
+    return true
+  } catch (e) {
+    console.error('保存本地文件失败:', e.message)
+    return false
+  }
+}
+
+// 读取本地文件
+function readLocal(filePath) {
+  try {
+    const fullPath = path.join(process.cwd(), filePath)
+    if (fs.existsSync(fullPath)) {
+      return fs.readFileSync(fullPath, 'utf-8')
+    }
+  } catch (e) {
+    console.error('读取本地文件失败:', e.message)
+  }
+  return null
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -211,12 +249,23 @@ ${content}`
       return res.status(502).json({ ok: false, error: err.message || 'Failed to create article' })
     }
 
+    // 1.5 本地开发环境：同时保存到本地文件
+    let localSaved = false
+    if (isLocalDev()) {
+      localSaved = saveToLocal(filePath, articleContent)
+      console.log(`[本地保存] ${filePath}: ${localSaved ? '成功' : '失败'}`)
+    }
+
     // 2. 如果是 article 分区，更新列表页
     let listUpdated = false
     if (target === 'article') {
       try {
         const listPath = 'docs/article/README.md'
-        const listContent = await getFileContent(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+        // 本地开发：优先读取本地文件
+        let listContent = isLocalDev() ? readLocal(listPath) : null
+        if (!listContent) {
+          listContent = await getFileContent(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+        }
 
         if (listContent) {
           const existingCount = countExistingItems(listContent)
@@ -230,6 +279,12 @@ ${content}`
               `更新文章列表: ${title}`, GITHUB_BRANCH, listSha
             )
             listUpdated = true
+
+            // 本地开发：同时保存到本地
+            if (isLocalDev()) {
+              const localListSaved = saveToLocal(listPath, updatedList)
+              console.log(`[本地保存] ${listPath}: ${localListSaved ? '成功' : '失败'}`)
+            }
           }
         }
       } catch (e) {
@@ -244,6 +299,8 @@ ${content}`
       path: filePath,
       url: articleData.content?.html_url,
       listUpdated,
+      localSaved,
+      isLocalDev: isLocalDev(),
     })
   } catch (err) {
     console.error('Handler error:', err)
