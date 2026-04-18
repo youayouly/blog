@@ -18,7 +18,8 @@
       "Bash(git stash *)",
       "Bash(npm run *)",
       "Bash(curl -I http://localhost:3000/assets/style-BEcYgR1d.css)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(git fetch *)"
     ]
   }
 }

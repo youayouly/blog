@@ -76,13 +76,14 @@ async function getFileContent(token, repo, path, branch) {
 }
 
 function removeItemFromList(content, slug) {
-  // 使用正则匹配整个 <li> 块，从 <li 开始到对应的 </li> 结束
-  // 匹配包含特定 slug 的完整列表项
+  // 使用正则匹配包含特定 slug 的完整列表项
+  // 匹配从 <li 到对应的 </li>，必须包含特定 href
   const pattern = new RegExp(
-    `\\s*<li[^>]*class="lk-blog__item[^"]*"[^>]*>[\\s\\S]*?href="/article/${slug}\\.html"[\\s\\S]*?</li>`,
+    `<li[^>]*>[\\s\\S]*?href="/article/${slug}\\.html"[\\s\\S]*?</li>`,
     'g'
   )
-  return content.replace(pattern, '')
+  const result = content.replace(pattern, '')
+  return result
 }
 
 // 检测是否是本地开发环境
