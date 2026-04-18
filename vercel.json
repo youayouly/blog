@@ -1,5 +1,4 @@
 {
-  "devCommand": "vuepress dev docs --port $PORT",
   "buildCommand": "npm run build",
   "outputDirectory": "docs/.vuepress/dist",
   "installCommand": "npm install",
