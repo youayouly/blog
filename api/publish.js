@@ -40,13 +40,6 @@ module.exports = async function handler(req, res) {
     const GITHUB_REPO = process.env.GITHUB_REPO
     const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main'
 
-    console.log('ENV check:', {
-      hasToken: !!GITHUB_TOKEN,
-      hasUser: !!LK_SITE_USER,
-      hasPass: !!LK_SITE_PASS,
-      hasRepo: !!GITHUB_REPO,
-    })
-
     if (!GITHUB_TOKEN || !LK_SITE_USER || !LK_SITE_PASS || !GITHUB_REPO) {
       return res.status(500).json({
         ok: false,
@@ -80,7 +73,7 @@ module.exports = async function handler(req, res) {
     if (!validateFilename(filename)) {
       return res.status(400).json({
         ok: false,
-        error: 'Invalid filename. Must be lowercase letters, numbers, hyphens, ending with .md',
+        error: 'Invalid filename',
       })
     }
 
@@ -103,9 +96,8 @@ module.exports = async function handler(req, res) {
 
     // 获取当前文件 SHA（用于更新）
     let currentSha = null
-    const getShaUrl = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`
-
     try {
+      const getShaUrl = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`
       const shaRes = await fetch(getShaUrl, {
         headers: {
           Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -118,7 +110,7 @@ module.exports = async function handler(req, res) {
         currentSha = shaData.sha
       }
     } catch (e) {
-      console.log('Get SHA error (file may not exist):', e.message)
+      // 文件不存在，忽略错误
     }
 
     // GitHub Contents API 请求
@@ -146,7 +138,6 @@ module.exports = async function handler(req, res) {
     const ghData = await ghRes.json()
 
     if (!ghRes.ok) {
-      console.error('GitHub API error:', ghData)
       return res.status(502).json({
         ok: false,
         error: ghData.message || `GitHub API error (${ghRes.status})`,
