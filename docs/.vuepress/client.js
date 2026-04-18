@@ -32,6 +32,7 @@ import FloatingShapes from './components/FloatingShapes.vue'
 import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
 import ParticlesNavbarToggle from './components/ParticlesNavbarToggle.vue'
 import PublishFab from './components/PublishFab.vue'
+import ArticleBatchOps from './components/ArticleBatchOps.vue'
 
 /** Canvas + rAF: keep out of SSR to avoid Node rAF spin / heap growth during prerender. */
 const NetworkParticlesBgClient = defineComponent({
@@ -67,6 +68,13 @@ const PublishFabClient = defineComponent({
   name: 'PublishFabClient',
   setup() {
     return () => h(ClientOnly, null, () => h(PublishFab))
+  },
+})
+
+const ArticleBatchOpsClient = defineComponent({
+  name: 'ArticleBatchOpsClient',
+  setup() {
+    return () => h(ClientOnly, null, () => h(ArticleBatchOps))
   },
 })
 
@@ -804,6 +812,7 @@ export default defineClientConfig({
     LoginGateClient,
     ArticleCategoriesAsideClient,
     PublishFabClient,
+    ArticleBatchOpsClient,
   ],
 
   enhance({ app, router }) {

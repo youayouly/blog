@@ -137,7 +137,8 @@ function batchPrint() {
 }
 
 function injectCheckboxes() {
-  const items = document.querySelectorAll('.lk-blog__item:not(.lk-blog__item--external)')
+  // 选中所有文章项，包括 external 的
+  const items = document.querySelectorAll('.lk-blog__item')
   items.forEach(item => {
     if (item.querySelector('.lk-batch-checkbox')) return
 
@@ -145,9 +146,10 @@ function injectCheckboxes() {
     if (!link) return
 
     const href = link.getAttribute('href') || ''
-    const match = href.match(/\/article\/(.+)\.html/)
-    const slug = match ? match[1] : null
-    if (!slug) return
+    // 匹配 /article/xxx.html 或 /tech/xxx.html
+    const match = href.match(/\/(article|tech)\/(.+)\.html/)
+    if (!match) return
+    const slug = match[2] // 获取文件名部分
 
     item.setAttribute('data-slug', slug)
 

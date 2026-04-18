@@ -41,6 +41,8 @@ const messageKind = ref('info')
 const commits = ref([])
 const historyBusy = ref(false)
 
+const previewItems = ref([])
+
 const apiUrl = computed(() => {
   const u = publishApiBase.trim()
   if (u) return u.replace(/\/+$/, '')
@@ -117,6 +119,101 @@ function openPushSheet() {
 
 function closePushSheet() {
   pushSheetOpen.value = false
+}
+
+function generateCoverUrl(title, excerpt) {
+  const text = `${title} ${excerpt}`.toLowerCase()
+  const keywords = []
+  const keywordMap = {
+    'ai': 'artificial-intelligence',
+    '机器学习': 'machine-learning',
+    '深度学习': 'deep-learning',
+    '神经网络': 'neural-network',
+    'python': 'python-code',
+    'javascript': 'javascript',
+    'vue': 'vuejs',
+    'react': 'react',
+    '前端': 'web-design',
+    '后端': 'server',
+    '数据库': 'database',
+    'docker': 'docker',
+    'kubernetes': 'kubernetes',
+    '云': 'cloud',
+    '安全': 'cybersecurity',
+    '测试': 'testing',
+    '架构': 'architecture',
+    '算法': 'algorithm',
+    '数据': 'data',
+    '网络': 'network',
+    '嵌入式': 'embedded',
+    '物联网': 'iot',
+    '区块链': 'blockchain',
+    '移动': 'mobile',
+    '游戏': 'gaming',
+    '设计': 'design',
+    '工具': 'tools',
+    '部署': 'deployment',
+    '性能': 'performance',
+    '优化': 'optimization',
+  }
+  for (const [key, value] of Object.entries(keywordMap)) {
+    if (text.includes(key) && keywords.length < 2) {
+      keywords.push(value)
+    }
+  }
+  if (keywords.length === 0) {
+    const randomKeywords = ['technology', 'coding', 'programming', 'computer', 'developer', 'software']
+    keywords.push(randomKeywords[Math.floor(Math.random() * randomKeywords.length)])
+  }
+  const keywordStr = keywords.join(',')
+  const seed = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+  return `https://source.unsplash.com/1200x800/?${keywordStr}&sig=${seed}`
+}
+
+function doPreview() {
+  message.value = ''
+  const s = slug.value.trim().toLowerCase()
+  if (!/^[a-z0-9][a-z0-9-]{0,100}$/.test(s)) {
+    setMsg('请填写文件名（slug）。', 'err')
+    return
+  }
+  const title = articleTitle.value.trim()
+  if (!title) {
+    setMsg('请填写文章标题。', 'err')
+    return
+  }
+  const excerpt = articleExcerpt.value.trim()
+  if (!excerpt) {
+    setMsg('请填写文章摘要。', 'err')
+    return
+  }
+
+  const now = new Date()
+  const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
+  const cover = generateCoverUrl(title, excerpt)
+
+  // 计算现有文章数量 + 预览数量来确定布局
+  const existingItems = document.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)')
+  const existingCount = existingItems.length
+  const previewIndex = existingCount + previewItems.value.length
+
+  previewItems.value.push({
+    id: `preview-${Date.now()}`,
+    slug: s,
+    title,
+    excerpt,
+    date: dateStr,
+    cover,
+    target: target.value,
+    index: previewIndex,
+  })
+
+  setMsg('已添加预览卡片到列表末尾。', 'ok')
+  closePanel()
+}
+
+function removePreviewItem(id) {
+  previewItems.value = previewItems.value.filter(item => item.id !== id)
 }
 
 function onDrop(e) {
@@ -432,8 +529,9 @@ async function doPublish() {
 
             <div class="lk-publish-actions">
               <button type="button" class="lk-publish-secondary" :disabled="busy" @click="closePanel">取消</button>
+              <button type="button" class="lk-publish-preview" :disabled="busy" @click="doPreview">预览</button>
               <button type="button" class="lk-publish-primary" :disabled="busy" @click="doPublish">
-                {{ busy ? '推送中…' : '一键推送到 GitHub' }}
+                {{ busy ? '推送中…' : '推送' }}
               </button>
             </div>
           </div>
@@ -506,6 +604,51 @@ async function doPublish() {
           </div>
         </div>
       </Transition>
+
+      <!-- 预览卡片 - 插入到文章列表末尾 -->
+      <Teleport v-if="previewItems.length" to=".lk-blog__list">
+        <li
+          v-for="item in previewItems"
+          :key="item.id"
+          class="lk-blog__item lk-blog__item--preview"
+          :class="{ 'lk-blog__item--reverse': item.index % 2 === 1 }"
+        >
+          <button
+            type="button"
+            class="lk-preview-delete"
+            title="删除预览"
+            @click="removePreviewItem(item.id)"
+          >×</button>
+          <a class="lk-blog__card" :href="`/${item.target}/${item.slug}.html`">
+            <template v-if="item.index % 2 === 0">
+              <!-- 偶数索引：文字左，图片右 -->
+              <div class="lk-blog__text">
+                <time class="lk-blog__date" :datetime="item.date">{{ item.date }}</time>
+                <h3 class="lk-blog__post-title">{{ item.title }}</h3>
+                <p class="lk-blog__excerpt">{{ item.excerpt }}</p>
+                <div class="lk-blog__meta">
+                  <span class="lk-blog__tag">预览</span>
+                  <span class="lk-blog__read" aria-hidden="true">Read →</span>
+                </div>
+              </div>
+              <img class="lk-blog__cover" :src="item.cover" alt="" />
+            </template>
+            <template v-else>
+              <!-- 奇数索引：图片左，文字右 -->
+              <img class="lk-blog__cover" :src="item.cover" alt="" />
+              <div class="lk-blog__text">
+                <time class="lk-blog__date" :datetime="item.date">{{ item.date }}</time>
+                <h3 class="lk-blog__post-title">{{ item.title }}</h3>
+                <p class="lk-blog__excerpt">{{ item.excerpt }}</p>
+                <div class="lk-blog__meta">
+                  <span class="lk-blog__tag">预览</span>
+                  <span class="lk-blog__read" aria-hidden="true">Read →</span>
+                </div>
+              </div>
+            </template>
+          </a>
+        </li>
+      </Teleport>
     </div>
   </Teleport>
 </template>
@@ -849,6 +992,71 @@ async function doPublish() {
 
 .lk-publish-primary:hover {
   background: #357abd !important;
+}
+
+.lk-publish-preview {
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #4a90d9;
+  background: #fff;
+  color: #4a90d9;
+  transition: all 0.2s ease;
+}
+
+.lk-publish-preview:hover {
+  background: #e8f4fd;
+}
+
+.lk-publish-preview:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 预览卡片样式 */
+.lk-blog__item--preview {
+  position: relative;
+  list-style: none;
+}
+
+.lk-blog__item--preview::before {
+  content: '预览';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.lk-preview-delete {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.lk-preview-delete:hover {
+  transform: scale(1.1);
+  background: #dc2626;
 }
 
 .lk-publish-primary:disabled,
