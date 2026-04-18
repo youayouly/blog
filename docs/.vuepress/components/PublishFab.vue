@@ -541,9 +541,9 @@ async function doPublish() {
 
 .lk-publish-panel {
   width: min(34rem, 100%);
-  max-height: 85vh;
+  max-height: 90vh;
   margin-top: 1rem;
-  padding: 1rem 1.1rem;
+  padding: 1rem;
   border-radius: 12px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg);
@@ -574,8 +574,9 @@ async function doPublish() {
 }
 
 .lk-publish-panel__scroll {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  max-height: calc(90vh - 200px);
   overflow-y: auto;
   padding-right: 0.15rem;
   margin-right: -0.15rem;
@@ -771,10 +772,13 @@ async function doPublish() {
   justify-content: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
-  flex-shrink: 0;
+  flex: 0 0 auto;
   margin-top: 0.75rem;
-  padding-top: 0.85rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg);
+  position: sticky;
+  bottom: 0;
 }
 
 .lk-publish-primary,
