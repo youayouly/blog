@@ -5,7 +5,8 @@
   "rewrites": [
     { "source": "/about", "destination": "/about.html" },
     { "source": "/home", "destination": "/home.html" },
-    { "source": "/article", "destination": "/article/index.html" }
+    { "source": "/article", "destination": "/article/index.html" },
+    { "source": "/article/", "destination": "/article/index.html" }
   ],
   "redirects": [
     { "source": "/", "destination": "/about", "permanent": false },
