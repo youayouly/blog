@@ -4,7 +4,8 @@
   "outputDirectory": "docs/.vuepress/dist",
   "installCommand": "npm install",
   "rewrites": [
-    { "source": "/api/sync", "destination": "/api/sync" },
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/assets/:path*", "destination": "/assets/:path*" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/home", "destination": "/home.html" },
     { "source": "/article", "destination": "/article/index.html" },
