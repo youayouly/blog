@@ -47,9 +47,26 @@ module.exports = async function handler(req, res) {
   const GITHUB_REPO = process.env.GITHUB_REPO
   const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main'
 
+  // 调试日志
+  console.log('ENV check:', {
+    hasToken: !!GITHUB_TOKEN,
+    hasUser: !!LK_SITE_USER,
+    hasPass: !!LK_SITE_PASS,
+    hasRepo: !!GITHUB_REPO,
+  })
+
   if (!GITHUB_TOKEN || !LK_SITE_USER || !LK_SITE_PASS || !GITHUB_REPO) {
     console.error('Missing required environment variables')
-    return res.status(500).json({ ok: false, error: 'Server misconfiguration' })
+    return res.status(500).json({
+      ok: false,
+      error: 'Server misconfiguration',
+      debug: {
+        hasToken: !!GITHUB_TOKEN,
+        hasUser: !!LK_SITE_USER,
+        hasPass: !!LK_SITE_PASS,
+        hasRepo: !!GITHUB_REPO,
+      }
+    })
   }
 
   const body = req.body
