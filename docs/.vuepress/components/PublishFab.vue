@@ -381,12 +381,17 @@ async function doPublish() {
       return
     }
     rememberLastPath(s)
-    setMsg(
-      data.url
-        ? `已推送：${data.path}。部署完成后即可访问；列表/侧栏若需展示请自行改 README。`
-        : `已推送：${data.path}。`,
-      'ok',
-    )
+    previewItems.value = []
+    const base = `已推送：${data.path}。`
+    let tail = ''
+    if (data.listUpdated) {
+      tail = data.url
+        ? ' 远端已更新 Articles 列表；本机 dev 请 git pull 后刷新 /article/ 查看新卡片。'
+        : ' 文章列表已同步更新。'
+    } else if (data.url) {
+      tail = ' 部署完成后即可访问。'
+    }
+    setMsg(base + tail, 'ok')
     closePanel()
     closePushSheet()
   } catch (e) {

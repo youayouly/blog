@@ -126,7 +126,8 @@ function updateArticleList(originalContent, newItem) {
   const before = originalContent.slice(0, listEnd)
   const after = originalContent.slice(listEnd)
 
-  return before + '\n' + newItem + '\n' + after
+  // No extra newline before newItem: a blank line ends markdown-it HTML blocks inside <ol>.
+  return before + newItem + '\n' + after
 }
 
 function countExistingItems(content) {
