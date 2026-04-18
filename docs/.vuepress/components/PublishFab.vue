@@ -531,8 +531,6 @@ async function doPublish() {
   padding: 1rem;
   overflow: auto;
 }
-  overflow: auto;
-}
 
 .lk-publish-backdrop--sheet {
   align-items: flex-end;
