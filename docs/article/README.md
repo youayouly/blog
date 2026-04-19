@@ -10,7 +10,6 @@ comment: false
   </p>
 
   <ol class="lk-blog__list">
-    
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/edge-ai-sketch.html">
         <div class="lk-blog__text">
