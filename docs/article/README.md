@@ -70,5 +70,18 @@ comment: false
         />
       </a>
     </li>
-  </ol>
+      <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/openclaw.html">
+        <img class="lk-blog__cover" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-19 06:57">2026-04-19 06:57</time>
+          <h3 class="lk-blog__post-title">openclaw</h3>
+          <p class="lk-blog__excerpt">如果你想在本地玩转大模型，这是最标准的起步流程：</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>
+</ol>
 </div>
