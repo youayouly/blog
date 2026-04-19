@@ -125,6 +125,7 @@ export default defineUserConfig({
         { text: 'Articles', link: '/article/' },
         { text: 'Edge AI 随笔', link: '/article/edge-ai-sketch.html' },
         { text: 'VuePress 短文', link: '/article/vuepress-stack-notes.html' },
+        { text: '大模型', link: '/article/langchain.html' },
       ],
       '/': 'structure',
     },
