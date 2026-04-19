@@ -11,6 +11,19 @@ comment: false
 
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/ai模板.html">
+        <img class="lk-blog__cover" src="/gallery/article-cover-ai模板-1776625057318.jpg" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-19 18:59">2026-04-19 18:59</time>
+          <h3 class="lk-blog__post-title">ai模板</h3>
+          <p class="lk-blog__excerpt">你是 [领域：例如资深前端 / VuePress / DevOps / 数据库] 工程师。优先给出**可验证**的结论与**可执行**的步骤；不确定时明确写「假...</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>
+    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/langchain.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-19 18:59">2026-04-19 18:59</time>
