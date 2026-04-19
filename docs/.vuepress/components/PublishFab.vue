@@ -24,6 +24,9 @@ const messageKind = ref('info')
 // 待推送队列
 const pendingArticles = ref([])
 
+// 待删除列表
+const pendingDeletes = ref([])
+
 // 推送面板
 const commitMsg = ref('')
 const busy = ref(false)
@@ -34,6 +37,9 @@ const pushMessageKind = ref('info')
 const historyRecords = ref([])
 const historyExpanded = ref(false)
 const historyBusy = ref(false)
+
+// 展开编辑的文章ID
+const expandedArticleId = ref(null)
 
 const apiUrl = computed(() => {
   const u = publishApiBase.trim()
@@ -213,6 +219,38 @@ function removePendingArticle(id) {
   pendingArticles.value = pendingArticles.value.filter(a => a.id !== id)
 }
 
+// 展开/收起文章编辑
+function toggleExpandArticle(id) {
+  expandedArticleId.value = expandedArticleId.value === id ? null : id
+}
+
+// 更新待推送文章
+function updatePendingArticle(id, field, value) {
+  const article = pendingArticles.value.find(a => a.id === id)
+  if (article) {
+    article[field] = value
+  }
+}
+
+// 添加待删除文章（供外部调用）
+function addPendingDelete(slug, title) {
+  if (!pendingDeletes.value.find(d => d.slug === slug)) {
+    pendingDeletes.value.push({ id: `del-${Date.now()}`, slug, title })
+  }
+}
+
+// 移除待删除文章
+function removePendingDelete(id) {
+  pendingDeletes.value = pendingDeletes.value.filter(d => d.id !== id)
+}
+
+// 暴露给其他组件
+defineExpose({
+  addPendingDelete,
+  pendingArticles,
+  pendingDeletes
+})
+
 // 打开推送面板
 function openPushSheet() {
   if (!isLoggedIn.value) return
@@ -265,7 +303,8 @@ async function doPush() {
   setPushMsg('推送中...', 'info')
 
   try {
-    let successCount = 0
+    let addCount = 0
+    let delCount = 0
     let failCount = 0
     const errors = []
 
@@ -288,7 +327,7 @@ async function doPush() {
         })
         const data = await res.json().catch(() => ({}))
         if (res.ok && data.ok) {
-          successCount++
+          addCount++
         } else {
           failCount++
           errors.push(`${article.title}: ${data.error || '失败'}`)
@@ -299,8 +338,55 @@ async function doPush() {
       }
     }
 
-    // 如果没有待推送文章，执行git push
-    if (pendingArticles.value.length === 0) {
+    // 删除待删除文章
+    if (pendingDeletes.value.length > 0) {
+      const slugs = pendingDeletes.value.map(d => d.slug)
+      try {
+        const res = await fetch('/api/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authUser: user,
+            authPass: pass,
+            target: 'article',
+            slugs,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && data.ok) {
+          delCount = data.deleted || slugs.length
+          // 从DOM中移除已删除的文章
+          slugs.forEach(slug => {
+            const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
+            if (item) item.remove()
+          })
+        } else {
+          failCount += slugs.length
+          errors.push(`删除失败: ${data.error || '未知错误'}`)
+        }
+      } catch (e) {
+        failCount += slugs.length
+        errors.push('删除请求失败')
+      }
+    }
+
+    // 清空队列
+    if (addCount > 0 || delCount > 0) {
+      pendingArticles.value = []
+      pendingDeletes.value = []
+      commitMsg.value = ''
+
+      const parts = []
+      if (addCount > 0) parts.push(`新增${addCount}篇`)
+      if (delCount > 0) parts.push(`删除${delCount}篇`)
+      if (failCount > 0) parts.push(`失败${failCount}项`)
+
+      setPushMsg(`推送成功：${parts.join('，')}`, failCount > 0 ? 'info' : 'ok')
+      loadHistory()
+    } else if (failCount > 0) {
+      setPushMsg(`推送失败：${errors.join('；')}`, 'err')
+    } else {
+      // 没有待处理项，执行普通推送
       const res = await fetch('/api/git-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -312,15 +398,6 @@ async function doPush() {
       } else {
         setPushMsg(data.error || '推送失败', 'err')
       }
-    } else if (successCount > 0) {
-      pendingArticles.value = []
-      setPushMsg(failCount > 0
-        ? `成功 ${successCount} 篇，失败 ${failCount} 篇`
-        : `成功推送 ${successCount} 篇文章！`,
-        failCount > 0 ? 'info' : 'ok')
-      loadHistory()
-    } else {
-      setPushMsg(`推送失败：${errors.join('；')}`, 'err')
     }
   } catch (e) {
     setPushMsg(e?.message || '网络错误', 'err')
@@ -336,13 +413,31 @@ onMounted(() => {
     if (saved) {
       pendingArticles.value = JSON.parse(saved)
     }
+    const savedDeletes = localStorage.getItem('lk_pending_deletes')
+    if (savedDeletes) {
+      pendingDeletes.value = JSON.parse(savedDeletes)
+    }
   } catch {}
+
+  // 监听删除事件
+  window.addEventListener('add-pending-delete', (e) => {
+    const { slug, title } = e.detail
+    if (!pendingDeletes.value.find(d => d.slug === slug)) {
+      pendingDeletes.value.push({ id: `del-${Date.now()}`, slug, title })
+    }
+  })
 })
 
 watch(pendingArticles, (val) => {
   // 保存到localStorage
   try {
     localStorage.setItem('lk_pending_articles', JSON.stringify(val))
+  } catch {}
+}, { deep: true })
+
+watch(pendingDeletes, (val) => {
+  try {
+    localStorage.setItem('lk_pending_deletes', JSON.stringify(val))
   } catch {}
 }, { deep: true })
 </script>
@@ -460,11 +555,53 @@ watch(pendingArticles, (val) => {
               </div>
               <ul class="lk-publish-queue__list">
                 <li v-for="article in pendingArticles" :key="article.id" class="lk-publish-queue__item">
-                  <div class="lk-publish-queue__info">
-                    <strong>{{ article.title }}</strong>
-                    <span>{{ article.slug }}.md</span>
+                  <div class="lk-publish-queue__header" @click="toggleExpandArticle(article.id)">
+                    <div class="lk-publish-queue__info">
+                      <strong>{{ article.title }}</strong>
+                      <span>{{ article.slug }}.md</span>
+                    </div>
+                    <div class="lk-publish-queue__actions">
+                      <span class="lk-publish-queue__expand" :class="{ 'lk-publish-queue__expand--open': expandedArticleId === article.id }">▼</span>
+                      <button type="button" class="lk-publish-queue__remove" @click.stop="removePendingArticle(article.id)">×</button>
+                    </div>
                   </div>
-                  <button type="button" class="lk-publish-queue__remove" @click="removePendingArticle(article.id)">×</button>
+                  <!-- 展开编辑 -->
+                  <div v-if="expandedArticleId === article.id" class="lk-publish-queue__edit">
+                    <input
+                      v-model="article.title"
+                      class="lk-publish-input lk-publish-input--sm"
+                      placeholder="标题"
+                    />
+                    <input
+                      v-model="article.excerpt"
+                      class="lk-publish-input lk-publish-input--sm"
+                      placeholder="摘要"
+                    />
+                    <input
+                      v-model="article.slug"
+                      class="lk-publish-input lk-publish-input--sm"
+                      placeholder="文件名"
+                    />
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <!-- 待删除列表 -->
+            <div v-if="pendingDeletes.length > 0" class="lk-publish-queue lk-publish-queue--delete">
+              <div class="lk-publish-queue__head">
+                <span class="lk-publish-queue__delete-title">待删除 ({{ pendingDeletes.length }})</span>
+                <button type="button" class="lk-publish-queue__clear" @click="pendingDeletes = []">清空</button>
+              </div>
+              <ul class="lk-publish-queue__list">
+                <li v-for="item in pendingDeletes" :key="item.id" class="lk-publish-queue__item">
+                  <div class="lk-publish-queue__header">
+                    <div class="lk-publish-queue__info">
+                      <strong>{{ item.title }}</strong>
+                      <span>{{ item.slug }}.md</span>
+                    </div>
+                    <button type="button" class="lk-publish-queue__remove" @click="removePendingDelete(item.id)">×</button>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -486,7 +623,7 @@ watch(pendingArticles, (val) => {
               :disabled="busy"
               @click="doPush"
             >
-              {{ busy ? '推送中...' : pendingArticles.length > 0 ? `推送 ${pendingArticles.length} 篇文章` : '推送所有改动' }}
+              {{ busy ? '推送中...' : (pendingArticles.length + pendingDeletes.length) > 0 ? `推送 ${pendingArticles.length > 0 ? `${pendingArticles.length}篇新增` : ''}${pendingArticles.length > 0 && pendingDeletes.length > 0 ? ' / ' : ''}${pendingDeletes.length > 0 ? `${pendingDeletes.length}篇删除` : ''}` : '推送所有改动' }}
             </button>
 
             <p v-if="pushMessage" class="lk-publish-msg" :class="`lk-publish-msg--${pushMessageKind}`">{{ pushMessage }}</p>
@@ -847,16 +984,20 @@ watch(pendingArticles, (val) => {
 }
 
 .lk-publish-queue__item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.3rem 0;
   font-size: 0.75rem;
   border-bottom: 1px solid var(--vp-c-divider);
 }
 
 .lk-publish-queue__item:last-child {
   border-bottom: none;
+}
+
+.lk-publish-queue__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  cursor: pointer;
 }
 
 .lk-publish-queue__info {
@@ -869,6 +1010,22 @@ watch(pendingArticles, (val) => {
   font-size: 0.65rem;
 }
 
+.lk-publish-queue__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.lk-publish-queue__expand {
+  font-size: 0.6rem;
+  color: var(--vp-c-text-3);
+  transition: transform 0.2s;
+}
+
+.lk-publish-queue__expand--open {
+  transform: rotate(180deg);
+}
+
 .lk-publish-queue__remove {
   width: 1.1rem;
   height: 1.1rem;
@@ -878,6 +1035,45 @@ watch(pendingArticles, (val) => {
   color: #fff;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.lk-publish-queue__edit {
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.lk-publish-input--sm {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* 待删除队列 */
+.lk-publish-queue--delete {
+  border-left: 3px solid #ef4444;
+}
+
+.lk-publish-queue__delete-title {
+  color: #ef4444;
+}
+
+/* 待删除文章卡片样式 */
+:deep(.lk-blog__item--pending-delete) {
+  opacity: 0.5;
+  position: relative;
+}
+
+:deep(.lk-blog__item--pending-delete::after) {
+  content: '待删除';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
 }
 
 /* 推送按钮 */

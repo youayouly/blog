@@ -62,66 +62,33 @@ async function batchDelete() {
   }
 
   const slugs = Array.from(selectedItems.value)
-  const confirmed = confirm(`确定要删除 ${slugs.length} 篇文章吗？\n\n${slugs.join('\n')}`)
+  const confirmed = confirm(`将 ${slugs.length} 篇文章标记为待删除？\n\n${slugs.join('\n')}\n\n删除将在推送时生效`)
   if (!confirmed) return
 
-  deleting.value = true
-  message.value = '删除中...'
+  // 获取文章标题并添加到待删除列表
+  slugs.forEach(slug => {
+    const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
+    const titleEl = item?.querySelector('.lk-blog__post-title')
+    const title = titleEl?.textContent || slug
 
-  const { user, pass } = readSiteApiCreds()
-  if (!user || !pass) {
-    message.value = '请先登录'
-    deleting.value = false
-    return
-  }
-
-  try {
-    const res = await fetch('/api/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        authUser: user,
-        authPass: pass,
-        target: 'article',
-        slugs,
-      }),
-    })
-
-    // 检查响应是否有效
-    const text = await res.text()
-    let data = {}
-    try {
-      data = JSON.parse(text)
-    } catch {
-      message.value = `API 错误 (${res.status}): 请确保运行 vercel dev`
-      return
+    // 调用PublishFab的addPendingDelete方法
+    const fab = document.querySelector('.lk-publish-root')?.__vueParentComponent?.proxy
+    if (fab?.addPendingDelete) {
+      fab.addPendingDelete(slug, title)
+    } else {
+      // 备用方案：使用事件
+      window.dispatchEvent(new CustomEvent('add-pending-delete', { detail: { slug, title } }))
     }
 
-    if (!res.ok || !data.ok) {
-      message.value = data.error || '删除失败'
-      return
+    // 从DOM中临时移除（添加删除标记样式）
+    if (item) {
+      item.classList.add('lk-blog__item--pending-delete')
     }
-    message.value = `已删除 ${data.deleted || slugs.length} 篇文章`
+  })
 
-    // 从 DOM 中移除被删除的文章卡片
-    slugs.forEach(slug => {
-      const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
-      if (item) {
-        item.remove()
-      }
-    })
-
-    selectedItems.value.clear()
-
-    // 同步本地文件
-    try {
-      await fetch('/api/sync', { method: 'POST' })
-    } catch {}
-  } catch (e) {
-    message.value = e.message || '网络错误'
-  } finally {
-    deleting.value = false
-  }
+  message.value = `已标记 ${slugs.length} 篇文章为待删除，点击推送按钮完成删除`
+  selectedItems.value.clear()
+  batchMode.value = false
 }
 
 function batchPrint() {
