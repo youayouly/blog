@@ -84,6 +84,12 @@ async function batchDelete() {
     if (item) {
       item.classList.add('lk-blog__item--pending-delete')
 
+      // 隐藏复选框
+      const checkboxWrapper = item.querySelector('.lk-batch-checkbox-wrapper')
+      if (checkboxWrapper) {
+        checkboxWrapper.style.display = 'none'
+      }
+
       // 添加"即将删除"标志（如果不存在）
       if (!item.querySelector('.lk-delete-badge')) {
         const badge = document.createElement('span')
@@ -110,6 +116,24 @@ async function batchDelete() {
   message.value = `已标记 ${slugs.length} 篇文章为待删除，点击推送按钮完成删除`
   selectedItems.value.clear()
   batchMode.value = false
+}
+
+// 取消所有待删除文章
+function cancelAllDeletes() {
+  const items = document.querySelectorAll('.lk-blog__item--pending-delete')
+  items.forEach(item => {
+    item.classList.remove('lk-blog__item--pending-delete')
+    const badge = item.querySelector('.lk-delete-badge')
+    if (badge) badge.remove()
+  })
+
+  // 清空待删除列表
+  const fab = document.querySelector('.lk-publish-root')?.__vueParentComponent?.proxy
+  if (fab?.pendingDeletes) {
+    fab.pendingDeletes.value = []
+  }
+  window.dispatchEvent(new CustomEvent('clear-pending-deletes'))
+  message.value = '已取消所有待删除文章'
 }
 
 function batchPrint() {
@@ -180,14 +204,14 @@ function injectCheckboxes() {
     item.style.position = 'relative'
     item.insertBefore(checkboxWrapper, item.firstChild)
 
-    // 点击卡片也可以选中
-    link.style.cursor = batchMode.value ? 'pointer' : ''
-    link.addEventListener('click', (e) => {
-      if (batchMode.value) {
+    // 在整个item上添加点击事件，批量模式下阻止链接跳转
+    item.addEventListener('click', (e) => {
+      if (batchMode.value && !item.classList.contains('lk-blog__item--pending-delete')) {
         e.preventDefault()
+        e.stopPropagation()
         toggleItem(slug)
       }
-    })
+    }, true)
   })
 }
 
@@ -232,6 +256,9 @@ onMounted(() => {
         <div v-if="!batchMode" class="lk-batch-card__single">
           <button type="button" class="lk-batch-card__btn lk-batch-card__btn--primary" @click="toggleBatchMode">
             开始选择
+          </button>
+          <button type="button" class="lk-batch-card__btn lk-batch-card__btn--warn" @click="cancelAllDeletes">
+            取消删除
           </button>
         </div>
 
@@ -384,6 +411,27 @@ onMounted(() => {
 
 [data-theme='dark'] .lk-batch-card__btn--primary:hover {
   background: #2563eb;
+}
+
+.lk-batch-card__btn--warn {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+  margin-top: 0.5rem;
+}
+
+[data-theme='dark'] .lk-batch-card__btn--warn {
+  background: #78350f;
+  border-color: #fbbf24;
+  color: #fef3c7;
+}
+
+.lk-batch-card__btn--warn:hover {
+  background: #fde68a;
+}
+
+[data-theme='dark'] .lk-batch-card__btn--warn:hover {
+  background: #92400e;
 }
 
 .lk-batch-card__btn--small {
