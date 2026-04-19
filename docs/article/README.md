@@ -11,6 +11,19 @@ comment: false
 
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/test-api.html">
+        <img class="lk-blog__cover" src="/gallery/test.jpg" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-19 17:29">2026-04-19 17:29</time>
+          <h3 class="lk-blog__post-title">API ��������</h3>
+          <p class="lk-blog__excerpt">����һƪ API ��������</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>
+    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/langchain.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-19 11:38">2026-04-19 11:38</time>
