@@ -63,6 +63,9 @@ function setPushMsg(text, kind = 'info') {
   pushMessageKind.value = kind
 }
 
+// 图片计数器，确保每次生成不同的图片
+let imageCounter = 0
+
 // 生成封面URL
 function generateCoverUrl(title, excerpt) {
   const text = `${title} ${excerpt}`.toLowerCase()
@@ -72,6 +75,8 @@ function generateCoverUrl(title, excerpt) {
     '机器学习': 'machine-learning',
     '深度学习': 'deep-learning',
     '大模型': 'artificial-intelligence',
+    'llm': 'artificial-intelligence',
+    'agent': 'robotics',
     'python': 'python-code',
     'javascript': 'javascript',
     'vue': 'vuejs',
@@ -80,6 +85,12 @@ function generateCoverUrl(title, excerpt) {
     '后端': 'server',
     '嵌入式': 'embedded',
     '部署': 'deployment',
+    '网络': 'network',
+    '安全': 'cybersecurity',
+    '数据库': 'database',
+    '云': 'cloud',
+    'docker': 'docker',
+    'kubernetes': 'kubernetes',
   }
   for (const [key, value] of Object.entries(keywordMap)) {
     if (text.includes(key) && keywords.length < 2) {
@@ -87,10 +98,15 @@ function generateCoverUrl(title, excerpt) {
     }
   }
   if (keywords.length === 0) {
-    keywords.push('technology')
+    // 随机选择一个默认关键词
+    const defaults = ['technology', 'coding', 'programming', 'computer', 'developer', 'software', 'tech']
+    keywords.push(defaults[Math.floor(Math.random() * defaults.length)])
   }
-  const seed = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-  return `https://source.unsplash.com/1200x800/?${keywords.join(',')}&sig=${seed}`
+
+  // 使用计数器确保唯一性
+  imageCounter++
+  const seed = `${Date.now()}-${imageCounter}-${Math.random().toString(36).slice(2, 8)}`
+  return `https://source.unsplash.com/1200x800/?${keywords.join(',')}&sig=${encodeURIComponent(seed)}`
 }
 
 // 从markdown提取标题
@@ -278,14 +294,23 @@ function insertPreviewCards() {
   // 移除旧的预览卡片
   list.querySelectorAll('.lk-blog__item--preview').forEach(el => el.remove())
 
-  // 插入新的预览卡片到开头
-  pendingArticles.value.forEach((article, index) => {
+  // 计算现有文章数量（用于确定布局）
+  const existingItems = list.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)').length
+
+  // 反转顺序插入，这样最新的在最前面
+  const reversedArticles = [...pendingArticles.value].reverse()
+
+  reversedArticles.forEach((article, revIndex) => {
+    // 计算实际显示位置：从0开始，最新文章为0
+    const displayIndex = reversedArticles.length - 1 - revIndex
+    const isReverse = displayIndex % 2 === 1
+
     const li = document.createElement('li')
-    li.className = `lk-blog__item lk-blog__item--preview${index % 2 === 1 ? ' lk-blog__item--reverse' : ''}`
+    li.className = `lk-blog__item lk-blog__item--preview${isReverse ? ' lk-blog__item--reverse' : ''}`
     li.innerHTML = `
       <button type="button" class="lk-preview-delete" title="移除">×</button>
       <a class="lk-blog__card" href="/${article.target}/${article.slug}.html">
-        ${index % 2 === 0 ? `
+        ${!isReverse ? `
           <div class="lk-blog__text">
             <time class="lk-blog__date">${article.date}</time>
             <h3 class="lk-blog__post-title">${article.title}</h3>
