@@ -6,6 +6,13 @@
 const fs = require('fs')
 const path = require('path')
 
+function agentDebugLog(payload) {
+  try {
+    const line = JSON.stringify({ sessionId: '16cc0b', ...payload, timestamp: Date.now() }) + '\n'
+    fs.appendFileSync(path.join(process.cwd(), 'debug-16cc0b.log'), line, 'utf-8')
+  } catch (_) {}
+}
+
 const ALLOWED_TARGETS = {
   article: 'docs/article',
   tech: 'docs/tech',
@@ -77,16 +84,41 @@ async function getFileContent(token, repo, path, branch) {
 
 function removeItemFromList(content, slug) {
   const targetHref = `href="/article/${slug}.html"`
-  // 使用正则匹配整个 <li>...</li> 块，支持跨行
-  const liRegex = /<li[^>]*class="lk-blog__item"[^>]*>[\s\S]*?<\/li>/g
 
-  return content.replace(liRegex, (match) => {
-    // 如果这个 <li> 块包含目标 href，删除它
-    if (match.includes(targetHref)) {
-      return ''
+  // 方法1：按行处理，找到包含目标 href 的整个 <li> 块
+  const lines = content.split('\n')
+  const result = []
+  let inTargetLi = false
+  let liDepth = 0
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // 检测是否是目标 <li> 的开始
+    if (line.includes('<li') && line.includes('lk-blog__item') && line.includes(targetHref)) {
+      inTargetLi = true
+      liDepth = 1
+      continue // 跳过这一行
     }
-    return match
-  })
+
+    if (inTargetLi) {
+      // 计算嵌套深度
+      const openMatches = line.match(/<li[^>]*>/g) || []
+      const closeMatches = line.match(/<\/li>/g) || []
+      liDepth += openMatches.length - closeMatches.length
+
+      if (liDepth <= 0) {
+        // 找到了对应的 </li>
+        inTargetLi = false
+        continue // 跳过这一行
+      }
+      continue // 跳过 <li> 内部的行
+    }
+
+    result.push(line)
+  }
+
+  return result.join('\n')
 }
 
 // 检测是否是本地开发环境
@@ -183,11 +215,37 @@ module.exports = async function handler(req, res) {
     const dir = ALLOWED_TARGETS[target]
     let deleted = 0
     const errors = []
+    const succeededSlugs = []
+
+    // #region agent log
+    agentDebugLog({
+      runId: 'pre-fix',
+      hypothesisId: 'H_B',
+      location: 'api/delete.js:entry',
+      message: 'delete handler start',
+      data: {
+        target,
+        slugs,
+        vercelEnv: process.env.VERCEL_ENV,
+        cwd: process.cwd(),
+      },
+    })
+    // #endregion
 
     // 删除每个文件
     for (const slug of slugs) {
       const filePath = `${dir}/${slug}.md`
       const sha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, filePath, GITHUB_BRANCH)
+
+      // #region agent log
+      agentDebugLog({
+        runId: 'pre-fix',
+        hypothesisId: 'H_B',
+        location: 'api/delete.js:perSlug',
+        message: 'github file sha',
+        data: { slug, filePath, hasSha: Boolean(sha) },
+      })
+      // #endregion
 
       if (sha) {
         const delRes = await deleteFile(
@@ -196,6 +254,7 @@ module.exports = async function handler(req, res) {
         )
         if (delRes.ok) {
           deleted++
+          succeededSlugs.push(slug)
           // 本地开发：同时删除本地文件
           if (isLocalDev()) {
             const localDeleted = deleteLocal(filePath)
@@ -205,7 +264,31 @@ module.exports = async function handler(req, res) {
           errors.push(`${slug}: delete failed`)
         }
       } else {
-        errors.push(`${slug}: not found`)
+        const fullPath = path.join(process.cwd(), filePath)
+        const existsLocal = fs.existsSync(fullPath)
+
+        // #region agent log
+        agentDebugLog({
+          runId: 'pre-fix',
+          hypothesisId: 'H_B',
+          location: 'api/delete.js:noSha',
+          message: 'github missing file branch',
+          data: { slug, filePath, existsLocal, isLocalDev: isLocalDev() },
+        })
+        // #endregion
+
+        if (isLocalDev() && existsLocal && deleteLocal(filePath)) {
+          // GitHub 无该文件但工作区仍有 .md：删掉本地副本
+          deleted++
+          succeededSlugs.push(slug)
+          console.log(`[本地删除] GitHub 无文件，已删本地: ${filePath}`)
+        } else if (!existsLocal) {
+          // 远端与本地都没有该 .md：按幂等删除处理，仍可从 README 移除列表项
+          deleted++
+          succeededSlugs.push(slug)
+        } else {
+          errors.push(`${slug}: not found`)
+        }
       }
     }
 
@@ -220,8 +303,8 @@ module.exports = async function handler(req, res) {
         }
 
         if (listContent) {
-          // 移除每个被删除文章的列表项
-          for (const slug of slugs) {
+          // 仅从 README 移除已成功删除的文章
+          for (const slug of succeededSlugs) {
             listContent = removeItemFromList(listContent, slug)
           }
 
@@ -255,8 +338,18 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // #region agent log
+    agentDebugLog({
+      runId: 'pre-fix',
+      hypothesisId: 'H_B',
+      location: 'api/delete.js:response',
+      message: 'delete handler done',
+      data: { deleted, errors, slugsRequested: slugs, succeededSlugs },
+    })
+    // #endregion
+
     return res.status(200).json({
-      ok: true,
+      ok: errors.length === 0,
       deleted,
       errors: errors.length > 0 ? errors : undefined,
     })

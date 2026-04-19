@@ -5,52 +5,64 @@ import { readSiteApiCreds } from '../utils/siteApiCreds.js'
 
 const isLoggedIn = useIsLoggedIn()
 const batchMode = ref(false)
-const selectedItems = ref(new Set())
+const selectedItems = ref([])  // 改用数组，Vue响应式更好
 const deleting = ref(false)
 const message = ref('')
 const mounted = ref(false)
 
-const selectedCount = computed(() => selectedItems.value.size)
+const selectedCount = computed(() => selectedItems.value.length)
 
 function toggleBatchMode() {
   batchMode.value = !batchMode.value
   if (!batchMode.value) {
-    selectedItems.value.clear()
+    selectedItems.value = []
     updateCheckboxes()
   }
   updateCheckboxVisibility()
 }
 
+// 切换选择（排除预览卡片）
 function toggleItem(slug) {
-  if (selectedItems.value.has(slug)) {
-    selectedItems.value.delete(slug)
+  // 检查是否是预览卡片
+  const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
+  if (item?.classList.contains('lk-blog__item--preview')) {
+    message.value = '预览卡片请从待推送列表移除'
+    return
+  }
+
+  const index = selectedItems.value.indexOf(slug)
+  if (index > -1) {
+    selectedItems.value.splice(index, 1)
   } else {
-    selectedItems.value.add(slug)
+    selectedItems.value.push(slug)
   }
   updateCheckboxes()
 }
 
 function selectAll() {
-  const items = document.querySelectorAll('.lk-blog__item[data-slug]')
+  const items = document.querySelectorAll('.lk-blog__item[data-slug]:not(.lk-blog__item--preview)')
+  selectedItems.value = []
   items.forEach(item => {
     const slug = item.getAttribute('data-slug')
-    if (slug) selectedItems.value.add(slug)
+    if (slug && !selectedItems.value.includes(slug)) {
+      selectedItems.value.push(slug)
+    }
   })
   updateCheckboxes()
 }
 
 function clearSelection() {
-  selectedItems.value.clear()
+  selectedItems.value = []
   updateCheckboxes()
 }
 
 function updateCheckboxes() {
-  const items = document.querySelectorAll('.lk-blog__item[data-slug]')
+  const items = document.querySelectorAll('.lk-blog__item[data-slug]:not(.lk-blog__item--preview)')
   items.forEach(item => {
     const slug = item.getAttribute('data-slug')
     const checkbox = item.querySelector('.lk-batch-checkbox')
     if (checkbox && slug) {
-      checkbox.checked = selectedItems.value.has(slug)
+      checkbox.checked = selectedItems.value.includes(slug)
     }
   })
 }
@@ -61,21 +73,29 @@ async function batchDelete() {
     return
   }
 
-  const slugs = Array.from(selectedItems.value)
+  const slugs = [...selectedItems.value]
   const confirmed = confirm(`将 ${slugs.length} 篇文章标记为待删除？\n\n${slugs.join('\n')}\n\n删除将在推送时生效`)
   if (!confirmed) return
 
   // 获取文章标题并添加到待删除列表
   slugs.forEach(slug => {
-    const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
+    const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]:not(.lk-blog__item--preview)`)
+    if (!item) return // 跳过不存在的或预览卡片
+
     const titleEl = item?.querySelector('.lk-blog__post-title')
     const title = titleEl?.textContent || slug
 
     // 调用PublishFab的addPendingDelete方法
     const fab = document.querySelector('.lk-publish-root')?.__vueParentComponent?.proxy
     if (fab?.addPendingDelete) {
+      // #region agent log
+      fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_E',location:'ArticleBatchOps.vue:batchDelete',message:'addPendingDelete path',data:{slug,path:'proxy'},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       fab.addPendingDelete(slug, title)
     } else {
+      // #region agent log
+      fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_E',location:'ArticleBatchOps.vue:batchDelete',message:'addPendingDelete path',data:{slug,path:'event'},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       // 备用方案：使用事件
       window.dispatchEvent(new CustomEvent('add-pending-delete', { detail: { slug, title } }))
     }
@@ -114,8 +134,9 @@ async function batchDelete() {
   })
 
   message.value = `已标记 ${slugs.length} 篇文章为待删除，点击推送按钮完成删除`
-  selectedItems.value.clear()
+  selectedItems.value = []
   batchMode.value = false
+  updateCheckboxVisibility()
 }
 
 // 取消所有待删除文章
@@ -142,7 +163,7 @@ function batchPrint() {
     return
   }
 
-  const slugs = Array.from(selectedItems.value)
+  const slugs = [...selectedItems.value]
   slugs.forEach((slug, index) => {
     setTimeout(() => {
       const win = window.open(`/article/${slug}.html`, '_blank')
@@ -156,8 +177,8 @@ function batchPrint() {
 }
 
 function injectCheckboxes() {
-  // 选中所有文章项，包括 external 的
-  const items = document.querySelectorAll('.lk-blog__item')
+  // 选中所有文章项，包括 external 的，但排除预览卡片
+  const items = document.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)')
   items.forEach(item => {
     if (item.querySelector('.lk-batch-checkbox')) return
 
@@ -241,6 +262,10 @@ onMounted(() => {
     injectCheckboxes()
   })
   observer.observe(document.body, { childList: true, subtree: true })
+
+  window.addEventListener('publish-push-finished', () => {
+    message.value = ''
+  })
 })
 </script>
 
@@ -250,39 +275,41 @@ onMounted(() => {
       <div class="lk-batch-card">
         <div class="lk-batch-card__head">
           <span class="lk-batch-card__title">批量操作</span>
-          <span v-if="batchMode" class="lk-batch-card__count">{{ selectedCount }} 项</span>
+          <span v-if="batchMode" class="lk-batch-card__count">已选 {{ selectedCount }} 篇</span>
         </div>
 
-        <div v-if="!batchMode" class="lk-batch-card__single">
-          <button type="button" class="lk-batch-card__btn lk-batch-card__btn--primary" @click="toggleBatchMode">
-            开始选择
+        <!-- 简化的按钮组 -->
+        <div class="lk-batch-card__buttons">
+          <button
+            v-if="!batchMode"
+            type="button"
+            class="lk-batch-card__btn lk-batch-card__btn--primary"
+            @click="toggleBatchMode"
+          >
+            选择文章
           </button>
-          <button type="button" class="lk-batch-card__btn lk-batch-card__btn--warn" @click="cancelAllDeletes">
-            取消删除
-          </button>
-        </div>
 
-        <div v-else class="lk-batch-card__actions">
-          <div class="lk-batch-card__row">
+          <template v-else>
             <button type="button" class="lk-batch-card__btn lk-batch-card__btn--small" @click="selectAll">全选</button>
             <button type="button" class="lk-batch-card__btn lk-batch-card__btn--small" @click="clearSelection">清空</button>
-          </div>
-          <div class="lk-batch-card__row">
             <button
               type="button"
               class="lk-batch-card__btn lk-batch-card__btn--delete"
-              :disabled="deleting || selectedCount === 0"
-              @click="batchDelete"
-            >{{ deleting ? '删除中...' : '删除' }}</button>
-            <button
-              type="button"
-              class="lk-batch-card__btn lk-batch-card__btn--print"
               :disabled="selectedCount === 0"
-              @click="batchPrint"
-            >打印</button>
-          </div>
-          <button type="button" class="lk-batch-card__btn lk-batch-card__btn--cancel" @click="toggleBatchMode">
-            取消选择
+              @click="batchDelete"
+            >删除 ({{ selectedCount }})</button>
+            <button type="button" class="lk-batch-card__btn lk-batch-card__btn--cancel" @click="toggleBatchMode">
+              取消
+            </button>
+          </template>
+
+          <button
+            v-if="!batchMode"
+            type="button"
+            class="lk-batch-card__btn lk-batch-card__btn--warn"
+            @click="cancelAllDeletes"
+          >
+            取消删除
           </button>
         </div>
 
@@ -345,6 +372,12 @@ onMounted(() => {
 [data-theme='dark'] .lk-batch-card__count {
   background: #475569;
   color: #e2e8f0;
+}
+
+.lk-batch-card__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .lk-batch-card__single {
