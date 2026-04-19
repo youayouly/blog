@@ -349,6 +349,8 @@ onMounted(() => {
 
 .lk-batch-card__single {
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .lk-batch-card__actions {
