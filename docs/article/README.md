@@ -31,7 +31,8 @@ comment: false
           alt=""
         />
       </a>
-    </li><li class="lk-blog__item">
+    </li>
+    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/vuepress-stack-notes.html">
         <img
           class="lk-blog__cover"
@@ -51,7 +52,8 @@ comment: false
           </div>
         </div>
       </a>
-    </li><li class="lk-blog__item lk-blog__item--external">
+    </li>
+    <li class="lk-blog__item lk-blog__item--external">
       <a class="lk-blog__card" href="/tech/my-blog.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-03-20">2026-03-20 18:30</time>
@@ -71,7 +73,5 @@ comment: false
         />
       </a>
     </li>
-      
-    
-</ol>
+  </ol>
 </div>

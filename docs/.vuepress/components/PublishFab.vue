@@ -294,8 +294,28 @@ function insertPreviewCards() {
   // 移除旧的预览卡片
   list.querySelectorAll('.lk-blog__item--preview').forEach(el => el.remove())
 
-  // 计算现有文章数量（用于确定布局）
-  const existingItems = list.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)').length
+  // 如果没有待推送文章，直接返回
+  if (pendingArticles.value.length === 0) return
+
+  // 获取已存在的文章slug列表
+  const existingSlugs = new Set()
+  list.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview) a.lk-blog__card').forEach(link => {
+    const href = link.getAttribute('href') || ''
+    const match = href.match(/\/(article|tech)\/(.+)\.html/)
+    if (match) existingSlugs.add(match[2])
+  })
+
+  // 直接从待推送队列中移除已存在的文章（清理脏数据）
+  if (existingSlugs.size > 0) {
+    const before = pendingArticles.value.length
+    pendingArticles.value = pendingArticles.value.filter(article => !existingSlugs.has(article.slug))
+    if (pendingArticles.value.length < before) {
+      console.log(`[Publish] 自动移除已存在的文章: ${before - pendingArticles.value.length} 篇`)
+    }
+  }
+
+  // 如果过滤后没有文章，直接返回
+  if (pendingArticles.value.length === 0) return
 
   // 反转顺序插入，这样最新的在最前面
   const reversedArticles = [...pendingArticles.value].reverse()
@@ -305,27 +325,36 @@ function insertPreviewCards() {
     const displayIndex = reversedArticles.length - 1 - revIndex
     const isReverse = displayIndex % 2 === 1
 
+    // 转义HTML特殊字符防止XSS
+    const escapeHtml = (str) => {
+      const div = document.createElement('div')
+      div.textContent = str
+      return div.innerHTML
+    }
+
     const li = document.createElement('li')
     li.className = `lk-blog__item lk-blog__item--preview${isReverse ? ' lk-blog__item--reverse' : ''}`
+    li.setAttribute('data-slug', article.slug)
+    li.setAttribute('data-preview', 'true')
     li.innerHTML = `
       <button type="button" class="lk-preview-delete" title="移除">×</button>
       <a class="lk-blog__card" href="/${article.target}/${article.slug}.html">
         ${!isReverse ? `
           <div class="lk-blog__text">
-            <time class="lk-blog__date">${article.date}</time>
-            <h3 class="lk-blog__post-title">${article.title}</h3>
-            <p class="lk-blog__excerpt">${article.excerpt}</p>
+            <time class="lk-blog__date">${escapeHtml(article.date)}</time>
+            <h3 class="lk-blog__post-title">${escapeHtml(article.title)}</h3>
+            <p class="lk-blog__excerpt">${escapeHtml(article.excerpt)}</p>
             <div class="lk-blog__meta">
               <span class="lk-blog__tag">待推送</span>
             </div>
           </div>
-          <img class="lk-blog__cover" src="${article.cover}" alt="" />
+          <img class="lk-blog__cover" src="${article.cover}" alt="" onerror="this.style.display='none'" />
         ` : `
-          <img class="lk-blog__cover" src="${article.cover}" alt="" />
+          <img class="lk-blog__cover" src="${article.cover}" alt="" onerror="this.style.display='none'" />
           <div class="lk-blog__text">
-            <time class="lk-blog__date">${article.date}</time>
-            <h3 class="lk-blog__post-title">${article.title}</h3>
-            <p class="lk-blog__excerpt">${article.excerpt}</p>
+            <time class="lk-blog__date">${escapeHtml(article.date)}</time>
+            <h3 class="lk-blog__post-title">${escapeHtml(article.title)}</h3>
+            <p class="lk-blog__excerpt">${escapeHtml(article.excerpt)}</p>
             <div class="lk-blog__meta">
               <span class="lk-blog__tag">待推送</span>
             </div>
@@ -333,7 +362,9 @@ function insertPreviewCards() {
         `}
       </a>
     `
-    li.querySelector('.lk-preview-delete').addEventListener('click', () => {
+    li.querySelector('.lk-preview-delete').addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
       removePendingArticle(article.id)
     })
     list.insertBefore(li, list.firstChild)
@@ -341,9 +372,14 @@ function insertPreviewCards() {
 }
 
 // 监听pendingArticles变化
-watch(pendingArticles, () => {
+watch(pendingArticles, (val) => {
   nextTick(() => {
-    insertPreviewCards()
+    if (val.length === 0) {
+      // 数组清空时，直接移除所有预览卡片
+      removePreviewCards()
+    } else {
+      insertPreviewCards()
+    }
   })
 }, { deep: true })
 
@@ -382,6 +418,15 @@ async function loadHistory() {
   }
 }
 
+// 移除预览卡片
+function removePreviewCards() {
+  if (typeof document === 'undefined') return
+  const list = document.querySelector('.lk-blog__list')
+  if (list) {
+    list.querySelectorAll('.lk-blog__item--preview').forEach(el => el.remove())
+  }
+}
+
 // 推送到Vercel
 async function doPush() {
   const cm = commitMsg.value.trim()
@@ -395,18 +440,73 @@ async function doPush() {
     return
   }
 
+  const totalPending = pendingArticles.value.length
+  const totalDeletes = pendingDeletes.value.length
+
+  if (totalPending === 0 && totalDeletes === 0) {
+    // 没有待处理项，执行普通推送
+    busy.value = true
+    setPushMsg('推送中...', 'info')
+    try {
+      const res = await fetch('/api/git-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authUser: user, authPass: pass, message: cm }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
+        setPushMsg('推送成功！Vercel正在部署...', 'ok')
+        loadHistory()
+      } else {
+        setPushMsg(data.error || '推送失败', 'err')
+      }
+    } catch (e) {
+      setPushMsg(e?.message || '网络错误', 'err')
+    } finally {
+      busy.value = false
+    }
+    return
+  }
+
   busy.value = true
   setPushMsg('推送中...', 'info')
 
-  try {
-    let addCount = 0
-    let delCount = 0
-    let failCount = 0
-    const errors = []
+  let addCount = 0
+  let delCount = 0
+  let failCount = 0
+  const errors = []
+  const successArticles = []
 
-    // 推送待推送文章
-    for (const article of pendingArticles.value) {
+  // 处理冲突：如果文章同时在待推送和待删除列表，从两边都移除
+  const pendingSlugs = new Set(pendingArticles.value.map(a => a.slug))
+  const deleteSlugs = new Set(pendingDeletes.value.map(d => d.slug))
+  const conflictSlugs = [...pendingSlugs].filter(slug => deleteSlugs.has(slug))
+
+  // #region agent log
+  fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_A',location:'PublishFab.vue:doPush:beforeConflict',message:'queues before conflict strip',data:{pendingSlugs:[...pendingSlugs],deleteSlugs:[...deleteSlugs],conflictSlugs},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  if (conflictSlugs.length > 0) {
+    // 移除冲突项
+    pendingArticles.value = pendingArticles.value.filter(a => !conflictSlugs.includes(a.slug))
+    pendingDeletes.value = pendingDeletes.value.filter(d => !conflictSlugs.includes(d.slug))
+    console.log('[Publish] 检测到冲突，已移除:', conflictSlugs)
+  }
+
+  // #region agent log
+  fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_A',location:'PublishFab.vue:doPush:afterConflict',message:'queues after conflict strip',data:{pendingLen:pendingArticles.value.length,pendingSlugs:pendingArticles.value.map(a=>a.slug),deleteLen:pendingDeletes.value.length,deleteSlugs:pendingDeletes.value.map(d=>d.slug)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  try {
+    // 推送待推送文章 - 每篇文章之间增加延迟避免README SHA冲突
+    for (let i = 0; i < pendingArticles.value.length; i++) {
+      const article = pendingArticles.value[i]
       try {
+        // 第一篇之后每篇增加2秒延迟，让GitHub API有时间同步
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        }
+
         const res = await fetch(apiUrl.value, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -424,19 +524,26 @@ async function doPush() {
         const data = await res.json().catch(() => ({}))
         if (res.ok && data.ok) {
           addCount++
+          successArticles.push(article)
         } else {
           failCount++
-          errors.push(`${article.title}: ${data.error || '失败'}`)
+          const errorMsg = data.error || '失败'
+          errors.push(`${article.title}: ${errorMsg}`)
+          console.error(`[Publish] ${article.title} 失败:`, errorMsg)
         }
       } catch (e) {
         failCount++
         errors.push(`${article.title}: 网络错误`)
+        console.error(`[Publish] ${article.title} 网络错误:`, e)
       }
     }
 
     // 删除待删除文章
     if (pendingDeletes.value.length > 0) {
       const slugs = pendingDeletes.value.map(d => d.slug)
+      // #region agent log
+      fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_B',location:'PublishFab.vue:doPush:beforeDeleteApi',message:'calling /api/delete',data:{slugs},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       try {
         const res = await fetch('/api/delete', {
           method: 'POST',
@@ -449,56 +556,84 @@ async function doPush() {
           }),
         })
         const data = await res.json().catch(() => ({}))
+        // #region agent log
+        fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_B',location:'PublishFab.vue:doPush:afterDeleteApi',message:'/api/delete response',data:{httpOk:res.ok,jsonOk:data?.ok,deleted:data?.deleted,error:data?.error,errors:data?.errors},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        const deletedNum = Number(data.deleted)
+        const safeDeleted = Number.isFinite(deletedNum) ? deletedNum : 0
         if (res.ok && data.ok) {
-          delCount = data.deleted || slugs.length
-          // 从DOM中移除已删除的文章
-          slugs.forEach(slug => {
-            const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
-            if (item) item.remove()
-          })
+          delCount = safeDeleted
+          // 从DOM中移除已删除的文章（仅在全成功时移除全部，避免误删卡片）
+          if (safeDeleted === slugs.length) {
+            slugs.forEach(slug => {
+              const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
+              if (item) item.remove()
+            })
+          }
         } else {
-          failCount += slugs.length
-          errors.push(`删除失败: ${data.error || '未知错误'}`)
+          delCount = safeDeleted
+          failCount += Math.max(0, slugs.length - safeDeleted)
+          const detail = Array.isArray(data.errors) && data.errors.length
+            ? data.errors.join('; ')
+            : (data.error || '未知错误')
+          errors.push(`删除失败: ${detail}`)
         }
       } catch (e) {
         failCount += slugs.length
         errors.push('删除请求失败')
       }
     }
-
-    // 清空队列
-    if (addCount > 0 || delCount > 0) {
-      pendingArticles.value = []
-      pendingDeletes.value = []
-      commitMsg.value = ''
-
-      const parts = []
-      if (addCount > 0) parts.push(`新增${addCount}篇`)
-      if (delCount > 0) parts.push(`删除${delCount}篇`)
-      if (failCount > 0) parts.push(`失败${failCount}项`)
-
-      setPushMsg(`推送成功：${parts.join('，')}`, failCount > 0 ? 'info' : 'ok')
-      loadHistory()
-    } else if (failCount > 0) {
-      setPushMsg(`推送失败：${errors.join('；')}`, 'err')
-    } else {
-      // 没有待处理项，执行普通推送
-      const res = await fetch('/api/git-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authUser: user, authPass: pass, message: cm }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok && data.ok) {
-        setPushMsg('推送成功！Vercel正在部署...', 'ok')
-      } else {
-        setPushMsg(data.error || '推送失败', 'err')
-      }
-    }
   } catch (e) {
+    console.error('[Publish] doPush error:', e)
     setPushMsg(e?.message || '网络错误', 'err')
-  } finally {
     busy.value = false
+    return
+  }
+
+  // 始终清空队列（无论成功失败）- 成功的已推送，失败的不再重试
+  pendingArticles.value = []
+  pendingDeletes.value = []
+  commitMsg.value = ''
+
+  // 移除预览卡片
+  removePreviewCards()
+
+  // 清除localStorage
+  try {
+    localStorage.removeItem('lk_pending_articles')
+    localStorage.removeItem('lk_pending_deletes')
+  } catch {}
+
+  // 构建结果消息
+  const parts = []
+  if (addCount > 0) parts.push(`新增${addCount}篇`)
+  if (delCount > 0) parts.push(`删除${delCount}篇`)
+  if (failCount > 0) parts.push(`失败${failCount}项`)
+
+  if (parts.length > 0) {
+    setPushMsg(`推送完成：${parts.join('，')}`, failCount > 0 ? 'info' : 'ok')
+  } else {
+    setPushMsg('没有需要推送的内容', 'info')
+  }
+
+  if (errors.length > 0) {
+    console.error('[Publish] 推送错误:', errors)
+  }
+
+  try {
+    window.dispatchEvent(new CustomEvent('publish-push-finished', { detail: { failCount, delCount } }))
+  } catch {}
+
+  busy.value = false
+  loadHistory()
+
+  // 如果有删除操作，提示刷新页面
+  if (delCount > 0) {
+    setTimeout(() => {
+      if (confirm('删除完成，是否刷新页面查看最新状态？')) {
+        window.location.reload()
+      }
+    }, 500)
   }
 }
 
@@ -513,6 +648,24 @@ onMounted(() => {
     if (savedDeletes) {
       pendingDeletes.value = JSON.parse(savedDeletes)
     }
+
+    // 清理冲突数据：文章不能同时在待推送和待删除中
+    const pendingSlugs = new Set(pendingArticles.value.map(a => a.slug))
+    const deleteSlugs = new Set(pendingDeletes.value.map(d => d.slug))
+    const conflictSlugs = [...pendingSlugs].filter(slug => deleteSlugs.has(slug))
+
+    if (conflictSlugs.length > 0) {
+      console.log('[Publish] 检测到冲突数据，自动清理:', conflictSlugs)
+      pendingArticles.value = pendingArticles.value.filter(a => !conflictSlugs.includes(a.slug))
+      pendingDeletes.value = pendingDeletes.value.filter(d => !conflictSlugs.includes(d.slug))
+      // 更新localStorage
+      localStorage.setItem('lk_pending_articles', JSON.stringify(pendingArticles.value))
+      localStorage.setItem('lk_pending_deletes', JSON.stringify(pendingDeletes.value))
+    }
+
+    // #region agent log
+    fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_C',location:'PublishFab.vue:onMounted:afterLsLoad',message:'localStorage queues after mount cleanup',data:{pendingSlugs:pendingArticles.value.map(a=>a.slug),deleteSlugs:pendingDeletes.value.map(d=>d.slug),hadConflict:conflictSlugs.length>0},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
   } catch {}
 
   // 监听删除事件
@@ -530,15 +683,23 @@ onMounted(() => {
 })
 
 watch(pendingArticles, (val) => {
-  // 保存到localStorage
+  // 保存到localStorage（空数组时移除）
   try {
-    localStorage.setItem('lk_pending_articles', JSON.stringify(val))
+    if (val.length === 0) {
+      localStorage.removeItem('lk_pending_articles')
+    } else {
+      localStorage.setItem('lk_pending_articles', JSON.stringify(val))
+    }
   } catch {}
 }, { deep: true })
 
 watch(pendingDeletes, (val) => {
   try {
-    localStorage.setItem('lk_pending_deletes', JSON.stringify(val))
+    if (val.length === 0) {
+      localStorage.removeItem('lk_pending_deletes')
+    } else {
+      localStorage.setItem('lk_pending_deletes', JSON.stringify(val))
+    }
   } catch {}
 }, { deep: true })
 </script>
