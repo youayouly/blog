@@ -11,19 +11,6 @@ comment: false
 
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
-      <a class="lk-blog__card" href="/article/langchain.html">
-        <img class="lk-blog__cover" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80" alt="" />
-        <div class="lk-blog__text">
-          <time class="lk-blog__date" datetime="2026-04-19 11:06">2026-04-19 11:06</time>
-          <h3 class="lk-blog__post-title">ai infra</h3>
-          <p class="lk-blog__excerpt">设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码。</p>
-          <div class="lk-blog__meta">
-            <span class="lk-blog__read" aria-hidden="true">Read →</span>
-          </div>
-        </div>
-      </a>
-    </li>
-    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/edge-ai-sketch.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-12">2026-04-12 20:53</time>
