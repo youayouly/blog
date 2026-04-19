@@ -41,7 +41,8 @@ const messageKind = ref('info')
 const commits = ref([])
 const historyBusy = ref(false)
 
-const previewItems = ref([])
+// 待推送队列 - 存储所有预览的文章
+const pendingArticles = ref([])
 
 const apiUrl = computed(() => {
   const u = publishApiBase.trim()
@@ -172,48 +173,47 @@ function generateCoverUrl(title, excerpt) {
 
 function doPreview() {
   message.value = ''
-  const s = slug.value.trim().toLowerCase()
-  if (!/^[a-z0-9][a-z0-9-]{0,100}$/.test(s)) {
-    setMsg('请填写文件名（slug）。', 'err')
-    return
+
+  // 如果没有待推送文章，从表单创建一个
+  if (pendingArticles.value.length === 0) {
+    const s = slug.value.trim().toLowerCase()
+    if (!/^[a-z0-9][a-z0-9-]{0,100}$/.test(s)) {
+      setMsg('请填写文件名（slug）。', 'err')
+      return
+    }
+    const title = articleTitle.value.trim()
+    if (!title) {
+      setMsg('请填写文章标题。', 'err')
+      return
+    }
+    const excerpt = articleExcerpt.value.trim()
+    if (!excerpt) {
+      setMsg('请填写文章摘要。', 'err')
+      return
+    }
+
+    const now = new Date()
+    const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
+    const cover = generateCoverUrl(title, excerpt)
+
+    pendingArticles.value.unshift({
+      id: `article-${Date.now()}`,
+      slug: s,
+      title,
+      excerpt,
+      content: content.value,
+      date: dateStr,
+      cover,
+      target: target.value,
+    })
   }
-  const title = articleTitle.value.trim()
-  if (!title) {
-    setMsg('请填写文章标题。', 'err')
-    return
-  }
-  const excerpt = articleExcerpt.value.trim()
-  if (!excerpt) {
-    setMsg('请填写文章摘要。', 'err')
-    return
-  }
 
-  const now = new Date()
-  const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
-  const cover = generateCoverUrl(title, excerpt)
-
-  // 计算现有文章数量 + 预览数量来确定布局
-  const existingItems = document.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)')
-  const existingCount = existingItems.length
-  const previewIndex = existingCount + previewItems.value.length
-
-  previewItems.value.push({
-    id: `preview-${Date.now()}`,
-    slug: s,
-    title,
-    excerpt,
-    date: dateStr,
-    cover,
-    target: target.value,
-    index: previewIndex,
-  })
-
-  setMsg('已添加预览卡片到列表末尾。', 'ok')
+  setMsg(`当前待推送：${pendingArticles.value.length} 篇文章`, 'ok')
   closePanel()
 }
 
-function removePreviewItem(id) {
-  previewItems.value = previewItems.value.filter(item => item.id !== id)
+function removePendingArticle(id) {
+  pendingArticles.value = pendingArticles.value.filter(item => item.id !== id)
 }
 
 function onDrop(e) {
@@ -243,15 +243,72 @@ function onFileInput(e) {
   e.target.value = ''
 }
 
+// 从markdown内容中提取标题
+function extractTitle(text) {
+  // 先尝试从frontmatter中提取
+  const frontmatterMatch = text.match(/^---\n[\s\S]*?\ntitle:\s*["']?(.+?)["']?\n[\s\S]*?\n---/)
+  if (frontmatterMatch) return frontmatterMatch[1].trim()
+
+  // 再尝试从第一个#标题提取
+  const h1Match = text.match(/^#\s+(.+)$/m)
+  if (h1Match) return h1Match[1].trim()
+
+  return ''
+}
+
+// 从markdown内容中提取摘要
+function extractExcerpt(text) {
+  // 移除frontmatter
+  let body = text.replace(/^---\n[\s\S]*?\n---\n*/, '')
+  // 移除标题
+  body = body.replace(/^#+\s+.*$/gm, '')
+  // 获取第一段非空文本
+  const lines = body.split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed && !trimmed.startsWith('<!--') && !trimmed.startsWith('![') && trimmed.length > 10) {
+      return trimmed.slice(0, 100) + (trimmed.length > 100 ? '...' : '')
+    }
+  }
+  return ''
+}
+
+// 解析markdown文件并添加到待推送队列
 async function readFile(file) {
   try {
     const text = await file.text()
-    content.value = text
-    if (!slug.value) {
-      const base = file.name.replace(/\.md$/i, '').toLowerCase()
-      if (/^[a-z0-9][a-z0-9-]*$/.test(base)) slug.value = base
+
+    // 自动提取信息
+    const extractedTitle = extractTitle(text)
+    const extractedExcerpt = extractExcerpt(text)
+    const fileSlug = file.name.replace(/\.md$/i, '').toLowerCase()
+
+    // 创建待推送文章对象
+    const now = new Date()
+    const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
+    const cover = generateCoverUrl(extractedTitle || fileSlug, extractedExcerpt || '')
+
+    const article = {
+      id: `article-${Date.now()}`,
+      slug: fileSlug,
+      title: extractedTitle || fileSlug,
+      excerpt: extractedExcerpt || '暂无摘要',
+      content: text,
+      date: dateStr,
+      cover,
+      target: target.value,
     }
-    setMsg(`已读取「${file.name}」。`, 'ok')
+
+    // 添加到待推送队列
+    pendingArticles.value.unshift(article)
+
+    // 更新表单显示当前文章（用于推送）
+    slug.value = article.slug
+    articleTitle.value = article.title
+    articleExcerpt.value = article.excerpt
+    content.value = text
+
+    setMsg(`已添加「${article.title}」到待推送队列（共${pendingArticles.value.length}篇）`, 'ok')
   } catch {
     setMsg('读取文件失败。', 'err')
   }
@@ -329,6 +386,78 @@ async function loadHistory() {
 
 async function doPublish() {
   message.value = ''
+
+  // 如果有待推送文章，批量推送
+  if (pendingArticles.value.length > 0) {
+    const cm = commitMsg.value.trim()
+    if (!cm) {
+      setMsg('请填写本次提交说明（对应 git commit -m）。', 'err')
+      return
+    }
+    const { user, pass } = readSiteApiCreds()
+    if (!user || !pass) {
+      setMsg('请先在 About 页退出并重新登录一次，以保存推送凭据。', 'err')
+      return
+    }
+
+    busy.value = true
+    let successCount = 0
+    let failCount = 0
+    const errors = []
+
+    for (const article of pendingArticles.value) {
+      try {
+        const res = await fetch(apiUrl.value, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authUser: user,
+            authPass: pass,
+            target: article.target,
+            filename: `${article.slug}.md`,
+            title: article.title,
+            excerpt: article.excerpt,
+            content: article.content,
+            commitMessage: cm.slice(0, 500),
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && data.ok) {
+          successCount++
+        } else {
+          failCount++
+          errors.push(`${article.title}: ${data.error || '推送失败'}`)
+        }
+      } catch (e) {
+        failCount++
+        errors.push(`${article.title}: ${e?.message || '网络错误'}`)
+      }
+    }
+
+    busy.value = false
+
+    if (successCount > 0) {
+      pendingArticles.value = []
+      // 清空表单
+      slug.value = ''
+      articleTitle.value = ''
+      articleExcerpt.value = ''
+      content.value = ''
+      commitMsg.value = ''
+
+      const msg = failCount > 0
+        ? `成功推送 ${successCount} 篇，失败 ${failCount} 篇。${errors.join('；')}`
+        : `已成功推送 ${successCount} 篇文章！`
+      setMsg(msg, failCount > 0 ? 'info' : 'ok')
+      closePanel()
+      closePushSheet()
+    } else {
+      setMsg(`推送失败：${errors.join('；')}`, 'err')
+    }
+    return
+  }
+
+  // 否则使用表单数据推送单篇
   const s = slug.value.trim().toLowerCase()
   if (!/^[a-z0-9][a-z0-9-]{0,100}$/.test(s)) {
     setMsg('文件名（slug）需为小写字母、数字、连字符。', 'err')
@@ -381,7 +510,6 @@ async function doPublish() {
       return
     }
     rememberLastPath(s)
-    previewItems.value = []
     const base = `已推送：${data.path}。`
     let tail = ''
     if (data.listUpdated) {
@@ -444,13 +572,25 @@ async function doPublish() {
 
             <div class="lk-publish-panel__scroll">
               <p class="lk-publish-panel__hint">
-                对应
-                <code>git add</code>
-                的文件内容与路径；推送时使用下方「提交说明」作为
-                <code>git commit -m</code>
-                ，由服务器写入 GitHub（等价一步完成 push）。无需单独「发布密钥」，凭据与 About
-                登录一致并在登录时写入会话。
+                拖入 .md 文件自动提取标题和摘要。支持多篇文章批量预览和推送。
               </p>
+
+              <!-- 待推送队列 -->
+              <div v-if="pendingArticles.length > 0" class="lk-publish-queue">
+                <div class="lk-publish-queue__head">
+                  <span>待推送文章 ({{ pendingArticles.length }})</span>
+                  <button type="button" class="lk-publish-queue__clear" @click="pendingArticles = []">清空</button>
+                </div>
+                <ul class="lk-publish-queue__list">
+                  <li v-for="article in pendingArticles" :key="article.id" class="lk-publish-queue__item">
+                    <div class="lk-publish-queue__info">
+                      <strong>{{ article.title }}</strong>
+                      <span class="lk-publish-queue__slug">{{ article.slug }}.md</span>
+                    </div>
+                    <button type="button" class="lk-publish-queue__remove" @click="removePendingArticle(article.id)">×</button>
+                  </li>
+                </ul>
+              </div>
 
               <div class="lk-publish-field">
                 <span class="lk-publish-label">分区</span>
@@ -534,9 +674,8 @@ async function doPublish() {
 
             <div class="lk-publish-actions">
               <button type="button" class="lk-publish-secondary" :disabled="busy" @click="closePanel">取消</button>
-              <button type="button" class="lk-publish-preview" :disabled="busy" @click="doPreview">预览</button>
               <button type="button" class="lk-publish-primary" :disabled="busy" @click="doPublish">
-                {{ busy ? '推送中…' : '推送' }}
+                {{ busy ? '推送中…' : pendingArticles.length > 0 ? `推送 ${pendingArticles.length} 篇` : '推送' }}
               </button>
             </div>
           </div>
@@ -610,41 +749,39 @@ async function doPublish() {
         </div>
       </Transition>
 
-      <!-- 预览卡片 - 插入到文章列表末尾 -->
-      <Teleport v-if="previewItems.length" to=".lk-blog__list">
+      <!-- 预览卡片 - 插入到文章列表顶部 -->
+      <Teleport v-if="pendingArticles.length" to=".lk-blog__list">
         <li
-          v-for="item in previewItems"
-          :key="item.id"
+          v-for="(article, index) in pendingArticles"
+          :key="article.id"
           class="lk-blog__item lk-blog__item--preview"
-          :class="{ 'lk-blog__item--reverse': item.index % 2 === 1 }"
+          :class="{ 'lk-blog__item--reverse': index % 2 === 1 }"
         >
           <button
             type="button"
             class="lk-preview-delete"
             title="删除预览"
-            @click="removePreviewItem(item.id)"
+            @click="removePendingArticle(article.id)"
           >×</button>
-          <a class="lk-blog__card" :href="`/${item.target}/${item.slug}.html`">
-            <template v-if="item.index % 2 === 0">
-              <!-- 偶数索引：文字左，图片右 -->
+          <a class="lk-blog__card" :href="`/${article.target}/${article.slug}.html`">
+            <template v-if="index % 2 === 0">
               <div class="lk-blog__text">
-                <time class="lk-blog__date" :datetime="item.date">{{ item.date }}</time>
-                <h3 class="lk-blog__post-title">{{ item.title }}</h3>
-                <p class="lk-blog__excerpt">{{ item.excerpt }}</p>
+                <time class="lk-blog__date" :datetime="article.date">{{ article.date }}</time>
+                <h3 class="lk-blog__post-title">{{ article.title }}</h3>
+                <p class="lk-blog__excerpt">{{ article.excerpt }}</p>
                 <div class="lk-blog__meta">
                   <span class="lk-blog__tag">预览</span>
                   <span class="lk-blog__read" aria-hidden="true">Read →</span>
                 </div>
               </div>
-              <img class="lk-blog__cover" :src="item.cover" alt="" />
+              <img class="lk-blog__cover" :src="article.cover" alt="" />
             </template>
             <template v-else>
-              <!-- 奇数索引：图片左，文字右 -->
-              <img class="lk-blog__cover" :src="item.cover" alt="" />
+              <img class="lk-blog__cover" :src="article.cover" alt="" />
               <div class="lk-blog__text">
-                <time class="lk-blog__date" :datetime="item.date">{{ item.date }}</time>
-                <h3 class="lk-blog__post-title">{{ item.title }}</h3>
-                <p class="lk-blog__excerpt">{{ item.excerpt }}</p>
+                <time class="lk-blog__date" :datetime="article.date">{{ article.date }}</time>
+                <h3 class="lk-blog__post-title">{{ article.title }}</h3>
+                <p class="lk-blog__excerpt">{{ article.excerpt }}</p>
                 <div class="lk-blog__meta">
                   <span class="lk-blog__tag">预览</span>
                   <span class="lk-blog__read" aria-hidden="true">Read →</span>
@@ -826,6 +963,97 @@ async function doPublish() {
 
 .lk-publish-panel__hint code {
   font-size: 0.8em;
+}
+
+/* 待推送队列样式 */
+.lk-publish-queue {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--vp-c-default-soft);
+  border-radius: 8px;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.lk-publish-queue__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+}
+
+.lk-publish-queue__clear {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+}
+
+.lk-publish-queue__clear:hover {
+  background: var(--vp-c-danger-soft);
+  color: var(--vp-c-danger-1);
+  border-color: var(--vp-c-danger-1);
+}
+
+.lk-publish-queue__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.lk-publish-queue__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+  font-size: 0.8rem;
+}
+
+.lk-publish-queue__item:last-child {
+  border-bottom: none;
+}
+
+.lk-publish-queue__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.lk-publish-queue__info strong {
+  color: var(--vp-c-text-1);
+}
+
+.lk-publish-queue__slug {
+  color: var(--vp-c-text-3);
+  font-size: 0.7rem;
+  font-family: var(--vp-font-family-mono);
+}
+
+.lk-publish-queue__remove {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.8);
+  color: #fff;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lk-publish-queue__remove:hover {
+  background: #dc2626;
 }
 
 .lk-publish-meta {
