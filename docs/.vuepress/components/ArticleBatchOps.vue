@@ -80,9 +80,30 @@ async function batchDelete() {
       window.dispatchEvent(new CustomEvent('add-pending-delete', { detail: { slug, title } }))
     }
 
-    // 从DOM中临时移除（添加删除标记样式）
+    // 添加删除标记样式和标志
     if (item) {
       item.classList.add('lk-blog__item--pending-delete')
+
+      // 添加"即将删除"标志（如果不存在）
+      if (!item.querySelector('.lk-delete-badge')) {
+        const badge = document.createElement('span')
+        badge.className = 'lk-delete-badge'
+        badge.textContent = '即将删除'
+        badge.style.cssText = `
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background: #ef4444;
+          color: #fff;
+          font-size: 11px;
+          padding: 2px 8px;
+          border-radius: 4px;
+          z-index: 10;
+          font-weight: 500;
+        `
+        item.style.position = 'relative'
+        item.insertBefore(badge, item.firstChild)
+      }
     }
   })
 
