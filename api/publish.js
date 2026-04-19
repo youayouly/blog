@@ -123,15 +123,16 @@ function generateArticleListItem(slug, title, excerpt, date, itemIndex) {
 }
 
 function updateArticleList(originalContent, newItem) {
-  // 找到 </ol> 标签，在其前面插入新条目（添加到列表末尾）
-  const listEnd = originalContent.indexOf('</ol>')
-  if (listEnd === -1) return null
+  // 找到 <ol class="lk-blog__list"> 后面的第一个 <li>，在其前面插入新条目（添加到列表开头）
+  const listStart = originalContent.indexOf('<ol class="lk-blog__list">')
+  if (listStart === -1) return null
 
-  const before = originalContent.slice(0, listEnd)
-  const after = originalContent.slice(listEnd)
+  const olEnd = originalContent.indexOf('>', listStart) + 1
+  const before = originalContent.slice(0, olEnd)
+  const after = originalContent.slice(olEnd)
 
-  // No extra newline before newItem: a blank line ends markdown-it HTML blocks inside <ol>.
-  return before + newItem + '\n' + after
+  // 新条目插入到开头，紧贴 <ol> 标签
+  return before + '\n' + newItem + after
 }
 
 function countExistingItems(content) {
