@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, nextTick } from 'vue'
 import { useIsLoggedIn } from '../utils/authGate.js'
 import { readSiteApiCreds } from '../utils/siteApiCreds.js'
 
@@ -120,13 +120,16 @@ function extractExcerpt(text) {
 function onDrop(e) {
   e.preventDefault()
   dragging.value = false
-  const file = e.dataTransfer?.files?.[0]
-  if (!file) return
-  if (!/\.md$/i.test(file.name)) {
+  const files = Array.from(e.dataTransfer?.files || [])
+  if (files.length === 0) return
+
+  const mdFiles = files.filter(f => /\.md$/i.test(f.name))
+  if (mdFiles.length === 0) {
     setMsg('请拖入 .md 文件', 'err')
     return
   }
-  void readFile(file)
+
+  void readFiles(mdFiles)
 }
 
 function onDragOver(e) {
@@ -167,10 +170,25 @@ async function readFile(file) {
     }
 
     pendingArticles.value.unshift(article)
-    setMsg(`已添加「${article.title}」到待推送队列`, 'ok')
-    open.value = false
+
+    // 更新表单显示最新文章的信息（不关闭面板）
+    slug.value = article.slug
+    articleTitle.value = article.title
+    articleExcerpt.value = article.excerpt
+    content.value = article.content
+
+    setMsg(`已添加「${article.title}」（共${pendingArticles.value.length}篇待推送）`, 'ok')
   } catch {
     setMsg('读取文件失败', 'err')
+  }
+}
+
+// 读取多个文件
+async function readFiles(files) {
+  for (const file of files) {
+    if (/\.md$/i.test(file.name)) {
+      await readFile(file)
+    }
   }
 }
 
@@ -205,14 +223,13 @@ function addManualArticle() {
     target: target.value,
   })
 
-  // 清空表单
+  // 清空表单（不关闭面板）
   slug.value = ''
   articleTitle.value = ''
   articleExcerpt.value = ''
   content.value = ''
 
-  setMsg('已添加到待推送队列', 'ok')
-  open.value = false
+  setMsg(`已添加到待推送队列（共${pendingArticles.value.length}篇）`, 'ok')
 }
 
 function removePendingArticle(id) {
@@ -250,6 +267,60 @@ defineExpose({
   pendingArticles,
   pendingDeletes
 })
+
+// 插入预览卡片到列表开头
+function insertPreviewCards() {
+  if (typeof document === 'undefined') return
+
+  const list = document.querySelector('.lk-blog__list')
+  if (!list) return
+
+  // 移除旧的预览卡片
+  list.querySelectorAll('.lk-blog__item--preview').forEach(el => el.remove())
+
+  // 插入新的预览卡片到开头
+  pendingArticles.value.forEach((article, index) => {
+    const li = document.createElement('li')
+    li.className = `lk-blog__item lk-blog__item--preview${index % 2 === 1 ? ' lk-blog__item--reverse' : ''}`
+    li.innerHTML = `
+      <button type="button" class="lk-preview-delete" title="移除">×</button>
+      <a class="lk-blog__card" href="/${article.target}/${article.slug}.html">
+        ${index % 2 === 0 ? `
+          <div class="lk-blog__text">
+            <time class="lk-blog__date">${article.date}</time>
+            <h3 class="lk-blog__post-title">${article.title}</h3>
+            <p class="lk-blog__excerpt">${article.excerpt}</p>
+            <div class="lk-blog__meta">
+              <span class="lk-blog__tag">待推送</span>
+            </div>
+          </div>
+          <img class="lk-blog__cover" src="${article.cover}" alt="" />
+        ` : `
+          <img class="lk-blog__cover" src="${article.cover}" alt="" />
+          <div class="lk-blog__text">
+            <time class="lk-blog__date">${article.date}</time>
+            <h3 class="lk-blog__post-title">${article.title}</h3>
+            <p class="lk-blog__excerpt">${article.excerpt}</p>
+            <div class="lk-blog__meta">
+              <span class="lk-blog__tag">待推送</span>
+            </div>
+          </div>
+        `}
+      </a>
+    `
+    li.querySelector('.lk-preview-delete').addEventListener('click', () => {
+      removePendingArticle(article.id)
+    })
+    list.insertBefore(li, list.firstChild)
+  })
+}
+
+// 监听pendingArticles变化
+watch(pendingArticles, () => {
+  nextTick(() => {
+    insertPreviewCards()
+  })
+}, { deep: true })
 
 // 打开推送面板
 function openPushSheet() {
@@ -656,42 +727,6 @@ watch(pendingDeletes, (val) => {
           </div>
         </div>
       </Transition>
-
-      <!-- 预览卡片 -->
-      <Teleport v-if="pendingArticles.length" to=".lk-blog__list">
-        <li
-          v-for="(article, index) in pendingArticles"
-          :key="article.id"
-          class="lk-blog__item lk-blog__item--preview"
-          :class="{ 'lk-blog__item--reverse': index % 2 === 1 }"
-        >
-          <button type="button" class="lk-preview-delete" title="移除" @click="removePendingArticle(article.id)">×</button>
-          <a class="lk-blog__card" :href="`/${article.target}/${article.slug}.html`">
-            <template v-if="index % 2 === 0">
-              <div class="lk-blog__text">
-                <time class="lk-blog__date">{{ article.date }}</time>
-                <h3 class="lk-blog__post-title">{{ article.title }}</h3>
-                <p class="lk-blog__excerpt">{{ article.excerpt }}</p>
-                <div class="lk-blog__meta">
-                  <span class="lk-blog__tag">待推送</span>
-                </div>
-              </div>
-              <img class="lk-blog__cover" :src="article.cover" alt="" />
-            </template>
-            <template v-else>
-              <img class="lk-blog__cover" :src="article.cover" alt="" />
-              <div class="lk-blog__text">
-                <time class="lk-blog__date">{{ article.date }}</time>
-                <h3 class="lk-blog__post-title">{{ article.title }}</h3>
-                <p class="lk-blog__excerpt">{{ article.excerpt }}</p>
-                <div class="lk-blog__meta">
-                  <span class="lk-blog__tag">待推送</span>
-                </div>
-              </div>
-            </template>
-          </a>
-        </li>
-      </Teleport>
     </div>
   </Teleport>
 </template>
