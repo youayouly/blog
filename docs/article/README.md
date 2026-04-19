@@ -11,18 +11,6 @@ comment: false
 
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
-      <a class="lk-blog__card" href="/article/test-article.html">
-        <img class="lk-blog__cover" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80" alt="" />
-        <div class="lk-blog__text">
-          <time class="lk-blog__date" datetime="2026-04-19">2026-04-19 05:57</time>
-          <h3 class="lk-blog__post-title">测试文章</h3>
-          <p class="lk-blog__excerpt">测试文章</p>
-          <div class="lk-blog__meta">
-            <span class="lk-blog__read" aria-hidden="true">Read →</span>
-          </div>
-        </div>
-      </a>
-    </li><li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/langchain.html">
         <img class="lk-blog__cover" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80" alt="" />
         <div class="lk-blog__text">
