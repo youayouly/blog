@@ -426,6 +426,11 @@ onMounted(() => {
       pendingDeletes.value.push({ id: `del-${Date.now()}`, slug, title })
     }
   })
+
+  // 监听清除删除事件
+  window.addEventListener('clear-pending-deletes', () => {
+    pendingDeletes.value = []
+  })
 })
 
 watch(pendingArticles, (val) => {
@@ -459,13 +464,13 @@ watch(pendingDeletes, (val) => {
         <button
           type="button"
           class="lk-publish-fab lk-publish-fab--push"
-          :class="{ 'lk-publish-fab--pending': pendingArticles.length > 0 }"
+          :class="{ 'lk-publish-fab--pending': (pendingArticles.length + pendingDeletes.length) > 0 }"
           aria-label="推送管理"
           title="推送到Vercel"
           @click="openPushSheet"
         >
           ⇪
-          <span v-if="pendingArticles.length" class="lk-publish-badge">{{ pendingArticles.length }}</span>
+          <span v-if="(pendingArticles.length + pendingDeletes.length) > 0" class="lk-publish-badge">{{ pendingArticles.length + pendingDeletes.length }}</span>
         </button>
       </div>
 
