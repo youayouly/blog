@@ -60,7 +60,20 @@ async function getFileContent(token, repo, path, branch) {
   return null
 }
 
-async function normalizeCoverUrl(token, repo, branch, coverUrl) {
+function readLocalCoverAsset(coverUrl) {
+  if (!coverUrl || typeof coverUrl !== 'string' || !coverUrl.startsWith('/gallery/')) return null
+  const repoPath = `docs/.vuepress/public${coverUrl}`
+  const fullPath = path.join(process.cwd(), repoPath)
+  if (!fs.existsSync(fullPath)) return null
+
+  return {
+    path: repoPath,
+    content: fs.readFileSync(fullPath).toString('base64'),
+    encoding: 'base64',
+  }
+}
+
+async function normalizeCoverUrl(token, repo, branch, coverUrl, files = []) {
   if (!coverUrl || typeof coverUrl !== 'string') return FALLBACK_COVER
   if (coverUrl.startsWith('data:image/')) return coverUrl
   if (/^https?:\/\//i.test(coverUrl)) return coverUrl
@@ -68,7 +81,17 @@ async function normalizeCoverUrl(token, repo, branch, coverUrl) {
   if (coverUrl.startsWith('/gallery/')) {
     const repoPath = `docs/.vuepress/public${coverUrl}`
     const sha = await getFileSha(token, repo, repoPath, branch)
-    return sha ? coverUrl : FALLBACK_COVER
+    if (sha) return coverUrl
+
+    const localAsset = readLocalCoverAsset(coverUrl)
+    if (localAsset) {
+      if (!files.some(file => file.path === localAsset.path)) {
+        files.push(localAsset)
+      }
+      return coverUrl
+    }
+
+    return FALLBACK_COVER
   }
 
   return FALLBACK_COVER
@@ -107,12 +130,44 @@ async function createBatchCommit(token, repo, branch, message, files) {
   const baseTreeSha = commitData.tree.sha
 
   // 3. 创建新的 tree，包含所有文件
-  const treeItems = files.map(file => ({
-    path: file.path,
-    mode: '100644',
-    type: 'blob',
-    content: file.content,
-  }))
+  const treeItems = []
+  for (const file of files) {
+    if (file.encoding === 'base64') {
+      const blobUrl = `${GITHUB_API_BASE}/repos/${repo}/git/blobs`
+      const blobRes = await fetch(blobUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'VuePress-Publish-API/1.0',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: file.content,
+          encoding: 'base64',
+        }),
+      })
+      if (!blobRes.ok) {
+        const err = await blobRes.text()
+        throw new Error(`Failed to create blob for ${file.path}: ${err}`)
+      }
+      const blobData = await blobRes.json()
+      treeItems.push({
+        path: file.path,
+        mode: '100644',
+        type: 'blob',
+        sha: blobData.sha,
+      })
+      continue
+    }
+
+    treeItems.push({
+      path: file.path,
+      mode: '100644',
+      type: 'blob',
+      content: file.content,
+    })
+  }
 
   const treeUrl = `${GITHUB_API_BASE}/repos/${repo}/git/trees`
   const treeRes = await fetch(treeUrl, {
@@ -333,7 +388,7 @@ module.exports = async function handler(req, res) {
         : `${filename.toLowerCase()}.md`
       const slug = normalizedFilename.replace(/\.md$/, '')
       const filePath = `${dir}/${normalizedFilename}`
-      const safeCover = await normalizeCoverUrl(GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, cover)
+      const safeCover = await normalizeCoverUrl(GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, cover, files)
 
       const now = new Date()
       // 使用标准 ISO 格式：YYYY-MM-DDTHH:mm:ss+08:00

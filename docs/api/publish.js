@@ -62,6 +62,39 @@ async function getFileContent(token, repo, path, branch) {
   return null
 }
 
+function readLocalCoverAsset(coverUrl) {
+  if (!coverUrl || typeof coverUrl !== 'string' || !coverUrl.startsWith('/gallery/')) return null
+  const repoPath = `docs/.vuepress/public${coverUrl}`
+  const fullPath = path.join(process.cwd(), repoPath)
+  if (!fs.existsSync(fullPath)) return null
+
+  return {
+    path: repoPath,
+    content: fs.readFileSync(fullPath).toString('base64'),
+  }
+}
+
+async function updateBinaryFile(token, repo, path, base64Content, message, branch, sha) {
+  const url = `${GITHUB_API_BASE}/repos/${repo}/contents/${path}`
+  const body = {
+    message,
+    content: base64Content,
+    branch,
+  }
+  if (sha) body.sha = sha
+
+  return fetch(url, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'VuePress-Publish-API/1.0',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+}
+
 async function normalizeCoverUrl(token, repo, branch, coverUrl) {
   if (!coverUrl || typeof coverUrl !== 'string') return FALLBACK_COVER
   if (coverUrl.startsWith('data:image/')) return coverUrl
@@ -70,7 +103,8 @@ async function normalizeCoverUrl(token, repo, branch, coverUrl) {
   if (coverUrl.startsWith('/gallery/')) {
     const repoPath = `docs/.vuepress/public${coverUrl}`
     const sha = await getFileSha(token, repo, repoPath, branch)
-    return sha ? coverUrl : FALLBACK_COVER
+    if (sha) return coverUrl
+    return readLocalCoverAsset(coverUrl) ? coverUrl : FALLBACK_COVER
   }
 
   return FALLBACK_COVER
@@ -241,6 +275,26 @@ module.exports = async function handler(req, res) {
     const slug = normalizedFilename.replace(/\.md$/, '')
     const filePath = `${dir}/${normalizedFilename}`
     const safeCover = await normalizeCoverUrl(GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, cover)
+
+    const localCoverAsset = readLocalCoverAsset(safeCover)
+    if (localCoverAsset) {
+      const coverSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, localCoverAsset.path, GITHUB_BRANCH)
+      if (!coverSha) {
+        const coverRes = await updateBinaryFile(
+          GITHUB_TOKEN,
+          GITHUB_REPO,
+          localCoverAsset.path,
+          localCoverAsset.content,
+          `${commitMessage} (上传封面: ${title})`,
+          GITHUB_BRANCH,
+          coverSha
+        )
+        if (!coverRes.ok) {
+          const err = await coverRes.json().catch(() => ({}))
+          console.error('[Publish] 封面上传失败:', JSON.stringify(err))
+        }
+      }
+    }
 
     // 获取当前日期（标准 ISO 格式）
     const now = new Date()
