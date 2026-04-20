@@ -12,6 +12,7 @@ const ALLOWED_TARGETS = {
 }
 
 const GITHUB_API_BASE = 'https://api.github.com'
+const FALLBACK_COVER = '/gallery/article-cover-1.png'
 
 function validateFilename(filename) {
   if (!filename || typeof filename !== 'string') return false
@@ -57,6 +58,20 @@ async function getFileContent(token, repo, path, branch) {
     }
   } catch {}
   return null
+}
+
+async function normalizeCoverUrl(token, repo, branch, coverUrl) {
+  if (!coverUrl || typeof coverUrl !== 'string') return FALLBACK_COVER
+  if (coverUrl.startsWith('data:image/')) return coverUrl
+  if (/^https?:\/\//i.test(coverUrl)) return coverUrl
+
+  if (coverUrl.startsWith('/gallery/')) {
+    const repoPath = `docs/.vuepress/public${coverUrl}`
+    const sha = await getFileSha(token, repo, repoPath, branch)
+    return sha ? coverUrl : FALLBACK_COVER
+  }
+
+  return FALLBACK_COVER
 }
 
 // 使用 GitHub Trees API 批量创建/更新文件
@@ -318,6 +333,7 @@ module.exports = async function handler(req, res) {
         : `${filename.toLowerCase()}.md`
       const slug = normalizedFilename.replace(/\.md$/, '')
       const filePath = `${dir}/${normalizedFilename}`
+      const safeCover = await normalizeCoverUrl(GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, cover)
 
       const now = new Date()
       // 使用标准 ISO 格式：YYYY-MM-DDTHH:mm:ss+08:00
@@ -347,7 +363,7 @@ ${content}`
           title,
           excerpt: excerpt || '暂无摘要',
           date: dateStr,
-          cover,
+          cover: safeCover,
         })
       }
 

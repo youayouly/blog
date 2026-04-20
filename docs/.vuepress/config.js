@@ -59,6 +59,11 @@ function lkBuildTracePlugin() {
 }
 
 export default defineUserConfig({
+  pagePatterns: [
+    '**/*.md',
+    '!.vuepress',
+    '!**/*_backup.md',
+  ],
   plugins: [lkBuildTracePlugin()],
   bundler: viteBundler({
     viteOptions: {
