@@ -11,45 +11,6 @@ comment: false
 
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
-      <a class="lk-blog__card" href="/article/openclaw.html">
-        <img class="lk-blog__cover" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22800%22%3E%0A%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20style%3D%22stop-color%3Ahsl(239%2C%2072%25%2C%2048%25)%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20style%3D%22stop-color%3Ahsl(269%2C%2070%25%2C%2038%25)%22%20%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%3C%2Fdefs%3E%0A%0A%20%20%20%20%20%20%3C!--%20%E8%83%8C%E6%99%AF%20--%3E%0A%20%20%20%20%20%20%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22url(%23bg)%22%2F%3E%0A%0A%20%20%20%20%20%20%3C!--%20%E8%A3%85%E9%A5%B0%E5%9C%86%E5%9C%88%20--%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22150%22%20cy%3D%22150%22%20r%3D%22100%22%20fill%3D%22rgba(255%2C255%2C255%2C0.1)%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%221100%22%20cy%3D%22700%22%20r%3D%2280%22%20fill%3D%22rgba(255%2C255%2C255%2C0.08)%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%221000%22%20cy%3D%22100%22%20r%3D%2250%22%20fill%3D%22rgba(255%2C255%2C255%2C0.08)%22%2F%3E%0A%0A%20%20%20%20%20%20%3C!--%20%E6%A0%87%E9%A2%98%E9%A6%96%E5%AD%97%E6%AF%8D%EF%BC%88%E5%A4%A7%E5%AD%97%E6%B0%B4%E5%8D%B0%EF%BC%89%20--%3E%0A%20%20%20%20%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2240%25%22%0A%20%20%20%20%20%20%20%20%20%20%20%20font-family%3D%22Arial%2C%20sans-serif%22%0A%20%20%20%20%20%20%20%20%20%20%20%20font-size%3D%22180%22%0A%20%20%20%20%20%20%20%20%20%20%20%20font-weight%3D%22bold%22%0A%20%20%20%20%20%20%20%20%20%20%20%20fill%3D%22rgba(255%2C255%2C255%2C0.25)%22%0A%20%20%20%20%20%20%20%20%20%20%20%20text-anchor%3D%22middle%22%0A%20%20%20%20%20%20%20%20%20%20%20%20dominant-baseline%3D%22middle%22%3E%0A%20%20%20%20%20%20%20%20OP%0A%20%20%20%20%20%20%3C%2Ftext%3E%0A%0A%20%20%20%20%20%20%3C!--%20%E5%85%B3%E9%94%AE%E8%AF%8D%E6%A0%87%E7%AD%BE%EF%BC%88%E5%BA%95%E9%83%A8%E5%B1%85%E4%B8%AD%EF%BC%89%20--%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%2250%25%22%20y%3D%2265%25%22%20width%3D%22400%22%20height%3D%2260%22%20rx%3D%2230%22%20fill%3D%22rgba(255%2C255%2C255%2C0.2)%22%20transform%3D%22translate(-200%2C%20-30)%22%2F%3E%0A%20%20%20%20%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2265%25%22%0A%20%20%20%20%20%20%20%20%20%20%20%20font-family%3D%22Arial%2C%20sans-serif%22%0A%20%20%20%20%20%20%20%20%20%20%20%20font-size%3D%2228%22%0A%20%20%20%20%20%20%20%20%20%20%20%20font-weight%3D%22600%22%0A%20%20%20%20%20%20%20%20%20%20%20%20fill%3D%22rgba(255%2C255%2C255%2C0.9)%22%0A%20%20%20%20%20%20%20%20%20%20%20%20text-anchor%3D%22middle%22%0A%20%20%20%20%20%20%20%20%20%20%20%20dominant-baseline%3D%22middle%22%3E%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%3C%2Ftext%3E%0A%20%20%20%20%3C%2Fsvg%3E" alt="" />
-        <div class="lk-blog__text">
-          <time class="lk-blog__date" datetime="2026-04-20T17:08:42.465Z">2026-04-20T17:08:42.465Z</time>
-          <h3 class="lk-blog__post-title">openclaw</h3>
-          <p class="lk-blog__excerpt">如果你想在本地玩转大模型，这是最标准的起步流程：</p>
-          <div class="lk-blog__meta">
-            <span class="lk-blog__read" aria-hidden="true">Read →</span>
-          </div>
-        </div>
-      </a>
-    </li>
-    <li class="lk-blog__item">
-      <a class="lk-blog__card" href="/article/langchain.html">
-        <div class="lk-blog__text">
-          <time class="lk-blog__date" datetime="2026-04-20T17:08:42.468Z">2026-04-20T17:08:42.468Z</time>
-          <h3 class="lk-blog__post-title">ai infra</h3>
-          <p class="lk-blog__excerpt">设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码。</p>
-          <div class="lk-blog__meta">
-            <span class="lk-blog__read" aria-hidden="true">Read →</span>
-          </div>
-        </div>
-        <img class="lk-blog__cover" src="/gallery/article-cover-ai-infra-1776704841695.jpg" alt="" />
-      </a>
-    </li>
-    <li class="lk-blog__item">
-      <a class="lk-blog__card" href="/article/ai模板.html">
-        <img class="lk-blog__cover" src="/gallery/article-cover-ai模板-1776704810212.jpg" alt="" />
-        <div class="lk-blog__text">
-          <time class="lk-blog__date" datetime="2026-04-20T17:08:42.469Z">2026-04-20T17:08:42.469Z</time>
-          <h3 class="lk-blog__post-title">ai模板</h3>
-          <p class="lk-blog__excerpt">你是 [领域：例如资深前端 / VuePress / DevOps / 数据库] 工程师。优先给出**可验证**的结论与**可执行**的步骤；不确定时明确写「假...</p>
-          <div class="lk-blog__meta">
-            <span class="lk-blog__read" aria-hidden="true">Read →</span>
-          </div>
-        </div>
-      </a>
-    </li>
-    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/edge-ai-sketch.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-12">2026-04-12 20:53</time>
