@@ -18,12 +18,6 @@ function runGit(args, options = {}) {
   }).trim()
 }
 
-function parseStatusPath(line) {
-  const raw = line.slice(3).trim()
-  const renamed = raw.match(/^(.+?) -> (.+)$/)
-  return renamed ? renamed[2] : raw
-}
-
 function shouldPublishPath(filePath) {
   const normalized = filePath.replace(/\\/g, '/')
   if (normalized.startsWith('.claude/')) return false
@@ -34,13 +28,13 @@ function shouldPublishPath(filePath) {
 }
 
 function getTrackedChangePaths() {
-  const status = runGit(['status', '--porcelain', '--untracked-files=no'])
-  if (!status) return []
-  return status
+  const working = runGit(['diff', '--name-only'])
+  const staged = runGit(['diff', '--cached', '--name-only'])
+  return [...new Set(`${working}\n${staged}`
     .split(/\r?\n/)
-    .map(parseStatusPath)
+    .map((item) => item.trim())
     .filter(Boolean)
-    .filter(shouldPublishPath)
+    .filter(shouldPublishPath))]
 }
 
 function hasTrackedChanges() {
@@ -81,7 +75,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         noChanges: true,
-        message: '没有改动需要推送',
+        message: 'NO_CHANGES_TO_PUSH',
       })
     }
 
@@ -90,17 +84,17 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         noChanges: true,
-        message: '没有改动需要推送',
+        message: 'NO_CHANGES_TO_PUSH',
       })
     }
 
-    runGit(['add', '--', ...files])
+    runGit(['add', '-u', '--', ...files])
 
     if (!hasTrackedChanges()) {
       return res.status(200).json({
         ok: true,
         noChanges: true,
-        message: '没有改动需要推送',
+        message: 'NO_CHANGES_TO_PUSH',
       })
     }
 
@@ -112,7 +106,7 @@ module.exports = async function handler(req, res) {
       ok: true,
       noChanges: false,
       commitSha: sha,
-      message: '推送成功',
+      message: 'PUSHED',
       output: pushOutput,
     })
   } catch (err) {
@@ -125,7 +119,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         noChanges: true,
-        message: '没有改动需要推送',
+        message: 'NO_CHANGES_TO_PUSH',
       })
     }
 
