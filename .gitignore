@@ -5,3 +5,4 @@ docs/.vuepress/.temp/
 .DS_Store
 .vercel
 .env*.local
+api/
