@@ -1,14 +1,19 @@
 <script setup>
+import { computed } from 'vue'
 import { recommendedArticles } from '../data/aboutArticleFeed.js'
 
-const articles = recommendedArticles
+const articles = computed(() =>
+  [...recommendedArticles]
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+    .slice(0, 4),
+)
 </script>
 
 <template>
   <div class="lk-about-articles">
     <h3 class="lk-about-articles__heading">短文推荐</h3>
     <p class="lk-about-articles__lead">
-      来自 <strong>Articles</strong> 的随笔与杂谈；完整项目仍见 <strong>Projects</strong>。
+      来自 <strong>Articles</strong> 的近期随笔；新文章会自动轮换到上面。
     </p>
     <ul class="lk-about-articles__list">
       <li v-for="(post, i) in articles" :key="i" class="lk-about-articles__card">
@@ -26,6 +31,11 @@ const articles = recommendedArticles
 <style scoped>
 .lk-about-articles {
   min-width: 0;
+  --lk-about-card-bg: rgba(255, 255, 255, 0.78);
+  --lk-about-card-border: rgba(37, 99, 235, 0.13);
+  --lk-about-card-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  --lk-about-accent: #2563eb;
+  --lk-about-accent-soft: rgba(37, 99, 235, 0.11);
 }
 
 .lk-about-articles__heading {
@@ -54,10 +64,22 @@ const articles = recommendedArticles
 .lk-about-articles__card {
   margin: 0;
   padding: 0.9rem 1rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(239, 246, 255, 0.58)),
+    var(--lk-about-card-bg);
+  border: 1px solid var(--lk-about-card-border);
+  box-shadow: var(--lk-about-card-shadow);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.lk-about-articles__card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.26);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
 }
 
 .lk-about-articles__date {
@@ -70,7 +92,7 @@ const articles = recommendedArticles
 .lk-about-articles__title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #4a90d9;
+  color: var(--lk-about-accent);
   text-decoration: none;
   line-height: 1.35;
 }
@@ -98,18 +120,24 @@ const articles = recommendedArticles
   font-weight: 600;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  background: rgba(74, 144, 217, 0.12);
-  color: #4a90d9;
-  border: 1px solid rgba(74, 144, 217, 0.22);
+  background: var(--lk-about-accent-soft);
+  color: var(--lk-about-accent);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+}
+
+[data-theme='dark'] .lk-about-articles {
+  --lk-about-card-bg: rgba(15, 23, 42, 0.72);
+  --lk-about-card-border: rgba(125, 211, 252, 0.18);
+  --lk-about-card-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  --lk-about-accent: #7dd3fc;
+  --lk-about-accent-soft: rgba(14, 165, 233, 0.14);
 }
 
 [data-theme='dark'] .lk-about-articles__card {
-  background: rgba(30, 41, 59, 0.55);
-  border-color: rgba(148, 163, 184, 0.2);
-}
-
-[data-theme='dark'] .lk-about-articles__title {
-  color: #7eb8ea;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(8, 47, 73, 0.32)),
+    var(--lk-about-card-bg);
+  border-color: var(--lk-about-card-border);
 }
 
 [data-theme='dark'] .lk-about-articles__heading {
@@ -126,11 +154,5 @@ const articles = recommendedArticles
 
 [data-theme='dark'] .lk-about-articles__excerpt {
   color: #94a3b8;
-}
-
-[data-theme='dark'] .lk-about-articles__tag {
-  background: rgba(59, 130, 246, 0.12);
-  color: #93c5fd;
-  border-color: rgba(96, 165, 250, 0.28);
 }
 </style>
