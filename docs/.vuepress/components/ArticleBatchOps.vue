@@ -1,7 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useIsLoggedIn } from '../utils/authGate.js'
-import { readSiteApiCreds } from '../utils/siteApiCreds.js'
 
 const isLoggedIn = useIsLoggedIn()
 const batchMode = ref(false)
@@ -9,6 +8,9 @@ const selectedItems = ref([])  // 改用数组，Vue响应式更好
 const deleting = ref(false)
 const message = ref('')
 const mounted = ref(false)
+
+// 待删除计数（从 localStorage 读取）
+const pendingDeleteCount = ref(0)
 
 const selectedCount = computed(() => selectedItems.value.length)
 
@@ -77,66 +79,66 @@ async function batchDelete() {
   const confirmed = confirm(`将 ${slugs.length} 篇文章标记为待删除？\n\n${slugs.join('\n')}\n\n删除将在推送时生效`)
   if (!confirmed) return
 
+  console.log('🔍 [ArticleBatchOps] batchDelete 开始执行')
+  console.log('  - 选中的 slugs:', slugs)
+
   // 获取文章标题并添加到待删除列表
   slugs.forEach(slug => {
     const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]:not(.lk-blog__item--preview)`)
-    if (!item) return // 跳过不存在的或预览卡片
+    if (!item) {
+      console.log('  - 跳过:', slug, '(未找到 DOM 元素)')
+      return
+    }
 
     const titleEl = item?.querySelector('.lk-blog__post-title')
     const title = titleEl?.textContent || slug
 
-    // 调用PublishFab的addPendingDelete方法
-    const fab = document.querySelector('.lk-publish-root')?.__vueParentComponent?.proxy
-    if (fab?.addPendingDelete) {
-      // #region agent log
-      fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_E',location:'ArticleBatchOps.vue:batchDelete',message:'addPendingDelete path',data:{slug,path:'proxy'},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      fab.addPendingDelete(slug, title)
-    } else {
-      // #region agent log
-      fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_E',location:'ArticleBatchOps.vue:batchDelete',message:'addPendingDelete path',data:{slug,path:'event'},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      // 备用方案：使用事件
-      window.dispatchEvent(new CustomEvent('add-pending-delete', { detail: { slug, title } }))
+    console.log('  - 触发事件 add-pending-delete:', { slug, title })
+
+    // 【Bug 3 修复】使用 CustomEvent 替代 __vueParentComponent
+    const event = new CustomEvent('add-pending-delete', { detail: { slug, title } })
+    const dispatched = window.dispatchEvent(event)
+    console.log('  - 事件已触发, 返回值:', dispatched)
+
+    // 添加删除标记样式
+    item.classList.add('lk-blog__item--pending-delete')
+
+    // 隐藏复选框
+    const checkboxWrapper = item.querySelector('.lk-batch-checkbox-wrapper')
+    if (checkboxWrapper) {
+      checkboxWrapper.style.display = 'none'
     }
 
-    // 添加删除标记样式和标志
-    if (item) {
-      item.classList.add('lk-blog__item--pending-delete')
-
-      // 隐藏复选框
-      const checkboxWrapper = item.querySelector('.lk-batch-checkbox-wrapper')
-      if (checkboxWrapper) {
-        checkboxWrapper.style.display = 'none'
-      }
-
-      // 添加"即将删除"标志（如果不存在）
-      if (!item.querySelector('.lk-delete-badge')) {
-        const badge = document.createElement('span')
-        badge.className = 'lk-delete-badge'
-        badge.textContent = '即将删除'
-        badge.style.cssText = `
-          position: absolute;
-          top: 8px;
-          left: 8px;
-          background: #ef4444;
-          color: #fff;
-          font-size: 11px;
-          padding: 2px 8px;
-          border-radius: 4px;
-          z-index: 10;
-          font-weight: 500;
-        `
-        item.style.position = 'relative'
-        item.insertBefore(badge, item.firstChild)
-      }
+    // 添加"即将删除"标志（如果不存在）
+    if (!item.querySelector('.lk-delete-badge')) {
+      const badge = document.createElement('span')
+      badge.className = 'lk-delete-badge'
+      badge.textContent = '即将删除'
+      badge.style.cssText = `
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        z-index: 10;
+        font-weight: 500;
+      `
+      item.style.position = 'relative'
+      item.insertBefore(badge, item.firstChild)
     }
   })
+
+  console.log('🔍 [ArticleBatchOps] batchDelete 完成, pendingDeletes 应该已更新')
+  console.log('  - localStorage lk_pending_deletes:', localStorage.getItem('lk_pending_deletes'))
 
   message.value = `已标记 ${slugs.length} 篇文章为待删除，点击推送按钮完成删除`
   selectedItems.value = []
   batchMode.value = false
   updateCheckboxVisibility()
+  updatePendingDeleteCount()
 }
 
 // 取消所有待删除文章
@@ -148,13 +150,10 @@ function cancelAllDeletes() {
     if (badge) badge.remove()
   })
 
-  // 清空待删除列表
-  const fab = document.querySelector('.lk-publish-root')?.__vueParentComponent?.proxy
-  if (fab?.pendingDeletes) {
-    fab.pendingDeletes.value = []
-  }
+  // 【Bug 3 修复】使用 CustomEvent 清空待删除列表
   window.dispatchEvent(new CustomEvent('clear-pending-deletes'))
   message.value = '已取消所有待删除文章'
+  pendingDeleteCount.value = 0
 }
 
 function batchPrint() {
@@ -243,6 +242,21 @@ function updateCheckboxVisibility() {
   })
 }
 
+// 更新待删除计数
+function updatePendingDeleteCount() {
+  try {
+    const saved = localStorage.getItem('lk_pending_deletes')
+    if (saved) {
+      const deletes = JSON.parse(saved)
+      pendingDeleteCount.value = Array.isArray(deletes) ? deletes.length : 0
+    } else {
+      pendingDeleteCount.value = 0
+    }
+  } catch {
+    pendingDeleteCount.value = 0
+  }
+}
+
 // 在 article 页面才显示
 const isArticlePage = ref(false)
 
@@ -255,8 +269,11 @@ function checkPage() {
 onMounted(() => {
   mounted.value = true
   checkPage()
+  updatePendingDeleteCount()
   setTimeout(injectCheckboxes, 500)
   setInterval(checkPage, 1000)
+  // 定期更新待删除计数
+  setInterval(updatePendingDeleteCount, 2000)
 
   const observer = new MutationObserver(() => {
     injectCheckboxes()
@@ -265,6 +282,7 @@ onMounted(() => {
 
   window.addEventListener('publish-push-finished', () => {
     message.value = ''
+    updatePendingDeleteCount()
   })
 })
 </script>
@@ -304,12 +322,12 @@ onMounted(() => {
           </template>
 
           <button
-            v-if="!batchMode"
+            v-if="!batchMode && pendingDeleteCount > 0"
             type="button"
             class="lk-batch-card__btn lk-batch-card__btn--warn"
             @click="cancelAllDeletes"
           >
-            取消删除
+            取消删除 ({{ pendingDeleteCount }})
           </button>
         </div>
 

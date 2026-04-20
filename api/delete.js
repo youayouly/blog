@@ -22,7 +22,8 @@ const GITHUB_API_BASE = 'https://api.github.com'
 
 function validateSlug(slug) {
   if (!slug || typeof slug !== 'string') return false
-  return /^[a-z0-9][a-z0-9-]{0,100}$/.test(slug)
+  // 支持：小写字母、数字、连字符、中文
+  return /^[a-z0-9\u4e00-\u9fa5][a-z0-9\u4e00-\u9fa5-]{0,100}$/.test(slug)
 }
 
 async function getFileSha(token, repo, path, branch) {
@@ -83,40 +84,63 @@ async function getFileContent(token, repo, path, branch) {
 }
 
 function removeItemFromList(content, slug) {
-  const targetHref = `href="/article/${slug}.html"`
+  const targetHref = `/article/${slug}.html`
+  console.log(`\n🔍 [removeItemFromList] 开始处理`)
+  console.log(`  - 目标 slug: ${slug}`)
+  console.log(`  - 目标 href: ${targetHref}`)
 
-  // 方法1：按行处理，找到包含目标 href 的整个 <li> 块
+  // 按行处理，更可靠的方式
   const lines = content.split('\n')
   const result = []
-  let inTargetLi = false
-  let liDepth = 0
+  let skipMode = false
+  let foundTarget = false
+  let removedLines = 0
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
+    const lineNum = i + 1
 
-    // 检测是否是目标 <li> 的开始
-    if (line.includes('<li') && line.includes('lk-blog__item') && line.includes(targetHref)) {
-      inTargetLi = true
-      liDepth = 1
-      continue // 跳过这一行
+    // 检测 <li class="lk-blog__item"> 开始
+    if (line.includes('<li') && line.includes('lk-blog__item') && !line.includes('</li>')) {
+      // 检查接下来的几行是否包含目标 href
+      let hasTarget = false
+      for (let j = i; j < Math.min(i + 30, lines.length); j++) {
+        if (lines[j].includes(targetHref)) {
+          hasTarget = true
+          break
+        }
+        // 如果遇到另一个 <li> 或 </li>，停止搜索
+        if ((lines[j].includes('<li') && j > i) || lines[j].includes('</li>')) {
+          break
+        }
+      }
+
+      if (hasTarget) {
+        skipMode = true
+        foundTarget = true
+        console.log(`  - 找到目标 <li> 开始位置: 第 ${lineNum} 行`)
+        removedLines++
+        continue
+      }
     }
 
-    if (inTargetLi) {
-      // 计算嵌套深度
-      const openMatches = line.match(/<li[^>]*>/g) || []
-      const closeMatches = line.match(/<\/li>/g) || []
-      liDepth += openMatches.length - closeMatches.length
-
-      if (liDepth <= 0) {
-        // 找到了对应的 </li>
-        inTargetLi = false
-        continue // 跳过这一行
+    if (skipMode) {
+      removedLines++
+      // 检测 </li> 结束标签
+      if (line.includes('</li>')) {
+        skipMode = false
+        console.log(`  - 找到目标 </li> 结束位置: 第 ${lineNum} 行`)
+        continue
       }
-      continue // 跳过 <li> 内部的行
+      continue
     }
 
     result.push(line)
   }
+
+  console.log(`  - 找到目标: ${foundTarget}`)
+  console.log(`  - 移除行数: ${removedLines}`)
+  console.log(`  - 原始行数: ${lines.length}, 结果行数: ${result.length}`)
 
   return result.join('\n')
 }
@@ -233,9 +257,23 @@ module.exports = async function handler(req, res) {
     // #endregion
 
     // 删除每个文件
+    console.log(`\n🔍 [诊断] api/delete.js 开始处理`)
+    console.log(`  - 请求删除 slugs:`, slugs)
+    console.log(`  - 目标目录:`, dir)
+    console.log(`  - 本地开发模式:`, isLocalDev())
+    console.log(`  - 工作目录:`, process.cwd())
+
     for (const slug of slugs) {
       const filePath = `${dir}/${slug}.md`
+      const fullPath = path.join(process.cwd(), filePath)
+
+      console.log(`\n🔍 [诊断] 处理 slug: ${slug}`)
+      console.log(`  - 相对路径: ${filePath}`)
+      console.log(`  - 完整路径: ${fullPath}`)
+      console.log(`  - 本地文件存在:`, fs.existsSync(fullPath))
+
       const sha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, filePath, GITHUB_BRANCH)
+      console.log(`  - GitHub SHA:`, sha ? '找到' : '未找到')
 
       // #region agent log
       agentDebugLog({
@@ -248,24 +286,34 @@ module.exports = async function handler(req, res) {
       // #endregion
 
       if (sha) {
+        console.log(`  - 正在调用 GitHub API 删除...`)
         const delRes = await deleteFile(
           GITHUB_TOKEN, GITHUB_REPO, filePath,
           `删除文章: ${slug}`, GITHUB_BRANCH, sha
         )
+        console.log(`  - GitHub API 响应: ${delRes.status} ${delRes.statusText}`)
+
         if (delRes.ok) {
           deleted++
           succeededSlugs.push(slug)
-          // 本地开发：同时删除本地文件
-          if (isLocalDev()) {
-            const localDeleted = deleteLocal(filePath)
-            console.log(`[本地删除] ${filePath}: ${localDeleted ? '成功' : '失败'}`)
+          console.log(`  - ✅ GitHub 删除成功`)
+
+          // 删除本地文件（在 GitHub 删除成功后）
+          if (isLocalDev() && fs.existsSync(fullPath)) {
+            try {
+              fs.unlinkSync(fullPath)
+              console.log(`  - ✅ 本地文件已删除: ${filePath}`)
+            } catch (e) {
+              console.log(`  - ⚠️ 本地文件删除失败: ${e.message}`)
+            }
           }
         } else {
           errors.push(`${slug}: delete failed`)
+          console.log(`  - ❌ GitHub 删除失败`)
         }
       } else {
-        const fullPath = path.join(process.cwd(), filePath)
         const existsLocal = fs.existsSync(fullPath)
+        console.log(`  - GitHub 无此文件，本地存在: ${existsLocal}`)
 
         // #region agent log
         agentDebugLog({
@@ -277,20 +325,35 @@ module.exports = async function handler(req, res) {
         })
         // #endregion
 
-        if (isLocalDev() && existsLocal && deleteLocal(filePath)) {
-          // GitHub 无该文件但工作区仍有 .md：删掉本地副本
-          deleted++
-          succeededSlugs.push(slug)
-          console.log(`[本地删除] GitHub 无文件，已删本地: ${filePath}`)
-        } else if (!existsLocal) {
+        if (!existsLocal) {
           // 远端与本地都没有该 .md：按幂等删除处理，仍可从 README 移除列表项
           deleted++
           succeededSlugs.push(slug)
+          console.log(`  - ✅ 文件不存在，视为已删除`)
         } else {
-          errors.push(`${slug}: not found`)
+          // GitHub 无此文件但本地有：删除本地文件
+          if (isLocalDev()) {
+            try {
+              fs.unlinkSync(fullPath)
+              deleted++
+              succeededSlugs.push(slug)
+              console.log(`  - ✅ 本地文件已删除（GitHub 无此文件）: ${filePath}`)
+            } catch (e) {
+              errors.push(`${slug}: local delete failed`)
+              console.log(`  - ❌ 本地文件删除失败: ${e.message}`)
+            }
+          } else {
+            errors.push(`${slug}: not found on GitHub`)
+            console.log(`  - ❌ GitHub 上未找到文件`)
+          }
         }
       }
     }
+
+    console.log(`\n🔍 [诊断] 删除处理完成`)
+    console.log(`  - 成功删除: ${deleted}`)
+    console.log(`  - 成功的 slugs:`, succeededSlugs)
+    console.log(`  - 错误:`, errors)
 
     // 如果是 article 分区，更新列表页
     if (target === 'article' && deleted > 0) {
@@ -303,33 +366,53 @@ module.exports = async function handler(req, res) {
         }
 
         if (listContent) {
+          console.log(`\n🔍 [README更新] 开始处理`)
+          console.log(`  - 原始内容长度: ${listContent.length} 字符`)
+          console.log(`  - 需要移除的 slugs:`, succeededSlugs)
+
           // 仅从 README 移除已成功删除的文章
           for (const slug of succeededSlugs) {
+            console.log(`\n  处理 slug: ${slug}`)
+            const beforeLength = listContent.length
             listContent = removeItemFromList(listContent, slug)
+            const afterLength = listContent.length
+            console.log(`  - 内容变化: ${beforeLength} -> ${afterLength} (减少 ${beforeLength - afterLength} 字符)`)
           }
 
-          const listSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
-          if (listSha) {
-            await fetch(`${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${listPath}`, {
-              method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${GITHUB_TOKEN}`,
-                Accept: 'application/vnd.github+json',
-                'User-Agent': 'VuePress-Publish-API/1.0',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                message: `更新文章列表：删除 ${deleted} 篇文章`,
-                content: Buffer.from(listContent).toString('base64'),
-                sha: listSha,
-                branch: GITHUB_BRANCH,
-              }),
-            })
+          // 安全检查：确保内容仍然有效
+          const hasValidStructure = listContent.includes('<ol class="lk-blog__list">') &&
+                                    listContent.includes('</ol>') &&
+                                    listContent.includes('---')
+          console.log(`  - 内容有效性检查: ${hasValidStructure ? '通过' : '失败'}`)
 
-            // 本地开发：同时保存到本地
-            if (isLocalDev()) {
-              const localSaved = saveToLocal(listPath, listContent)
-              console.log(`[本地保存] ${listPath}: ${localSaved ? '成功' : '失败'}`)
+          if (!hasValidStructure) {
+            console.error(`  - ❌ README 内容无效，跳过更新`)
+            console.log(`  - 内容预览 (前500字符):`, listContent.substring(0, 500))
+          } else {
+            const listSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
+            if (listSha) {
+              const readmeRes = await fetch(`${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${listPath}`, {
+                method: 'PUT',
+                headers: {
+                  Authorization: `Bearer ${GITHUB_TOKEN}`,
+                  Accept: 'application/vnd.github+json',
+                  'User-Agent': 'VuePress-Publish-API/1.0',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  message: `更新文章列表：删除 ${deleted} 篇文章`,
+                  content: Buffer.from(listContent).toString('base64'),
+                  sha: listSha,
+                  branch: GITHUB_BRANCH,
+                }),
+              })
+              console.log(`  - README.md GitHub 更新: ${readmeRes.status} ${readmeRes.statusText}`)
+
+              // 保存到本地文件（必须在 GitHub 更新成功后）
+              if (readmeRes.ok && isLocalDev()) {
+                const localSaved = saveToLocal(listPath, listContent)
+                console.log(`  - 本地 README.md 保存: ${localSaved ? '成功' : '失败'}`)
+              }
             }
           }
         }

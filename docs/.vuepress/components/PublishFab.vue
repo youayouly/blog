@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch, nextTick } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { useIsLoggedIn } from '../utils/authGate.js'
 import { readSiteApiCreds } from '../utils/siteApiCreds.js'
 
@@ -41,6 +41,9 @@ const historyBusy = ref(false)
 // 展开编辑的文章ID
 const expandedArticleId = ref(null)
 
+// 【Bug 1 修复】防重入锁
+const isUpdatingPendingArticles = ref(false)
+
 const apiUrl = computed(() => {
   const u = publishApiBase.trim()
   if (u) return u.replace(/\/+$/, '')
@@ -66,47 +69,511 @@ function setPushMsg(text, kind = 'info') {
 // 图片计数器，确保每次生成不同的图片
 let imageCounter = 0
 
-// 生成封面URL
-function generateCoverUrl(title, excerpt) {
-  const text = `${title} ${excerpt}`.toLowerCase()
-  const keywords = []
-  const keywordMap = {
-    'ai': 'artificial-intelligence',
-    '机器学习': 'machine-learning',
-    '深度学习': 'deep-learning',
-    '大模型': 'artificial-intelligence',
-    'llm': 'artificial-intelligence',
-    'agent': 'robotics',
-    'python': 'python-code',
-    'javascript': 'javascript',
-    'vue': 'vuejs',
-    'react': 'react',
-    '前端': 'web-design',
-    '后端': 'server',
-    '嵌入式': 'embedded',
-    '部署': 'deployment',
-    '网络': 'network',
-    '安全': 'cybersecurity',
-    '数据库': 'database',
-    '云': 'cloud',
-    'docker': 'docker',
-    'kubernetes': 'kubernetes',
-  }
-  for (const [key, value] of Object.entries(keywordMap)) {
-    if (text.includes(key) && keywords.length < 2) {
-      keywords.push(value)
-    }
-  }
-  if (keywords.length === 0) {
-    // 随机选择一个默认关键词
-    const defaults = ['technology', 'coding', 'programming', 'computer', 'developer', 'software', 'tech']
-    keywords.push(defaults[Math.floor(Math.random() * defaults.length)])
+// 生成基于文章内容的唯一颜色
+function generateUniqueColor(text) {
+  // 使用字符串哈希生成唯一颜色
+  let hash = 0
+  for (let i = 0; i < text.length; i++) {
+    hash = text.charCodeAt(i) + ((hash << 5) - hash)
   }
 
-  // 使用计数器确保唯一性
+  // 检测当前主题
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+                 document.documentElement.classList.contains('dark')
+
+  // 生成 HSL 颜色
+  const hue = Math.abs(hash) % 360
+
+  // 根据主题调整饱和度和亮度
+  const saturation = isDark ? (55 + (Math.abs(hash >> 8) % 25)) : (50 + (Math.abs(hash >> 8) % 20))
+  const lightness = isDark ? (25 + (Math.abs(hash >> 16) % 20)) : (35 + (Math.abs(hash >> 16) % 15))
+
+  return { hue, saturation, lightness, isDark }
+}
+
+// 检测是否是本地开发环境
+function isLocalDev() {
+  if (typeof window === 'undefined') return false
+  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+}
+
+// 关键词图标模式（方案B：简洁文字+标签风格，参考图风格）
+// 直接使用首字母大字 + 关键词标签，不使用复杂图标
+const keywordColors = {
+  // AI 相关 - 紫色系
+  'AI': { hue: 260, label: 'AI · LLM' },
+  'ML': { hue: 270, label: 'ML' },
+  'Deep Learning': { hue: 280, label: 'Deep Learning' },
+  'LLM': { hue: 265, label: 'LLM' },
+  'GPT': { hue: 255, label: 'GPT' },
+  'Agent': { hue: 275, label: 'AI · Agent' },
+  'Neural Net': { hue: 285, label: 'Neural Net' },
+  'Transformer': { hue: 260, label: 'Transformer' },
+
+  // 编程语言 - 蓝色系
+  'Python': { hue: 200, label: 'Python' },
+  'JavaScript': { hue: 52, label: 'JavaScript' },
+  'TypeScript': { hue: 210, label: 'TypeScript' },
+  'Vue': { hue: 160, label: 'Vue' },
+  'React': { hue: 190, label: 'React' },
+  'Node.js': { hue: 120, label: 'Node.js' },
+  'Rust': { hue: 25, label: 'Rust' },
+  'Go': { hue: 180, label: 'Go' },
+  'Java': { hue: 220, label: 'Java' },
+  'C++': { hue: 230, label: 'C++' },
+
+  // 技术领域 - 青色系
+  'Frontend': { hue: 195, label: 'Frontend' },
+  'Backend': { hue: 205, label: 'Backend' },
+  'Full Stack': { hue: 200, label: 'Full Stack' },
+  'Embedded': { hue: 175, label: 'Embedded' },
+  'DevOps': { hue: 170, label: 'DevOps' },
+  'Network': { hue: 185, label: 'Network' },
+  'Security': { hue: 0, label: 'Security' },
+  'Database': { hue: 35, label: 'Database' },
+  'Cloud': { hue: 200, label: 'Cloud' },
+  'Docker': { hue: 195, label: 'Docker' },
+  'K8s': { hue: 215, label: 'K8s' },
+  'Git': { hue: 15, label: 'Git' },
+
+  // 硬件相关 - 橙色系
+  'MCU': { hue: 30, label: 'MCU' },
+  'IoT': { hue: 40, label: 'IoT' },
+  'Edge': { hue: 35, label: 'Edge' },
+  'GPU': { hue: 120, label: 'GPU' },
+
+  // 其他 - 红色系
+  'Algorithm': { hue: 330, label: 'Algorithm' },
+  'Architecture': { hue: 340, label: 'Architecture' },
+  'Testing': { hue: 145, label: 'Testing' },
+  'Performance': { hue: 25, label: 'Performance' },
+  'Linux': { hue: 20, label: 'Linux' },
+  'Server': { hue: 210, label: 'Server' }
+}
+
+// 生成简洁风格的占位图（参考图风格：大字+关键词标签）
+function generatePlaceholderImage(title, keywords, width = 1200, height = 800) {
+  // 检测当前主题
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+                 document.documentElement.classList.contains('dark')
+
+  // 获取主关键词
+  const primaryKeyword = keywords[0] || 'TECH'
+  const keywordConfig = keywordColors[primaryKeyword]
+
+  // 根据关键词确定颜色
+  let hue
+  if (keywordConfig) {
+    hue = keywordConfig.hue
+  } else {
+    // 回退：基于标题哈希生成色相
+    let hash = 0
+    for (let i = 0; i < title.length; i++) {
+      hash = title.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    hue = Math.abs(hash) % 360
+  }
+
+  // 根据主题调整饱和度和亮度
+  const sat = isDark ? 72 : 58
+  const light = isDark ? 48 : 46
+
+  // 主色调和渐变色
+  const mainColor = `hsl(${hue}, ${sat}%, ${light}%)`
+  const secondColor = `hsl(${(hue + 30) % 360}, ${sat - 2}%, ${light - 10}%)`
+
+  // 主题适配的颜色
+  const textColor = 'rgba(255,255,255,0.9)'
+  const watermarkColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.3)'
+  const decorColor1 = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.15)'
+  const decorColor2 = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)'
+  const tagBg = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.25)'
+
+  // 标题首字母（取前2个字符）
+  const titleInitial = title.trim().substring(0, 2).toUpperCase()
+
+  // 关键词标签文字
+  const keywordLabel = keywordConfig ? keywordConfig.label : keywords.slice(0, 2).join(' · ')
+
+  // 创建 SVG（参考图风格）
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${mainColor}" />
+          <stop offset="100%" style="stop-color:${secondColor}" />
+        </linearGradient>
+      </defs>
+
+      <!-- 背景 -->
+      <rect width="100%" height="100%" fill="url(#bg)"/>
+
+      <!-- 装饰圆圈 -->
+      <circle cx="150" cy="150" r="100" fill="${decorColor1}"/>
+      <circle cx="${width - 100}" cy="${height - 100}" r="80" fill="${decorColor2}"/>
+      <circle cx="${width - 200}" cy="100" r="50" fill="${decorColor2}"/>
+
+      <!-- 标题首字母（大字水印） -->
+      <text x="50%" y="40%"
+            font-family="Arial, sans-serif"
+            font-size="180"
+            font-weight="bold"
+            fill="${watermarkColor}"
+            text-anchor="middle"
+            dominant-baseline="middle">
+        ${titleInitial}
+      </text>
+
+      <!-- 关键词标签（底部居中） -->
+      <rect x="50%" y="65%" width="400" height="60" rx="30" fill="${tagBg}" transform="translate(-200, -30)"/>
+      <text x="50%" y="65%"
+            font-family="Arial, sans-serif"
+            font-size="28"
+            font-weight="600"
+            fill="${textColor}"
+            text-anchor="middle"
+            dominant-baseline="middle">
+        ${keywordLabel}
+      </text>
+    </svg>
+  `
+
+  return `data:image/svg+xml,${encodeURIComponent(svg.trim())}`
+}
+
+// 提取文章关键词（中文友好）
+function extractKeywords(text, maxKeywords = 3) {
+  const keywords = []
+
+  // 关键词映射表（原始词 -> 显示词）
+  const keywordMap = {
+    // AI 相关
+    'ai': 'AI', '人工智能': 'AI', '机器学习': 'ML', '深度学习': 'Deep Learning',
+    '大模型': 'LLM', 'llm': 'LLM', 'gpt': 'GPT', 'agent': 'Agent',
+    '神经网络': 'Neural Net', 'transformer': 'Transformer',
+
+    // 编程语言
+    'python': 'Python', 'javascript': 'JavaScript', 'typescript': 'TypeScript',
+    'vue': 'Vue', 'react': 'React', 'node': 'Node.js', 'rust': 'Rust',
+    'go': 'Go', 'java': 'Java', 'c++': 'C++',
+
+    // 技术领域
+    '前端': 'Frontend', '后端': 'Backend', '全栈': 'Full Stack',
+    '嵌入式': 'Embedded', '部署': 'DevOps', '网络': 'Network',
+    '安全': 'Security', '数据库': 'Database', '云': 'Cloud',
+    'docker': 'Docker', 'kubernetes': 'K8s', 'git': 'Git',
+
+    // 硬件相关
+    '单片机': 'MCU', 'iot': 'IoT', '边缘计算': 'Edge', 'gpu': 'GPU',
+
+    // 其他
+    '算法': 'Algorithm', '架构': 'Architecture', '测试': 'Testing',
+    '性能': 'Performance', 'linux': 'Linux', '服务器': 'Server',
+  }
+
+  const lowerText = text.toLowerCase()
+
+  // 匹配关键词
+  for (const [key, value] of Object.entries(keywordMap)) {
+    if (lowerText.includes(key.toLowerCase()) && !keywords.includes(value)) {
+      keywords.push(value)
+      if (keywords.length >= maxKeywords) break
+    }
+  }
+
+  return keywords
+}
+
+// 图片生成后端选项
+const imageBackendOptions = [
+  { value: 'unsplash', label: 'Unsplash（照片）', free: true },
+  { value: 'siliconflow', label: '硅基流动（AI生图）', free: false },
+  { value: 'dify', label: 'Dify 工作流', free: false },
+  { value: 'huggingface', label: 'Hugging Face（免费）', free: true },
+]
+const imageBackend = ref('dify')
+
+// AI 封面生成状态
+const generatingCover = ref(false)
+const generatedCoverUrl = ref('')
+
+// 立即生成 AI 封面
+async function generateCoverNow() {
+  const title = articleTitle.value.trim()
+  if (!title) {
+    setMsg('请先填写标题', 'err')
+    return
+  }
+
+  generatingCover.value = true
+  generatedCoverUrl.value = ''
+
+  try {
+    const keywords = extractKeywords(`${title} ${articleExcerpt.value}`)
+    const { user, pass } = readSiteApiCreds()
+
+    const res = await fetch('/api/cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        keywords,
+        summary: articleExcerpt.value.trim() || title,
+        backend: imageBackend.value,
+        authUser: user,
+        authPass: pass,
+      }),
+    })
+
+    const data = await res.json()
+
+    if (res.ok && data.ok && data.imageUrl) {
+      generatedCoverUrl.value = data.imageUrl
+      setMsg(data.localSaved ? `封面已保存到本地: ${data.localPath}` : '封面生成成功', 'ok')
+      console.log(`📷 [封面生成] 成功: ${data.imageUrl}`)
+      if (data.localSaved) {
+        console.log(`  - 本地路径: ${data.localPath}`)
+      }
+    } else {
+      setMsg(`生成失败: ${data.error || '未知错误'}`, 'err')
+    }
+  } catch (e) {
+    setMsg(`请求失败: ${e.message}`, 'err')
+  } finally {
+    generatingCover.value = false
+  }
+}
+
+// 使用生成的封面（应用到当前展开编辑的文章，如果没有则应用到第一篇）
+function useGeneratedCover() {
+  if (generatedCoverUrl.value) {
+    // 优先应用到当前展开编辑的文章
+    let targetArticle = null
+    if (expandedArticleId.value) {
+      targetArticle = pendingArticles.value.find(a => a.id === expandedArticleId.value)
+    }
+    // 如果没有展开的文章，应用到第一篇
+    if (!targetArticle && pendingArticles.value.length > 0) {
+      targetArticle = pendingArticles.value[0]
+    }
+
+    if (targetArticle) {
+      targetArticle.cover = generatedCoverUrl.value
+      setMsg(`已应用到「${targetArticle.title}」`, 'ok')
+      console.log(`📷 [应用封面] 应用到: ${targetArticle.title}`)
+    }
+    generatedCoverUrl.value = ''
+  }
+}
+
+// 生成封面URL
+function generateCoverUrl(title, excerpt, content = '', forceUnique = false) {
+  const fullText = `${title} ${excerpt} ${content || ''}`
+  const keywords = extractKeywords(fullText)
+
+  // 本地开发环境：使用带关键词的占位图
+  if (isLocalDev()) {
+    return generatePlaceholderImage(title, keywords)
+  }
+
+  // 生产环境：根据用户选择的后端生成图片
   imageCounter++
-  const seed = `${Date.now()}-${imageCounter}-${Math.random().toString(36).slice(2, 8)}`
-  return `https://source.unsplash.com/1200x800/?${keywords.join(',')}&sig=${encodeURIComponent(seed)}`
+
+  // 基于标题生成唯一哈希
+  let titleHash = 0
+  for (let i = 0; i < title.length; i++) {
+    titleHash = title.charCodeAt(i) + ((titleHash << 5) - titleHash)
+  }
+  const hashSeed = Math.abs(titleHash).toString(36)
+
+  // 种子：标题哈希 + 计数器 + 随机后缀（强制唯一时增加更多随机性）
+  const randomSuffix = forceUnique
+    ? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+    : Math.random().toString(36).slice(2, 6)
+  const seed = `${hashSeed}-${imageCounter}-${randomSuffix}`
+
+  console.log(`📷 [图片生成] 标题: ${title}`)
+  console.log(`  - 后端: ${imageBackend.value}`)
+  console.log(`  - 关键词: ${keywords.join(', ')}`)
+
+  // Unsplash（默认）
+  if (imageBackend.value === 'unsplash') {
+    const unsplashKeywords = keywords.length > 0
+      ? keywords.map(k => k.toLowerCase().replace(' ', '-')).join(',')
+      : 'technology'
+    return `https://source.unsplash.com/1200x800/?${unsplashKeywords}&sig=${encodeURIComponent(seed)}`
+  }
+
+  // AI 生图后端：返回占位图，实际生成在推送时异步调用 API
+  // 因为图片生成需要时间，这里先返回占位图，API 调用在 doPush 中处理
+  return generatePlaceholderImage(title, keywords)
+}
+
+// 异步生成 AI 封面图
+async function generateAICover(title, keywords, summary) {
+  try {
+    const { user, pass } = readSiteApiCreds()
+    const res = await fetch('/api/cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        keywords,
+        summary: summary || title,
+        backend: imageBackend.value,
+        authUser: user,
+        authPass: pass,
+      }),
+    })
+    const data = await res.json()
+    if (res.ok && data.ok && data.imageUrl) {
+      console.log(`📷 [AI生图] 成功: ${data.imageUrl.substring(0, 60)}...`)
+      return data.imageUrl
+    } else {
+      console.error(`📷 [AI生图] 失败:`, data.error)
+      return null
+    }
+  } catch (e) {
+    console.error(`📷 [AI生图] 异常:`, e)
+    return null
+  }
+}
+
+// 检查待推送队列中是否有重复封面
+function checkPendingCovers() {
+  const coverMap = new Map()
+  const duplicates = []
+
+  pendingArticles.value.forEach(article => {
+    if (coverMap.has(article.cover)) {
+      duplicates.push({
+        cover: article.cover,
+        articles: [coverMap.get(article.cover), article.title]
+      })
+    } else {
+      coverMap.set(article.cover, article.title)
+    }
+  })
+
+  return duplicates
+}
+
+// 为重复封面的文章重新生成封面
+function regenerateDuplicateCovers() {
+  const coverMap = new Map()
+  let regenerated = 0
+
+  pendingArticles.value.forEach(article => {
+    if (coverMap.has(article.cover)) {
+      // 发现重复，重新生成封面
+      const newCover = generateCoverUrl(article.title, article.excerpt, article.content, true)
+      article.cover = newCover
+      regenerated++
+      console.log(`📷 [重新生成] "${article.title}" 的封面已更新`)
+    } else {
+      coverMap.set(article.cover, article.title)
+    }
+  })
+
+  if (regenerated > 0) {
+    setMsg(`已为 ${regenerated} 篇文章重新生成唯一封面`, 'ok')
+  }
+
+  return regenerated
+}
+
+// 重新生成单篇文章的封面（异步调用 Dify）
+async function regenerateArticleCover(articleId) {
+  console.log(`📷 [重新生成] 收到 articleId: ${articleId}`)
+  console.log(`📷 [重新生成] 当前队列:`, pendingArticles.value.map(a => ({ id: a.id, title: a.title, slug: a.slug })))
+
+  const article = pendingArticles.value.find(a => a.id === articleId)
+  if (!article) {
+    console.error(`📷 [重新生成] 未找到文章: ${articleId}`)
+    return
+  }
+
+  const keywords = extractKeywords(`${article.title} ${article.excerpt}`)
+  const summary = article.excerpt || article.title
+
+  console.log(`📷 [重新生成] 找到文章:`, { id: article.id, title: article.title, slug: article.slug })
+  console.log(`📷 [重新生成] "${article.title}" 调用 Dify...`)
+  console.log(`📷 [重新生成] 发送数据:`, { title: article.title, keywords, summary })
+
+  try {
+    const { user, pass } = readSiteApiCreds()
+    const requestBody = {
+      title: article.title,
+      keywords,
+      summary,
+      backend: imageBackend.value,
+      authUser: user,
+      authPass: pass,
+    }
+    console.log(`📷 [重新生成] 请求体:`, JSON.stringify(requestBody, null, 2))
+
+    const res = await fetch('/api/cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    })
+
+    const data = await res.json()
+    if (res.ok && data.ok && data.imageUrl) {
+      article.cover = data.imageUrl
+      console.log(`📷 [重新生成] "${article.title}" 成功: ${data.imageUrl}`)
+    } else {
+      console.error(`📷 [重新生成] "${article.title}" 失败:`, data.error)
+    }
+  } catch (e) {
+    console.error(`📷 [重新生成] "${article.title}" 异常:`, e)
+  }
+}
+
+// 检测重复图片（供用户调用）
+function checkDuplicateImages() {
+  const items = document.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)')
+  const imageMap = new Map()
+  const duplicates = []
+
+  items.forEach(item => {
+    const img = item.querySelector('.lk-blog__cover')
+    const title = item.querySelector('.lk-blog__post-title')?.textContent || '未知'
+    if (img && img.src) {
+      if (imageMap.has(img.src)) {
+        duplicates.push({
+          image: img.src,
+          articles: [imageMap.get(img.src), title]
+        })
+      } else {
+        imageMap.set(img.src, title)
+      }
+    }
+  })
+
+  console.log('\n📷 [图片重复检测]')
+  console.log(`  - 文章总数: ${items.length}`)
+  console.log(`  - 唯一图片: ${imageMap.size}`)
+
+  if (duplicates.length > 0) {
+    console.log(`  - ⚠️ 发现重复图片: ${duplicates.length} 组`)
+    duplicates.forEach((d, i) => {
+      console.log(`\n  重复组 ${i + 1}:`)
+      console.log(`    图片: ${d.image}`)
+      console.log(`    文章: ${d.articles.join(', ')}`)
+    })
+  } else {
+    console.log(`  - ✅ 没有发现重复图片`)
+  }
+
+  return { total: items.length, unique: imageMap.size, duplicates }
+}
+
+// 暴露到全局供控制台调用
+if (typeof window !== 'undefined') {
+  window.checkDuplicateImages = checkDuplicateImages
+  window.regenerateDuplicateCovers = regenerateDuplicateCovers
+  console.log('💡 提示: 运行 checkDuplicateImages() 检测重复，regenerateDuplicateCovers() 重新生成')
 }
 
 // 从markdown提取标题
@@ -171,11 +638,20 @@ async function readFile(file) {
     const fileSlug = file.name.replace(/\.md$/i, '').toLowerCase()
 
     const now = new Date()
-    const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
-    const cover = generateCoverUrl(extractedTitle || fileSlug, extractedExcerpt || '')
+    const dateStr = now.toISOString()
+
+    // 使用更唯一的 ID：时间戳 + 随机数
+    const articleId = `article-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    // Dify 后端：使用占位图，稍后自动生成真实封面
+    // 其他后端：直接生成封面 URL
+    const shouldAutoGenerate = imageBackend.value === 'dify'
+    const cover = shouldAutoGenerate
+      ? generatePlaceholderImage(extractedTitle || fileSlug, [])
+      : generateCoverUrl(extractedTitle || fileSlug, extractedExcerpt || '', text)
 
     const article = {
-      id: `article-${Date.now()}`,
+      id: articleId,
       slug: fileSlug,
       title: extractedTitle || fileSlug,
       excerpt: extractedExcerpt || '暂无摘要',
@@ -183,6 +659,12 @@ async function readFile(file) {
       date: dateStr,
       cover,
       target: target.value,
+    }
+
+    // 【Bug 1 修复】入队前去重
+    if (pendingArticles.value.some(item => item.slug === article.slug)) {
+      setMsg(`「${article.slug}」已在待推送队列中`, 'err')
+      return
     }
 
     pendingArticles.value.unshift(article)
@@ -194,25 +676,92 @@ async function readFile(file) {
     content.value = article.content
 
     setMsg(`已添加「${article.title}」（共${pendingArticles.value.length}篇待推送）`, 'ok')
+
+    // Dify 后端：自动生成真实封面（不等待，后台执行）
+    if (shouldAutoGenerate) {
+      autoGenerateCover(articleId)
+    }
   } catch {
     setMsg('读取文件失败', 'err')
   }
 }
 
-// 读取多个文件
+// 读取多个文件（快速添加所有文件，然后后台生成封面）
 async function readFiles(files) {
+  const articleIds = []
+
+  // 快速读取所有文件并添加到列表
   for (const file of files) {
     if (/\.md$/i.test(file.name)) {
-      await readFile(file)
+      const articleId = await readFileQuick(file)
+      if (articleId) {
+        articleIds.push(articleId)
+      }
     }
+  }
+
+  // 所有文件添加完后，按顺序生成封面
+  if (articleIds.length > 0 && imageBackend.value === 'dify') {
+    console.log(`📷 [批量处理] 开始按顺序生成 ${articleIds.length} 篇文章的封面`)
+    for (const articleId of articleIds) {
+      await autoGenerateCover(articleId)
+    }
+  }
+}
+
+// 快速读取文件（不等待封面生成）
+async function readFileQuick(file) {
+  try {
+    const text = await file.text()
+    const extractedTitle = extractTitle(text)
+    const extractedExcerpt = extractExcerpt(text)
+    const fileSlug = file.name.replace(/\.md$/i, '').toLowerCase()
+
+    const now = new Date()
+    const dateStr = now.toISOString()
+
+    // 使用更唯一的 ID：时间戳 + 随机数
+    const articleId = `article-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    // Dify 后端：使用占位图，稍后自动生成真实封面
+    const shouldAutoGenerate = imageBackend.value === 'dify'
+    const cover = shouldAutoGenerate
+      ? generatePlaceholderImage(extractedTitle || fileSlug, [])
+      : generateCoverUrl(extractedTitle || fileSlug, extractedExcerpt || '', text)
+
+    const article = {
+      id: articleId,
+      slug: fileSlug,
+      title: extractedTitle || fileSlug,
+      excerpt: extractedExcerpt || '暂无摘要',
+      content: text,
+      date: dateStr,
+      cover,
+      target: target.value,
+    }
+
+    // 入队前去重
+    if (pendingArticles.value.some(item => item.slug === article.slug)) {
+      setMsg(`「${article.slug}」已在待推送队列中`, 'err')
+      return null
+    }
+
+    pendingArticles.value.unshift(article)
+    setMsg(`已添加「${article.title}」（共${pendingArticles.value.length}篇待推送）`, 'ok')
+
+    return articleId
+  } catch {
+    setMsg('读取文件失败', 'err')
+    return null
   }
 }
 
 // 手动添加文章
 function addManualArticle() {
   const s = slug.value.trim().toLowerCase()
-  if (!/^[a-z0-9][a-z0-9-]{0,100}$/.test(s)) {
-    setMsg('请填写有效的文件名', 'err')
+  // 支持：小写字母、数字、连字符、中文
+  if (!/^[a-z0-9\u4e00-\u9fa5][a-z0-9\u4e00-\u9fa5-]{0,100}$/.test(s)) {
+    setMsg('请填写有效的文件名（支持中文、字母、数字、连字符）', 'err')
     return
   }
   if (!articleTitle.value.trim()) {
@@ -224,18 +773,30 @@ function addManualArticle() {
     return
   }
 
+  // 【Bug 1 修复】入队前去重
+  if (pendingArticles.value.some(item => item.slug === s)) {
+    setMsg(`「${s}」已在待推送队列中`, 'err')
+    return
+  }
+
   const now = new Date()
   const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
-  const cover = generateCoverUrl(articleTitle.value, articleExcerpt.value)
+  // 使用更唯一的 ID：时间戳 + 随机数
+  const articleId = `article-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
+  // 优先使用已生成的封面
+  let cover = generatedCoverUrl.value
+  generatedCoverUrl.value = ''
+
+  // 先添加到队列（用占位图或已生成的封面）
   pendingArticles.value.unshift({
-    id: `article-${Date.now()}`,
+    id: articleId,
     slug: s,
     title: articleTitle.value.trim(),
     excerpt: articleExcerpt.value.trim(),
     content: content.value,
     date: dateStr,
-    cover,
+    cover: cover || generatePlaceholderImage(articleTitle.value, extractKeywords(`${articleTitle.value} ${articleExcerpt.value}`)),
     target: target.value,
   })
 
@@ -245,7 +806,110 @@ function addManualArticle() {
   articleExcerpt.value = ''
   content.value = ''
 
-  setMsg(`已添加到待推送队列（共${pendingArticles.value.length}篇）`, 'ok')
+  setMsg(`已添加（共${pendingArticles.value.length}篇待推送）`, 'ok')
+
+  // Dify 后端：自动生成真实封面（如果没有手动生成的封面）
+  if (!cover && imageBackend.value === 'dify') {
+    console.log(`📷 [手动添加] 触发自动生成封面, articleId: ${articleId}`)
+    autoGenerateCover(articleId)
+  }
+}
+
+// 封面生成队列（串行执行）
+let coverQueue = []
+let isGeneratingCover = false
+
+// 处理封面生成队列（串行执行，按添加顺序）
+async function processCoverQueue() {
+  if (isGeneratingCover || coverQueue.length === 0) {
+    return
+  }
+
+  isGeneratingCover = true
+
+  while (coverQueue.length > 0) {
+    const { articleId, resolve } = coverQueue.shift()
+
+    console.log(`📷 [自动生成] 开始处理 articleId: ${articleId}, 队列剩余: ${coverQueue.length}`)
+
+    const article = pendingArticles.value.find(a => a.id === articleId)
+    if (!article) {
+      console.log(`📷 [自动生成] 文章已移除: ${articleId}`)
+      resolve(null)
+      continue
+    }
+
+    // 检查是否已有真实封面（非占位图）
+    if (article.cover && !article.cover.startsWith('data:image/svg+xml')) {
+      console.log(`📷 [自动生成] 文章已有封面，跳过: ${article.title}`)
+      resolve(article.cover)
+      continue
+    }
+
+    const articleTitle_text = article.title
+    const keywords = extractKeywords(`${article.title} ${article.excerpt}`)
+    const summary = article.excerpt || article.title
+
+    console.log(`📷 [自动生成] 生成中: "${articleTitle_text}"`)
+
+    try {
+      const { user, pass } = readSiteApiCreds()
+      const requestBody = {
+        title: articleTitle_text,
+        keywords,
+        summary,
+        backend: 'dify',
+        authUser: user,
+        authPass: pass,
+      }
+
+      const res = await fetch('/api/cover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.ok && data.imageUrl) {
+        // 重新查找文章（可能在等待期间被移除）
+        const currentArticle = pendingArticles.value.find(a => a.id === articleId)
+        if (currentArticle) {
+          currentArticle.cover = data.imageUrl
+          console.log(`📷 [自动生成] "${articleTitle_text}" 成功: ${data.imageUrl}`)
+          console.log('📷 [自动生成] 当前所有文章封面:')
+          pendingArticles.value.forEach((a, i) => {
+            console.log(`  [${i}] slug: ${a.slug}, cover: ${a.cover?.substring(0, 50)}...`)
+          })
+        }
+        resolve(data.imageUrl)
+      } else {
+        console.error(`📷 [自动生成] "${articleTitle_text}" 失败:`, data.error)
+        resolve(null)
+      }
+    } catch (e) {
+      console.error(`📷 [自动生成] "${articleTitle_text}" 异常:`, e)
+      resolve(null)
+    }
+
+    // 短暂延迟，避免请求过快
+    if (coverQueue.length > 0) {
+      await new Promise(r => setTimeout(r, 500))
+    }
+  }
+
+  isGeneratingCover = false
+  console.log(`📷 [自动生成] 队列处理完成`)
+}
+
+// 自动生成封面（加入队列，串行执行）
+function autoGenerateCover(articleId) {
+  console.log(`📷 [自动生成] 加入队列: ${articleId}`)
+
+  return new Promise((resolve) => {
+    coverQueue.push({ articleId, resolve })
+    // 触发队列处理
+    processCoverQueue()
+  })
 }
 
 function removePendingArticle(id) {
@@ -297,32 +961,44 @@ function insertPreviewCards() {
   // 如果没有待推送文章，直接返回
   if (pendingArticles.value.length === 0) return
 
-  // 获取已存在的文章slug列表
-  const existingSlugs = new Set()
-  list.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview) a.lk-blog__card').forEach(link => {
-    const href = link.getAttribute('href') || ''
-    const match = href.match(/\/(article|tech)\/(.+)\.html/)
-    if (match) existingSlugs.add(match[2])
-  })
-
-  // 直接从待推送队列中移除已存在的文章（清理脏数据）
-  if (existingSlugs.size > 0) {
-    const before = pendingArticles.value.length
-    pendingArticles.value = pendingArticles.value.filter(article => !existingSlugs.has(article.slug))
-    if (pendingArticles.value.length < before) {
-      console.log(`[Publish] 自动移除已存在的文章: ${before - pendingArticles.value.length} 篇`)
+  // 获取已存在的文章slug和对应的DOM元素
+  const existingItems = new Map()
+  list.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)').forEach(item => {
+    const link = item.querySelector('a.lk-blog__card')
+    if (link) {
+      const href = link.getAttribute('href') || ''
+      const match = href.match(/\/(article|tech)\/(.+)\.html/)
+      if (match) {
+        existingItems.set(match[2], item)
+      }
     }
-  }
+  })
+  const existingCount = existingItems.size
 
-  // 如果过滤后没有文章，直接返回
-  if (pendingArticles.value.length === 0) return
+  // 【诊断日志】打印当前文章数据
+  console.log('📷 [预览卡片] 准备渲染文章:')
+  pendingArticles.value.forEach((article, i) => {
+    console.log(`  [${i}] slug: ${article.slug}, title: ${article.title}, cover: ${article.cover?.substring(0, 50)}...`)
+  })
 
   // 反转顺序插入，这样最新的在最前面
   const reversedArticles = [...pendingArticles.value].reverse()
 
+  // 首先移除已存在文章的旧卡片（将被预览卡片替换）
+  pendingArticles.value.forEach(article => {
+    const existingItem = existingItems.get(article.slug)
+    if (existingItem) {
+      existingItem.remove()
+      console.log(`📷 [预览卡片] 移除旧卡片: ${article.slug}`)
+    }
+  })
+
+  // 计算当前列表中的文章数量（移除旧卡片后）
+  const currentItems = list.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)')
+
   reversedArticles.forEach((article, revIndex) => {
-    // 计算实际显示位置：从0开始，最新文章为0
-    const displayIndex = reversedArticles.length - 1 - revIndex
+    // 计算实际显示位置
+    const displayIndex = currentItems.length + (reversedArticles.length - 1 - revIndex)
     const isReverse = displayIndex % 2 === 1
 
     // 转义HTML特殊字符防止XSS
@@ -332,8 +1008,14 @@ function insertPreviewCards() {
       return div.innerHTML
     }
 
+    // 判断是更新还是新增
+    const isUpdate = existingItems.has(article.slug)
+
+    // 【诊断日志】打印每个卡片创建时的数据
+    console.log(`📷 [预览卡片] 创建卡片: slug=${article.slug}, cover=${article.cover?.substring(0, 50)}..., isUpdate=${isUpdate}`)
+
     const li = document.createElement('li')
-    li.className = `lk-blog__item lk-blog__item--preview${isReverse ? ' lk-blog__item--reverse' : ''}`
+    li.className = `lk-blog__item lk-blog__item--preview${isReverse ? ' lk-blog__item--reverse' : ''}${isUpdate ? ' lk-blog__item--update' : ''}`
     li.setAttribute('data-slug', article.slug)
     li.setAttribute('data-preview', 'true')
     li.innerHTML = `
@@ -345,7 +1027,7 @@ function insertPreviewCards() {
             <h3 class="lk-blog__post-title">${escapeHtml(article.title)}</h3>
             <p class="lk-blog__excerpt">${escapeHtml(article.excerpt)}</p>
             <div class="lk-blog__meta">
-              <span class="lk-blog__tag">待推送</span>
+              <span class="lk-blog__tag">${isUpdate ? '待更新' : '待推送'}</span>
             </div>
           </div>
           <img class="lk-blog__cover" src="${article.cover}" alt="" onerror="this.style.display='none'" />
@@ -356,7 +1038,7 @@ function insertPreviewCards() {
             <h3 class="lk-blog__post-title">${escapeHtml(article.title)}</h3>
             <p class="lk-blog__excerpt">${escapeHtml(article.excerpt)}</p>
             <div class="lk-blog__meta">
-              <span class="lk-blog__tag">待推送</span>
+              <span class="lk-blog__tag">${isUpdate ? '待更新' : '待推送'}</span>
             </div>
           </div>
         `}
@@ -371,16 +1053,35 @@ function insertPreviewCards() {
   })
 }
 
-// 监听pendingArticles变化
+// 移除预览卡片
+function removePreviewCards() {
+  if (typeof document === 'undefined') return
+  const list = document.querySelector('.lk-blog__list')
+  if (list) {
+    list.querySelectorAll('.lk-blog__item--preview').forEach(el => el.remove())
+  }
+}
+
+// 【Bug 1 修复】监听pendingArticles变化，更新预览卡片
+// 使用防抖避免快速更新时的重复渲染
+let previewUpdateTimer = null
 watch(pendingArticles, (val) => {
-  nextTick(() => {
+  // 清除之前的定时器
+  if (previewUpdateTimer) {
+    clearTimeout(previewUpdateTimer)
+  }
+
+  // 防抖：100ms 后更新预览卡片
+  previewUpdateTimer = setTimeout(() => {
     if (val.length === 0) {
-      // 数组清空时，直接移除所有预览卡片
       removePreviewCards()
     } else {
+      // 重建所有预览卡片（会移除旧的并插入新的）
       insertPreviewCards()
+      console.log('📷 [预览卡片] 已更新，文章数:', val.length)
     }
-  })
+    previewUpdateTimer = null
+  }, 100)
 }, { deep: true })
 
 // 打开推送面板
@@ -418,23 +1119,39 @@ async function loadHistory() {
   }
 }
 
-// 移除预览卡片
-function removePreviewCards() {
-  if (typeof document === 'undefined') return
-  const list = document.querySelector('.lk-blog__list')
-  if (list) {
-    list.querySelectorAll('.lk-blog__item--preview').forEach(el => el.remove())
+// 【Bug 3 修复】事件处理函数（用于移除监听）
+function handleAddPendingDelete(e) {
+  console.log('🔍 [PublishFab] handleAddPendingDelete 被调用')
+  console.log('  - e.detail:', e.detail)
+  const { slug, title } = e.detail
+  if (!pendingDeletes.value.find(d => d.slug === slug)) {
+    pendingDeletes.value.push({ id: `del-${Date.now()}`, slug, title })
+    console.log('  - 已添加到 pendingDeletes:', pendingDeletes.value.length)
+    console.log('  - 当前 pendingDeletes:', JSON.stringify(pendingDeletes.value))
+  } else {
+    console.log('  - 已存在，跳过')
   }
+}
+
+function handleClearPendingDeletes() {
+  console.log('🔍 [PublishFab] handleClearPendingDeletes 被调用')
+  pendingDeletes.value = []
 }
 
 // 推送到Vercel
 async function doPush() {
+  console.log('🔍 [PublishFab] doPush 开始执行')
+  console.log('  - commitMsg:', commitMsg.value.trim())
+  console.log('  - pendingArticles.length:', pendingArticles.value.length)
+  console.log('  - pendingDeletes.length:', pendingDeletes.value.length)
+
   const cm = commitMsg.value.trim()
   if (!cm) {
     setPushMsg('请填写提交说明', 'err')
     return
   }
   const { user, pass } = readSiteApiCreds()
+  console.log('  - 认证状态:', !!(user && pass))
   if (!user || !pass) {
     setPushMsg('请先登录', 'err')
     return
@@ -442,6 +1159,7 @@ async function doPush() {
 
   const totalPending = pendingArticles.value.length
   const totalDeletes = pendingDeletes.value.length
+  console.log('  - totalPending:', totalPending, 'totalDeletes:', totalDeletes)
 
   if (totalPending === 0 && totalDeletes === 0) {
     // 没有待处理项，执行普通推送
@@ -475,16 +1193,13 @@ async function doPush() {
   let delCount = 0
   let failCount = 0
   const errors = []
-  const successArticles = []
+  const successIds = [] // 成功推送的文章ID
+  const successDeleteIds = [] // 成功删除的ID
 
   // 处理冲突：如果文章同时在待推送和待删除列表，从两边都移除
   const pendingSlugs = new Set(pendingArticles.value.map(a => a.slug))
   const deleteSlugs = new Set(pendingDeletes.value.map(d => d.slug))
-  const conflictSlugs = [...pendingSlugs].filter(slug => deleteSlugs.has(slug))
-
-  // #region agent log
-  fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_A',location:'PublishFab.vue:doPush:beforeConflict',message:'queues before conflict strip',data:{pendingSlugs:[...pendingSlugs],deleteSlugs:[...deleteSlugs],conflictSlugs},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
+  const conflictSlugs = [...pendingSlugs].filter(s => deleteSlugs.has(s))
 
   if (conflictSlugs.length > 0) {
     // 移除冲突项
@@ -493,59 +1208,55 @@ async function doPush() {
     console.log('[Publish] 检测到冲突，已移除:', conflictSlugs)
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_A',location:'PublishFab.vue:doPush:afterConflict',message:'queues after conflict strip',data:{pendingLen:pendingArticles.value.length,pendingSlugs:pendingArticles.value.map(a=>a.slug),deleteLen:pendingDeletes.value.length,deleteSlugs:pendingDeletes.value.map(d=>d.slug)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
   try {
-    // 推送待推送文章 - 每篇文章之间增加延迟避免README SHA冲突
-    for (let i = 0; i < pendingArticles.value.length; i++) {
-      const article = pendingArticles.value[i]
-      try {
-        // 第一篇之后每篇增加2秒延迟，让GitHub API有时间同步
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000))
-        }
+    // 批量推送待推送文章（一次性提交）
+    if (pendingArticles.value.length > 0) {
+      console.log(`📤 [批量推送] 正在推送 ${pendingArticles.value.length} 篇文章...`)
 
-        const res = await fetch(apiUrl.value, {
+      try {
+        const res = await fetch('/api/publish-batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             authUser: user,
             authPass: pass,
-            target: article.target,
-            filename: `${article.slug}.md`,
-            title: article.title,
-            excerpt: article.excerpt,
-            content: article.content,
             commitMessage: cm,
+            articles: pendingArticles.value.map(article => ({
+              target: article.target,
+              filename: `${article.slug}.md`,
+              title: article.title,
+              excerpt: article.excerpt,
+              content: article.content,
+              cover: article.cover,
+            })),
           }),
         })
         const data = await res.json().catch(() => ({}))
+
         if (res.ok && data.ok) {
-          addCount++
-          successArticles.push(article)
+          addCount = data.count || pendingArticles.value.length
+          pendingArticles.value.forEach(a => successIds.push(a.id))
+          console.log(`✅ [批量推送] 成功: ${addCount} 篇文章, commit: ${data.commitSha}`)
         } else {
-          failCount++
-          const errorMsg = data.error || '失败'
-          errors.push(`${article.title}: ${errorMsg}`)
-          console.error(`[Publish] ${article.title} 失败:`, errorMsg)
+          failCount = pendingArticles.value.length
+          errors.push(`批量发布失败: ${data.error || '未知错误'}`)
+          console.error(`❌ [批量推送] 失败:`, data.error)
         }
       } catch (e) {
-        failCount++
-        errors.push(`${article.title}: 网络错误`)
-        console.error(`[Publish] ${article.title} 网络错误:`, e)
+        failCount = pendingArticles.value.length
+        errors.push('批量发布网络错误')
+        console.error(`❌ [批量推送] 网络错误:`, e)
       }
     }
 
-    // 删除待删除文章
+    // 删除待删除文章（一次性批量删除）
     if (pendingDeletes.value.length > 0) {
       const slugs = pendingDeletes.value.map(d => d.slug)
-      // #region agent log
-      fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_B',location:'PublishFab.vue:doPush:beforeDeleteApi',message:'calling /api/delete',data:{slugs},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+
+      console.log(`🗑️ [批量删除] 正在删除 ${slugs.length} 篇文章...`)
+
       try {
-        const res = await fetch('/api/delete', {
+        const res = await fetch('/api/delete-batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -556,103 +1267,107 @@ async function doPush() {
           }),
         })
         const data = await res.json().catch(() => ({}))
-        // #region agent log
-        fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_B',location:'PublishFab.vue:doPush:afterDeleteApi',message:'/api/delete response',data:{httpOk:res.ok,jsonOk:data?.ok,deleted:data?.deleted,error:data?.error,errors:data?.errors},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        const deletedNum = Number(data.deleted)
-        const safeDeleted = Number.isFinite(deletedNum) ? deletedNum : 0
+
+        console.log('🗑️ [批量删除] 响应:', { status: res.status, ok: data.ok, deleted: data.deleted, commitSha: data.commitSha })
+
         if (res.ok && data.ok) {
-          delCount = safeDeleted
-          // 从DOM中移除已删除的文章（仅在全成功时移除全部，避免误删卡片）
-          if (safeDeleted === slugs.length) {
-            slugs.forEach(slug => {
-              const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
-              if (item) item.remove()
-            })
-          }
+          delCount = data.deleted || 0
+          pendingDeletes.value.forEach(d => successDeleteIds.push(d.id))
+          console.log(`✅ [批量删除] 成功: ${delCount} 篇文章, commit: ${data.commitSha}`)
         } else {
-          delCount = safeDeleted
-          failCount += Math.max(0, slugs.length - safeDeleted)
-          const detail = Array.isArray(data.errors) && data.errors.length
-            ? data.errors.join('; ')
-            : (data.error || '未知错误')
+          delCount = data.deleted || 0
+          failCount += Math.max(0, slugs.length - delCount)
+          const detail = data.error || '未知错误'
           errors.push(`删除失败: ${detail}`)
+          console.log(`❌ [批量删除] 失败:`, detail)
         }
       } catch (e) {
         failCount += slugs.length
         errors.push('删除请求失败')
+        console.log(`❌ [批量删除] 请求异常:`, e.message)
       }
     }
   } catch (e) {
     console.error('[Publish] doPush error:', e)
     setPushMsg(e?.message || '网络错误', 'err')
+  } finally {
+    // 【修复】只移除成功推送的文章，失败的保留让用户重试
+    if (successIds.length > 0) {
+      pendingArticles.value = pendingArticles.value.filter(a => !successIds.includes(a.id))
+      console.log(`📤 [推送] 已移除 ${successIds.length} 篇成功文章，剩余 ${pendingArticles.value.length} 篇`)
+    }
+    if (successDeleteIds.length > 0) {
+      pendingDeletes.value = pendingDeletes.value.filter(d => !successDeleteIds.includes(d.id))
+    }
+
+    // 如果全部成功，清空提交信息
+    if (pendingArticles.value.length === 0 && pendingDeletes.value.length === 0) {
+      commitMsg.value = ''
+      removePreviewCards()
+      try {
+        localStorage.removeItem('lk_pending_articles')
+        localStorage.removeItem('lk_pending_deletes')
+      } catch {}
+    } else {
+      // 还有失败的文章，更新 localStorage
+      try {
+        localStorage.setItem('lk_pending_articles', JSON.stringify(pendingArticles.value))
+        localStorage.setItem('lk_pending_deletes', JSON.stringify(pendingDeletes.value))
+      } catch {}
+      console.log(`⚠️ [推送] 有 ${pendingArticles.value.length} 篇文章未成功推送，已保留`)
+    }
+
+    // 构建结果消息
+    const parts = []
+    if (addCount > 0) parts.push(`新增${addCount}篇`)
+    if (delCount > 0) parts.push(`删除${delCount}篇`)
+    if (failCount > 0) parts.push(`失败${failCount}项`)
+
+    if (parts.length > 0) {
+      setPushMsg(`推送完成：${parts.join('，')}`, failCount > 0 ? 'info' : 'ok')
+    } else {
+      setPushMsg('没有需要推送的内容', 'info')
+    }
+
+    if (errors.length > 0) {
+      console.error('[Publish] 推送错误:', errors)
+    }
+
     busy.value = false
-    return
-  }
+    loadHistory()
 
-  // 始终清空队列（无论成功失败）- 成功的已推送，失败的不再重试
-  pendingArticles.value = []
-  pendingDeletes.value = []
-  commitMsg.value = ''
-
-  // 移除预览卡片
-  removePreviewCards()
-
-  // 清除localStorage
-  try {
-    localStorage.removeItem('lk_pending_articles')
-    localStorage.removeItem('lk_pending_deletes')
-  } catch {}
-
-  // 构建结果消息
-  const parts = []
-  if (addCount > 0) parts.push(`新增${addCount}篇`)
-  if (delCount > 0) parts.push(`删除${delCount}篇`)
-  if (failCount > 0) parts.push(`失败${failCount}项`)
-
-  if (parts.length > 0) {
-    setPushMsg(`推送完成：${parts.join('，')}`, failCount > 0 ? 'info' : 'ok')
-  } else {
-    setPushMsg('没有需要推送的内容', 'info')
-  }
-
-  if (errors.length > 0) {
-    console.error('[Publish] 推送错误:', errors)
-  }
-
-  try {
-    window.dispatchEvent(new CustomEvent('publish-push-finished', { detail: { failCount, delCount } }))
-  } catch {}
-
-  busy.value = false
-  loadHistory()
-
-  // 如果有删除操作，提示刷新页面
-  if (delCount > 0) {
-    setTimeout(() => {
-      if (confirm('删除完成，是否刷新页面查看最新状态？')) {
+    // 只有全部成功时才刷新页面
+    if (failCount === 0 && (addCount > 0 || delCount > 0)) {
+      setPushMsg(`操作完成，正在刷新页面...`, 'ok')
+      setTimeout(() => {
         window.location.reload()
-      }
-    }, 500)
+      }, 1500)
+    }
   }
 }
 
 onMounted(() => {
+  console.log('🔍 [PublishFab] onMounted 执行')
+
   // 从localStorage恢复待推送队列
   try {
     const saved = localStorage.getItem('lk_pending_articles')
     if (saved) {
-      pendingArticles.value = JSON.parse(saved)
+      const parsed = JSON.parse(saved)
+      pendingArticles.value = parsed
+      console.log('📥 [恢复] 从 localStorage 恢复文章:', parsed.map(a => a.slug))
     }
     const savedDeletes = localStorage.getItem('lk_pending_deletes')
     if (savedDeletes) {
-      pendingDeletes.value = JSON.parse(savedDeletes)
+      const parsedDeletes = JSON.parse(savedDeletes)
+      pendingDeletes.value = parsedDeletes
+      console.log('📥 [恢复] 从 localStorage 恢复删除:', parsedDeletes.map(d => d.slug))
     }
 
     // 清理冲突数据：文章不能同时在待推送和待删除中
     const pendingSlugs = new Set(pendingArticles.value.map(a => a.slug))
     const deleteSlugs = new Set(pendingDeletes.value.map(d => d.slug))
-    const conflictSlugs = [...pendingSlugs].filter(slug => deleteSlugs.has(slug))
+    const conflictSlugs = [...pendingSlugs].filter(s => deleteSlugs.has(s))
 
     if (conflictSlugs.length > 0) {
       console.log('[Publish] 检测到冲突数据，自动清理:', conflictSlugs)
@@ -662,45 +1377,76 @@ onMounted(() => {
       localStorage.setItem('lk_pending_articles', JSON.stringify(pendingArticles.value))
       localStorage.setItem('lk_pending_deletes', JSON.stringify(pendingDeletes.value))
     }
+  } catch (e) {
+    console.error('📥 [恢复] 恢复数据失败:', e)
+  }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7288/ingest/3136d737-2eab-49d2-89cb-f2491c213577',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'16cc0b'},body:JSON.stringify({sessionId:'16cc0b',runId:'pre-fix',hypothesisId:'H_C',location:'PublishFab.vue:onMounted:afterLsLoad',message:'localStorage queues after mount cleanup',data:{pendingSlugs:pendingArticles.value.map(a=>a.slug),deleteSlugs:pendingDeletes.value.map(d=>d.slug),hadConflict:conflictSlugs.length>0},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-  } catch {}
+  // 【Bug 3 修复】监听删除事件
+  console.log('🔍 [PublishFab] 注册事件监听: add-pending-delete, clear-pending-deletes')
+  window.addEventListener('add-pending-delete', handleAddPendingDelete)
+  window.addEventListener('clear-pending-deletes', handleClearPendingDeletes)
 
-  // 监听删除事件
-  window.addEventListener('add-pending-delete', (e) => {
-    const { slug, title } = e.detail
-    if (!pendingDeletes.value.find(d => d.slug === slug)) {
-      pendingDeletes.value.push({ id: `del-${Date.now()}`, slug, title })
-    }
+  // 监听主题切换事件
+  document.addEventListener('themechange', handleThemeChange)
+  // 也监听 html 元素的 data-theme 属性变化
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme') {
+        handleThemeChange()
+      }
+    })
   })
+  observer.observe(document.documentElement, { attributes: true })
+})
 
-  // 监听清除删除事件
-  window.addEventListener('clear-pending-deletes', () => {
-    pendingDeletes.value = []
-  })
+// 主题切换时重新生成预览卡片封面
+function handleThemeChange() {
+  // 重新生成所有待推送文章的封面（仅本地开发模式）
+  if (isLocalDev() && pendingArticles.value.length > 0) {
+    pendingArticles.value.forEach(article => {
+      article.cover = generatePlaceholderImage(article.title, extractKeywords(`${article.title} ${article.excerpt} ${article.content || ''}`))
+    })
+    console.log('🎨 [主题切换] 已重新生成所有封面')
+    insertPreviewCards()
+  }
+}
+
+// 【Bug 3 修复】组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('add-pending-delete', handleAddPendingDelete)
+  window.removeEventListener('clear-pending-deletes', handleClearPendingDeletes)
+  document.removeEventListener('themechange', handleThemeChange)
 })
 
 watch(pendingArticles, (val) => {
   // 保存到localStorage（空数组时移除）
+  console.log('🔍 [PublishFab] watch(pendingArticles) 触发, 长度:', val.length)
   try {
     if (val.length === 0) {
       localStorage.removeItem('lk_pending_articles')
+      console.log('  - 已移除 lk_pending_articles')
     } else {
       localStorage.setItem('lk_pending_articles', JSON.stringify(val))
+      console.log('  - 已保存 lk_pending_articles')
     }
-  } catch {}
+  } catch (e) {
+    console.error('  - 保存失败:', e)
+  }
 }, { deep: true })
 
 watch(pendingDeletes, (val) => {
+  console.log('🔍 [PublishFab] watch(pendingDeletes) 触发, 长度:', val.length)
   try {
     if (val.length === 0) {
       localStorage.removeItem('lk_pending_deletes')
+      console.log('  - 已移除 lk_pending_deletes')
     } else {
       localStorage.setItem('lk_pending_deletes', JSON.stringify(val))
+      console.log('  - 已保存 lk_pending_deletes:', localStorage.getItem('lk_pending_deletes'))
     }
-  } catch {}
+  } catch (e) {
+    console.error('  - 保存失败:', e)
+  }
 }, { deep: true })
 </script>
 
@@ -753,6 +1499,36 @@ watch(pendingDeletes, (val) => {
                   <input v-model="target" type="radio" value="tech" />
                   Projects
                 </label>
+              </div>
+
+              <div class="lk-publish-field">
+                <label class="lk-publish-label">封面图片来源</label>
+                <select v-model="imageBackend" class="lk-publish-select">
+                  <option v-for="opt in imageBackendOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}{{ opt.free ? ' (免费)' : '' }}
+                  </option>
+                </select>
+                <!-- 本地开发模式下显示 AI 生成按钮 -->
+                <button
+                  v-if="isLocalDev() && imageBackend !== 'unsplash'"
+                  type="button"
+                  class="lk-publish-ai-cover-btn"
+                  :disabled="!articleTitle.trim() || generatingCover"
+                  @click="generateCoverNow"
+                >
+                  {{ generatingCover ? '生成中...' : '🎨 生成封面' }}
+                </button>
+              </div>
+
+              <!-- 生成的封面预览 -->
+              <div v-if="generatedCoverUrl && isLocalDev()" class="lk-publish-field">
+                <label class="lk-publish-label">生成的封面</label>
+                <div class="lk-publish-cover-preview">
+                  <img :src="generatedCoverUrl" alt="封面预览" />
+                  <button type="button" class="lk-publish-cover-use" @click="useGeneratedCover">
+                    使用此封面
+                  </button>
+                </div>
               </div>
 
               <div class="lk-publish-field">
@@ -844,6 +1620,13 @@ watch(pendingDeletes, (val) => {
                       class="lk-publish-input lk-publish-input--sm"
                       placeholder="文件名"
                     />
+                    <button
+                      type="button"
+                      class="lk-publish-regen-btn"
+                      @click.stop="regenerateArticleCover(article.id)"
+                    >
+                      🔄 重新生成封面
+                    </button>
                   </div>
                 </li>
               </ul>
@@ -878,6 +1661,16 @@ watch(pendingDeletes, (val) => {
                 placeholder="例如：添加新文章 / 更新配置"
               />
             </div>
+
+            <!-- 封面检查按钮 -->
+            <button
+              v-if="pendingArticles.length > 1"
+              type="button"
+              class="lk-publish-check-btn"
+              @click="regenerateDuplicateCovers"
+            >
+              🔍 检查封面唯一性
+            </button>
 
             <button
               type="button"
@@ -1096,6 +1889,18 @@ watch(pendingDeletes, (val) => {
   font-size: 0.85rem;
 }
 
+.lk-publish-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-alt);
+  color: var(--vp-c-text-1);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .lk-publish-textarea {
   width: 100%;
   box-sizing: border-box;
@@ -1275,6 +2080,27 @@ watch(pendingDeletes, (val) => {
   font-size: 0.75rem;
 }
 
+/* 重新生成封面按钮 */
+.lk-publish-regen-btn {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  border: 1px dashed var(--vp-c-divider);
+  background: transparent;
+  color: var(--vp-c-text-2);
+  font-size: 0.7rem;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: all 0.15s;
+}
+
+.lk-publish-regen-btn:hover {
+  border-style: solid;
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
 /* 待删除队列 */
 .lk-publish-queue--delete {
   border-left: 3px solid #ef4444;
@@ -1300,6 +2126,25 @@ watch(pendingDeletes, (val) => {
   font-size: 0.6rem;
   padding: 0.1rem 0.35rem;
   border-radius: 3px;
+}
+
+/* 封面检查按钮 */
+.lk-publish-check-btn {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-default-soft);
+  color: var(--vp-c-text-1);
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: all 0.15s;
+}
+
+.lk-publish-check-btn:hover {
+  background: var(--vp-c-brand-soft);
+  border-color: var(--vp-c-brand-1);
 }
 
 /* 推送按钮 */
@@ -1403,6 +2248,12 @@ watch(pendingDeletes, (val) => {
   z-index: 10;
 }
 
+/* 待更新状态（已有文章的更新） */
+.lk-blog__item--update::before {
+  content: '待更新';
+  background: #3b82f6;
+}
+
 .lk-preview-delete {
   position: absolute;
   top: 0.5rem;
@@ -1427,5 +2278,64 @@ watch(pendingDeletes, (val) => {
 .lk-publish-panel-enter-from,
 .lk-publish-panel-leave-to {
   opacity: 0;
+}
+
+/* AI 封面生成按钮 */
+.lk-publish-ai-cover-btn {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-brand-1);
+  background: color-mix(in srgb, var(--vp-c-brand-1) 15%, transparent);
+  color: var(--vp-c-brand-1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.lk-publish-ai-cover-btn:hover:not(:disabled) {
+  background: var(--vp-c-brand-1);
+  color: #fff;
+}
+
+.lk-publish-ai-cover-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 封面预览 */
+.lk-publish-cover-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-default-soft);
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.lk-publish-cover-preview img {
+  width: 100%;
+  max-height: 200px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.lk-publish-cover-use {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: none;
+  background: var(--vp-c-brand-1);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.4;
 }
 </style>
