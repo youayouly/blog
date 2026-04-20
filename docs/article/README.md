@@ -12,7 +12,7 @@ comment: false
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/openclaw.html">
-        <img class="lk-blog__cover" src="/gallery/article-cover-1.png" alt="" />
+        <img class="lk-blog__cover" src="/gallery/article-cover-openclaw-1776707846395.jpg" alt="" />
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-20T17:57:35.490Z">2026-04-20T17:57:35.490Z</time>
           <h3 class="lk-blog__post-title">openclaw</h3>
@@ -33,12 +33,12 @@ comment: false
             <span class="lk-blog__read" aria-hidden="true">Read →</span>
           </div>
         </div>
-        <img class="lk-blog__cover" src="/gallery/article-cover-1.png" alt="" />
+        <img class="lk-blog__cover" src="/gallery/article-cover-ai-infra-1776707813048.jpg" alt="" />
       </a>
     </li>
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/ai模板.html">
-        <img class="lk-blog__cover" src="/gallery/article-cover-1.png" alt="" />
+        <img class="lk-blog__cover" src="/gallery/article-cover-ai模板-1776707784801.jpg" alt="" />
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-20T17:57:36.418Z">2026-04-20T17:57:36.418Z</time>
           <h3 class="lk-blog__post-title">ai模板</h3>
