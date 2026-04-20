@@ -26,7 +26,7 @@ function canWriteLocal() {
 }
 
 // 本地 gallery 目录路径
-const GALLERY_DIR = path.join(__dirname, '..', 'docs', '.vuepress', 'public', 'gallery')
+const GALLERY_DIR = path.join(process.cwd(), 'docs', '.vuepress', 'public', 'gallery')
 
 // 根据标题生成文件名 slug
 function generateSlug(title) {
