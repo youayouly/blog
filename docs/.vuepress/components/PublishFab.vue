@@ -1272,7 +1272,7 @@ async function doPush() {
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         if (data.noChanges) {
-          setPushMsg(data.message || '没有改动需要推送', 'info')
+          setPushMsg('没有改动需要推送', 'info')
         } else {
           setPushMsg(data.commitSha ? `推送成功：${data.commitSha}，Vercel正在部署...` : '推送成功！Vercel正在部署...', 'ok')
           loadHistory()
