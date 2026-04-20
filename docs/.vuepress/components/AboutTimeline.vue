@@ -166,4 +166,17 @@ const rows = computed(() => {
   --lk-time-dot: #7dd3fc;
   --lk-time-year-bg: linear-gradient(135deg, #0e7490 0%, #38bdf8 100%);
 }
+
+[data-theme='dark'] .lk-about-timeline__heading,
+[data-theme='dark'] .lk-about-timeline__title {
+  color: rgba(248, 250, 252, 0.96);
+}
+
+[data-theme='dark'] .lk-about-timeline__date {
+  color: rgba(203, 213, 225, 0.82);
+}
+
+[data-theme='dark'] .lk-about-timeline__cat {
+  color: rgba(147, 197, 253, 0.88);
+}
 </style>
