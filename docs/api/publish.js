@@ -13,6 +13,7 @@ const ALLOWED_TARGETS = {
 }
 
 const GITHUB_API_BASE = 'https://api.github.com'
+const FALLBACK_COVER = '/gallery/article-cover-1.png'
 
 function validateFilename(filename) {
   if (!filename || typeof filename !== 'string') return false
@@ -59,6 +60,20 @@ async function getFileContent(token, repo, path, branch) {
     }
   } catch {}
   return null
+}
+
+async function normalizeCoverUrl(token, repo, branch, coverUrl) {
+  if (!coverUrl || typeof coverUrl !== 'string') return FALLBACK_COVER
+  if (coverUrl.startsWith('data:image/')) return coverUrl
+  if (/^https?:\/\//i.test(coverUrl)) return coverUrl
+
+  if (coverUrl.startsWith('/gallery/')) {
+    const repoPath = `docs/.vuepress/public${coverUrl}`
+    const sha = await getFileSha(token, repo, repoPath, branch)
+    return sha ? coverUrl : FALLBACK_COVER
+  }
+
+  return FALLBACK_COVER
 }
 
 async function updateFile(token, repo, path, content, message, branch, sha) {
@@ -225,6 +240,7 @@ module.exports = async function handler(req, res) {
       : `${filename.toLowerCase()}.md`
     const slug = normalizedFilename.replace(/\.md$/, '')
     const filePath = `${dir}/${normalizedFilename}`
+    const safeCover = await normalizeCoverUrl(GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, cover)
 
     // 获取当前日期（标准 ISO 格式）
     const now = new Date()
@@ -275,7 +291,7 @@ ${content}`
 
         if (listContent) {
           const existingCount = countExistingItems(listContent)
-          const newItem = generateArticleListItem(slug, title, excerpt, dateStr, existingCount, cover)
+          const newItem = generateArticleListItem(slug, title, excerpt, dateStr, existingCount, safeCover)
           const updatedList = updateArticleList(listContent, newItem)
 
           if (updatedList) {
