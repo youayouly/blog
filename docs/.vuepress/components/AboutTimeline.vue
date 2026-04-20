@@ -11,9 +11,8 @@ function yearOf(d) {
 }
 
 const rows = computed(() => {
-  const list = sorted.value
   let prevYear = ''
-  return list.map((item) => {
+  return sorted.value.slice(0, 10).map((item) => {
     const y = yearOf(item.date)
     const showYear = y !== prevYear
     prevYear = y
@@ -24,18 +23,18 @@ const rows = computed(() => {
 
 <template>
   <div class="lk-about-timeline">
-    <h3 class="lk-about-timeline__heading">动态</h3>
+    <h3 class="lk-about-timeline__heading">动态时间线</h3>
     <ul class="lk-about-timeline__list">
       <li v-for="(row, i) in rows" :key="i" class="lk-about-timeline__item">
+        <div class="lk-about-timeline__rail" aria-hidden="true">
+          <span class="lk-about-timeline__dot" />
+        </div>
         <div class="lk-about-timeline__body">
           <span v-if="row.showYear" class="lk-about-timeline__year">{{ row.year }}</span>
           <time class="lk-about-timeline__date" :datetime="row.date">{{ row.date }}</time>
           <a v-if="row.href" class="lk-about-timeline__title" :href="row.href">{{ row.title }}</a>
           <span v-else class="lk-about-timeline__title lk-about-timeline__title--plain">{{ row.title }}</span>
           <span class="lk-about-timeline__cat">{{ row.category }}</span>
-        </div>
-        <div class="lk-about-timeline__rail" aria-hidden="true">
-          <span class="lk-about-timeline__dot" />
         </div>
       </li>
     </ul>
@@ -46,14 +45,17 @@ const rows = computed(() => {
 .lk-about-timeline {
   position: relative;
   min-width: 0;
+  --lk-time-rail: rgba(37, 99, 235, 0.2);
+  --lk-time-dot: #2563eb;
+  --lk-time-year-bg: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
 }
 
 .lk-about-timeline__heading {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
-  font-weight: 700;
-  color: #0a0a0a;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  color: var(--vp-c-text-1, #0f172a);
+  letter-spacing: 0.05em;
   text-align: left;
 }
 
@@ -64,7 +66,6 @@ const rows = computed(() => {
   padding: 0 0 0.25rem;
 }
 
-/* Single continuous rail — one vertical segment for the whole module */
 .lk-about-timeline__list::before {
   content: '';
   position: absolute;
@@ -72,7 +73,7 @@ const rows = computed(() => {
   bottom: 0.35rem;
   left: 10px;
   width: 2px;
-  background: rgba(15, 23, 42, 0.22);
+  background: var(--lk-time-rail);
   border-radius: 1px;
 }
 
@@ -80,7 +81,7 @@ const rows = computed(() => {
   position: relative;
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr);
-  gap: 0.35rem;
+  gap: 0.45rem;
   align-items: start;
   padding: 0.55rem 0;
 }
@@ -94,38 +95,37 @@ const rows = computed(() => {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  gap: 0.2rem;
-  padding-left: 0.15rem;
+  gap: 0.22rem;
   min-width: 0;
 }
 
 .lk-about-timeline__year {
   align-self: flex-start;
-  margin-bottom: 0.15rem;
-  padding: 0.12rem 0.45rem;
-  border-radius: 6px;
+  margin-bottom: 0.12rem;
+  padding: 0.12rem 0.48rem;
+  border-radius: 999px;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
-  background: linear-gradient(135deg, #5b9bd5 0%, #4a90d9 100%);
-  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.35);
+  background: var(--lk-time-year-bg);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26);
 }
 
 .lk-about-timeline__date {
   font-size: 0.68rem;
-  color: #334155;
+  color: var(--vp-c-text-3, #64748b);
 }
 
 .lk-about-timeline__title {
   font-size: 0.8rem;
-  font-weight: 600;
-  color: #0a0a0a;
+  font-weight: 700;
+  color: var(--vp-c-text-1, #0f172a);
   text-decoration: none;
   line-height: 1.35;
 }
 
 .lk-about-timeline__title:hover {
-  color: #2563eb;
+  color: var(--lk-time-dot);
 }
 
 .lk-about-timeline__title--plain {
@@ -134,61 +134,36 @@ const rows = computed(() => {
 
 .lk-about-timeline__cat {
   font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #475569;
+  color: var(--vp-c-text-2, #475569);
 }
 
 .lk-about-timeline__rail {
   position: relative;
   display: flex;
   justify-content: center;
-  padding-top: 1.35rem;
-  order: -1;
+  padding-top: 1.45rem;
 }
 
 .lk-about-timeline__item:first-child .lk-about-timeline__rail {
-  padding-top: 1.85rem;
+  padding-top: 1.9rem;
 }
 
 .lk-about-timeline__dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #fff;
-  border: 2px solid #4a90d9;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  background: var(--vp-c-bg, #fff);
+  border: 2px solid var(--lk-time-dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--vp-c-bg, #fff) 88%, transparent);
   z-index: 1;
 }
 
-[data-theme='dark'] .lk-about-timeline__heading {
-  color: #f8fafc;
-}
-
-[data-theme='dark'] .lk-about-timeline__date {
-  color: #cbd5e1;
-}
-
-[data-theme='dark'] .lk-about-timeline__title {
-  color: #f8fafc;
-}
-
-[data-theme='dark'] .lk-about-timeline__title:hover {
-  color: #93c5fd;
-}
-
-[data-theme='dark'] .lk-about-timeline__cat {
-  color: #e2e8f0;
-}
-
-[data-theme='dark'] .lk-about-timeline__dot {
-  background: #0a0a0a;
-  border-color: #93c5fd;
-  box-shadow: 0 0 0 2px #0a0a0a;
-}
-
-[data-theme='dark'] .lk-about-timeline__list::before {
-  background: rgba(248, 250, 252, 0.35);
+[data-theme='dark'] .lk-about-timeline {
+  --lk-time-rail: rgba(125, 211, 252, 0.28);
+  --lk-time-dot: #7dd3fc;
+  --lk-time-year-bg: linear-gradient(135deg, #0e7490 0%, #38bdf8 100%);
 }
 </style>

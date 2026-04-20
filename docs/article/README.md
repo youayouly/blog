@@ -6,23 +6,44 @@ comment: false
 
 <div class="lk-blog">
   <p class="lk-blog__intro">
-    工程笔记、工具链与项目随笔 — 按时间倒序排列，版式参考常见技术博客列表页。
+    工程笔记、工具链与项目随笔，按时间倒序排列。新发布的短文会优先出现在列表上方。
   </p>
 
   <ol class="lk-blog__list">
+    <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/git-release-map.html">
+        <img class="lk-blog__cover" src="/gallery/article-cover-2.png" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-21">2026-04-21</time>
+          <h3 class="lk-blog__post-title">Git 发布流水线：从本地改动到 Vercel Release</h3>
+          <p class="lk-blog__excerpt">
+            把暂存、提交、同步、推送、部署和排错拆成几个稳定模块，方便以后回看每段时间到底在做什么。
+          </p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__tag">Git</span>
+            <span class="lk-blog__tag">Release</span>
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>
+
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/openclaw.html">
         <img class="lk-blog__cover" src="/gallery/article-cover-openclaw-1776709183886.jpg" alt="" />
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-20T18:19:56.004Z">2026-04-20T18:19:56.004Z</time>
           <h3 class="lk-blog__post-title">openclaw</h3>
-          <p class="lk-blog__excerpt">如果你想在本地玩转大模型，这是最标准的起步流程：</p>
+          <p class="lk-blog__excerpt">如果你想在本地玩转大模型，这是最标准的起步流程。</p>
           <div class="lk-blog__meta">
+            <span class="lk-blog__tag">AI</span>
+            <span class="lk-blog__tag">Local</span>
             <span class="lk-blog__read" aria-hidden="true">Read →</span>
           </div>
         </div>
       </a>
     </li>
+
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/langchain.html">
         <div class="lk-blog__text">
@@ -30,25 +51,31 @@ comment: false
           <h3 class="lk-blog__post-title">ai infra</h3>
           <p class="lk-blog__excerpt">设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码。</p>
           <div class="lk-blog__meta">
+            <span class="lk-blog__tag">Agent</span>
+            <span class="lk-blog__tag">Infra</span>
             <span class="lk-blog__read" aria-hidden="true">Read →</span>
           </div>
         </div>
         <img class="lk-blog__cover" src="/gallery/article-cover-ai-infra-1776709132684.jpg" alt="" />
       </a>
     </li>
+
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/ai模板.html">
         <img class="lk-blog__cover" src="/gallery/article-cover-ai模板-1776709103241.jpg" alt="" />
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-20T18:19:56.943Z">2026-04-20T18:19:56.943Z</time>
           <h3 class="lk-blog__post-title">ai模板</h3>
-          <p class="lk-blog__excerpt">你是 [领域：例如资深前端 / VuePress / DevOps / 数据库] 工程师。优先给出**可验证**的结论与**可执行**的步骤；不确定时明确写「假...</p>
+          <p class="lk-blog__excerpt">把可验证结论、可执行步骤和不确定性说明写进模板，让 AI 输出更稳定。</p>
           <div class="lk-blog__meta">
+            <span class="lk-blog__tag">Prompt</span>
+            <span class="lk-blog__tag">Workflow</span>
             <span class="lk-blog__read" aria-hidden="true">Read →</span>
           </div>
         </div>
       </a>
     </li>
+
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/edge-ai-sketch.html">
         <div class="lk-blog__text">
@@ -70,6 +97,7 @@ comment: false
         />
       </a>
     </li>
+
     <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/vuepress-stack-notes.html">
         <img
@@ -81,7 +109,7 @@ comment: false
           <time class="lk-blog__date" datetime="2026-04-02">2026-04-02 20:49</time>
           <h3 class="lk-blog__post-title">用 VuePress 2 搭静态个人站</h3>
           <p class="lk-blog__excerpt">
-            主题选型、目录约定、Sass 全局样式与少量客户端增强 — 和 Projects 里的长文互补的短文版。
+            主题选型、目录约定、Sass 全局样式与少量客户端增强，和 Projects 里的长文互补。
           </p>
           <div class="lk-blog__meta">
             <span class="lk-blog__tag">VuePress</span>
@@ -91,6 +119,7 @@ comment: false
         </div>
       </a>
     </li>
+
     <li class="lk-blog__item lk-blog__item--external">
       <a class="lk-blog__card" href="/tech/my-blog.html">
         <div class="lk-blog__text">
