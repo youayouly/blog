@@ -19,7 +19,8 @@ function validateFilename(filename) {
   const base = filename.toLowerCase()
   if (!base.endsWith('.md') && !base.endsWith('.markdown')) return false
   const nameWithoutExt = base.replace(/\.(md|markdown)$/, '')
-  return /^[a-z0-9][a-z0-9-]{0,100}$/.test(nameWithoutExt)
+  // 支持：小写字母、数字、连字符、中文
+  return /^[a-z0-9\u4e00-\u9fa5][a-z0-9\u4e00-\u9fa5-]{0,100}$/.test(nameWithoutExt)
 }
 
 async function getFileSha(token, repo, path, branch) {
@@ -82,9 +83,9 @@ async function updateFile(token, repo, path, content, message, branch, sha) {
   return res
 }
 
-function generateArticleListItem(slug, title, excerpt, date, itemIndex) {
-  // 默认封面图
-  const defaultCover = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80'
+function generateArticleListItem(slug, title, excerpt, date, itemIndex, coverUrl) {
+  // 使用传入的封面图，如果没有则使用默认图
+  const cover = coverUrl || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80'
 
   // 交替布局：偶数索引文字在左图片在右，奇数索引图片在左文字在右
   const isEven = itemIndex % 2 === 0
@@ -101,14 +102,14 @@ function generateArticleListItem(slug, title, excerpt, date, itemIndex) {
             <span class="lk-blog__read" aria-hidden="true">Read →</span>
           </div>
         </div>
-        <img class="lk-blog__cover" src="${defaultCover}" alt="" />
+        <img class="lk-blog__cover" src="${cover}" alt="" />
       </a>
     </li>`
   } else {
     // 图片在左，文字在右
     return `    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/${slug}.html">
-        <img class="lk-blog__cover" src="${defaultCover}" alt="" />
+        <img class="lk-blog__cover" src="${cover}" alt="" />
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="${date}">${date}</time>
           <h3 class="lk-blog__post-title">${title}</h3>
@@ -200,7 +201,7 @@ module.exports = async function handler(req, res) {
     }
 
     const body = req.body || {}
-    const { target, filename, title, excerpt, content, commitMessage, authUser, authPass } = body
+    const { target, filename, title, excerpt, content, cover, commitMessage, authUser, authPass } = body
 
     // 用户鉴权
     if (authUser !== LK_SITE_USER || authPass !== LK_SITE_PASS) {
@@ -225,9 +226,9 @@ module.exports = async function handler(req, res) {
     const slug = normalizedFilename.replace(/\.md$/, '')
     const filePath = `${dir}/${normalizedFilename}`
 
-    // 获取当前日期
+    // 获取当前日期（标准 ISO 格式）
     const now = new Date()
-    const dateStr = now.toISOString().slice(0, 16).replace('T', ' ')
+    const dateStr = now.toISOString()
 
     // 1. 创建/更新文章文件
     let articleSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, filePath, GITHUB_BRANCH)
@@ -247,8 +248,12 @@ ${content}`
 
     if (!articleRes.ok) {
       const err = await articleRes.json().catch(() => ({}))
+      console.error('[Publish] 文章创建失败:', JSON.stringify(err))
       return res.status(502).json({ ok: false, error: err.message || 'Failed to create article' })
     }
+
+    const articleData = await articleRes.json()
+    console.log('[Publish] 文章创建成功:', articleData.content?.html_url)
 
     // 1.5 本地开发环境：同时保存到本地文件
     let localSaved = false
@@ -270,21 +275,28 @@ ${content}`
 
         if (listContent) {
           const existingCount = countExistingItems(listContent)
-          const newItem = generateArticleListItem(slug, title, excerpt, dateStr, existingCount)
+          const newItem = generateArticleListItem(slug, title, excerpt, dateStr, existingCount, cover)
           const updatedList = updateArticleList(listContent, newItem)
 
           if (updatedList) {
             const listSha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, listPath, GITHUB_BRANCH)
-            await updateFile(
+            const listRes = await updateFile(
               GITHUB_TOKEN, GITHUB_REPO, listPath, updatedList,
               `更新文章列表: ${title}`, GITHUB_BRANCH, listSha
             )
-            listUpdated = true
 
-            // 本地开发：同时保存到本地
-            if (isLocalDev()) {
-              const localListSaved = saveToLocal(listPath, updatedList)
-              console.log(`[本地保存] ${listPath}: ${localListSaved ? '成功' : '失败'}`)
+            if (!listRes.ok) {
+              const listErr = await listRes.json().catch(() => ({}))
+              console.error('Failed to update README:', listErr)
+              // 不阻止文章发布，但记录错误
+            } else {
+              listUpdated = true
+
+              // 本地开发：同时保存到本地
+              if (isLocalDev()) {
+                const localListSaved = saveToLocal(listPath, updatedList)
+                console.log(`[本地保存] ${listPath}: ${localListSaved ? '成功' : '失败'}`)
+              }
             }
           }
         }
@@ -293,7 +305,7 @@ ${content}`
       }
     }
 
-    const articleData = await articleRes.json()
+    console.log('[Publish] 推送完成:', { filePath, listUpdated, localSaved })
 
     return res.status(200).json({
       ok: true,
