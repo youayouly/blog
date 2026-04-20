@@ -11,6 +11,45 @@ comment: false
 
   <ol class="lk-blog__list">
     <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/openclaw.html">
+        <img class="lk-blog__cover" src="/gallery/article-cover-openclaw-1776682584530.jpg" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-20T10:58:52.963Z">2026-04-20T10:58:52.963Z</time>
+          <h3 class="lk-blog__post-title">openclaw</h3>
+          <p class="lk-blog__excerpt">如果你想在本地玩转大模型，这是最标准的起步流程：</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>
+    <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/langchain.html">
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-20T10:58:52.966Z">2026-04-20T10:58:52.966Z</time>
+          <h3 class="lk-blog__post-title">ai infra</h3>
+          <p class="lk-blog__excerpt">设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码。</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+        <img class="lk-blog__cover" src="/gallery/article-cover-ai-infra-1776682533366.jpg" alt="" />
+      </a>
+    </li>
+    <li class="lk-blog__item">
+      <a class="lk-blog__card" href="/article/ai模板.html">
+        <img class="lk-blog__cover" src="/gallery/article-cover-ai模板-1776682497013.jpg" alt="" />
+        <div class="lk-blog__text">
+          <time class="lk-blog__date" datetime="2026-04-20T10:58:52.967Z">2026-04-20T10:58:52.967Z</time>
+          <h3 class="lk-blog__post-title">ai模板</h3>
+          <p class="lk-blog__excerpt">你是 [领域：例如资深前端 / VuePress / DevOps / 数据库] 工程师。优先给出**可验证**的结论与**可执行**的步骤；不确定时明确写「假...</p>
+          <div class="lk-blog__meta">
+            <span class="lk-blog__read" aria-hidden="true">Read →</span>
+          </div>
+        </div>
+      </a>
+    </li>
+    <li class="lk-blog__item">
       <a class="lk-blog__card" href="/article/edge-ai-sketch.html">
         <div class="lk-blog__text">
           <time class="lk-blog__date" datetime="2026-04-12">2026-04-12 20:53</time>
