@@ -8,6 +8,18 @@
 const fs = require('fs')
 const path = require('path')
 
+// 确保在Node.js环境中正确处理fetch
+let fetch
+try {
+  // 优先使用 undici 的 fetch（已在package.json中依赖）
+  fetch = require('undici').fetch
+  console.log('[Cover] Using undici fetch')
+} catch {
+  // 回退到原生fetch（Node 18+）
+  fetch = global.fetch
+  console.log('[Cover] Using native fetch')
+}
+
 // 本地开发模式检测（尝试写入文件来判断）
 function canWriteLocal() {
   try {
@@ -74,6 +86,16 @@ async function downloadAndSaveLocal(imageUrl, title) {
     fs.writeFileSync(filepath, buffer)
     console.log(`[Cover] 已保存到本地: ${filepath}`)
 
+    // 自动添加到git（防止部署时找不到图片）
+    try {
+      const { execSync } = require('child_process')
+      execSync(`git add "${filepath}"`, { encoding: 'utf-8', stdio: 'pipe' })
+      console.log(`[Cover] 已添加到git: ${filename}`)
+    } catch (gitErr) {
+      // git操作失败不影响图片保存，只记录警告
+      console.warn(`[Cover] 无法添加到git: ${gitErr.message}`)
+    }
+
     return {
       saved: true,
       localPath: filepath,
@@ -96,7 +118,19 @@ const IMAGE_BACKENDS = {
       const { apiUrl, apiKey } = config
 
       // 调用 Dify 工作流 API
-      const res = await fetch(`${apiUrl}/workflows/run`, {
+      const apiUrlWithWorkflow = `${apiUrl}/workflows/run`
+      console.log(`[Dify] Calling API: ${apiUrlWithWorkflow}`)
+      console.log(`[Dify] Request body:`, JSON.stringify({
+        inputs: {
+          title,
+          keywords: Array.isArray(keywords) ? keywords.join(', ') : keywords,
+          summary: summary || title,
+        },
+        response_mode: 'blocking',
+        user: 'article-publisher',
+      }, null, 2))
+
+      const res = await fetch(apiUrlWithWorkflow, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -105,7 +139,7 @@ const IMAGE_BACKENDS = {
         body: JSON.stringify({
           inputs: {
             title,
-            keywords: keywords.join(', '),
+            keywords: Array.isArray(keywords) ? keywords.join(', ') : keywords,
             summary: summary || title,
           },
           response_mode: 'blocking',
@@ -113,19 +147,75 @@ const IMAGE_BACKENDS = {
         }),
       })
 
+      console.log(`[Dify] Response status: ${res.status} ${res.statusText}`)
+
       if (!res.ok) {
         const err = await res.text()
+        console.error(`[Dify] Error response: ${err}`)
         throw new Error(`Dify API error: ${err}`)
       }
 
       const data = await res.json()
-      // Dify 工作流返回格式: { result: [{ url: "..." }] }
-      const outputs = data.data?.outputs || {}
-      if (outputs.result?.[0]?.url) {
-        return outputs.result[0].url
+      console.log(`[Dify] Response data:`, JSON.stringify(data, null, 2))
+      console.log(`[Dify] Full response structure:`, JSON.stringify(Object.keys(data), null, 2))
+
+      // 检查工作流执行状态
+      if (data.data?.status === 'failed') {
+        const errorInfo = data.data?.error || 'Unknown error'
+        console.error(`[Dify] Workflow failed: ${errorInfo}`)
+
+        // 提供更友好的错误信息
+        if (errorInfo.includes('APIAuthenticationError') || errorInfo.includes('401')) {
+          throw new Error('Dify工作流认证失败：API密钥无效或已过期。请检查Dify配置或尝试使用其他后端（如siliconflow）。')
+        } else {
+          throw new Error(`Dify工作流执行失败：${errorInfo}`)
+        }
       }
-      // 兼容其他可能的返回格式
-      return outputs.image_url || outputs.cover_url || outputs.url
+
+      // Dify 工作流返回格式解析
+      const outputs = data.data?.outputs || {}
+      console.log(`[Dify] Extracted outputs:`, JSON.stringify(outputs, null, 2))
+
+      // 尝试多种可能的返回格式
+      let imageUrl = null
+
+      // 格式1: { result: [{ url: "..." }] }
+      if (outputs.result?.[0]?.url) {
+        imageUrl = outputs.result[0].url
+        console.log(`[Dify] Found image URL (format 1): ${imageUrl}`)
+      }
+      // 格式2: { image_url: "..." }
+      else if (outputs.image_url) {
+        imageUrl = outputs.image_url
+        console.log(`[Dify] Found image URL (format 2): ${imageUrl}`)
+      }
+      // 格式3: { cover_url: "..." }
+      else if (outputs.cover_url) {
+        imageUrl = outputs.cover_url
+        console.log(`[Dify] Found image URL (format 3): ${imageUrl}`)
+      }
+      // 格式4: { url: "..." }
+      else if (outputs.url) {
+        imageUrl = outputs.url
+        console.log(`[Dify] Found image URL (format 4): ${imageUrl}`)
+      }
+      // 格式5: 直接在 result 中
+      else if (outputs.result && typeof outputs.result === 'string') {
+        imageUrl = outputs.result
+        console.log(`[Dify] Found image URL (format 5): ${imageUrl}`)
+      }
+      // 格式6: outputs 本身就是 URL 字符串
+      else if (typeof outputs === 'string' && outputs.startsWith('http')) {
+        imageUrl = outputs
+        console.log(`[Dify] Found image URL (format 6): ${imageUrl}`)
+      }
+
+      if (imageUrl) {
+        return imageUrl
+      }
+
+      console.error(`[Dify] No image URL found in response, full data:`, JSON.stringify(data, null, 2))
+      throw new Error('Dify工作流未返回图片URL，请检查工作流配置')
     },
   },
 
@@ -242,7 +332,7 @@ const IMAGE_BACKENDS = {
 
 // 生成英文图片提示词
 function generatePrompt(title, keywords) {
-  const keywordStr = keywords.length > 0 ? keywords.join(', ') : 'technology'
+  const keywordStr = Array.isArray(keywords) && keywords.length > 0 ? keywords.join(', ') : (typeof keywords === 'string' ? keywords : 'technology')
 
   return `Professional tech blog cover image, ${keywordStr} theme, modern minimalist design,
 abstract geometric shapes, gradient colors, clean composition, no text, no logo,
@@ -323,7 +413,7 @@ module.exports = async function handler(req, res) {
 
     console.log(`[Cover] Generating cover for: ${title}`)
     console.log(`  - Backend: ${backendConfig.name}`)
-    console.log(`  - Keywords: ${keywords?.join(', ') || 'none'}`)
+    console.log(`  - Keywords: ${Array.isArray(keywords) ? keywords.join(', ') : (keywords || 'none')}`)
     console.log(`  - Summary: ${summary?.substring(0, 50) || '(none)'}...`)
 
     // 调用对应后端生成图片
@@ -356,7 +446,8 @@ module.exports = async function handler(req, res) {
       localPath: localSave?.localPath,
     })
   } catch (err) {
-    console.error('[Cover] Error:', err)
+    console.error('[Cover] Error:', err.message)
+    console.error('[Cover] Error stack:', err.stack)
     return res.status(500).json({ ok: false, error: err.message || 'Internal server error' })
   }
 }

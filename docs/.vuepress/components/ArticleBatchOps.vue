@@ -139,6 +139,7 @@ async function batchDelete() {
   batchMode.value = false
   updateCheckboxVisibility()
   updatePendingDeleteCount()
+  window.dispatchEvent(new CustomEvent('open-push-sheet'))
 }
 
 // 取消所有待删除文章
