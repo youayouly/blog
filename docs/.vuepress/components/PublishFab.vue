@@ -32,6 +32,7 @@ const commitMsg = ref('')
 const busy = ref(false)
 const pushMessage = ref('')
 const pushMessageKind = ref('info')
+const isClosing = ref(false) // 新增：跟踪面板是否正在关闭
 
 // 历史记录
 const historyRecords = ref([])
@@ -43,6 +44,9 @@ const expandedArticleId = ref(null)
 
 // 【Bug 1 修复】防重入锁
 const isUpdatingPendingArticles = ref(false)
+
+// 批量处理标记
+const isBatchProcessing = ref(false)
 
 const apiUrl = computed(() => {
   const u = publishApiBase.trim()
@@ -700,11 +704,16 @@ async function readFiles(files) {
     }
   }
 
-  // 所有文件添加完后，按顺序生成封面
+  // 所有文件添加完后，按顺序生成封面（从下到上，即先拖入的文件先处理）
   if (articleIds.length > 0 && imageBackend.value === 'dify') {
     console.log(`📷 [批量处理] 开始按顺序生成 ${articleIds.length} 篇文章的封面`)
+    console.log(`📷 [批量处理] 处理顺序:`, articleIds)
+    // 标记正在批量处理
+    isBatchProcessing.value = true
+    // 直接使用原数组，因为最后一个拖入的文件会排在数组前面
+    // 不使用await，让它们自然加入队列
     for (const articleId of articleIds) {
-      await autoGenerateCover(articleId)
+      autoGenerateCover(articleId)
     }
   }
 }
@@ -819,7 +828,7 @@ function addManualArticle() {
 let coverQueue = []
 let isGeneratingCover = false
 
-// 处理封面生成队列（串行执行，按添加顺序）
+// 处理封面生成队列（串行执行，按FIFO顺序）
 async function processCoverQueue() {
   if (isGeneratingCover || coverQueue.length === 0) {
     return
@@ -827,10 +836,17 @@ async function processCoverQueue() {
 
   isGeneratingCover = true
 
+  // 记录队列初始状态
+  console.log(`📷 [队列处理] 开始处理队列，长度: ${coverQueue.length}`)
+  coverQueue.forEach((item, i) => {
+    console.log(`  [${i}] articleId: ${item.articleId}`)
+  })
+
   while (coverQueue.length > 0) {
+    // 使用 shift() 确保FIFO顺序（先进先出）
     const { articleId, resolve } = coverQueue.shift()
 
-    console.log(`📷 [自动生成] 开始处理 articleId: ${articleId}, 队列剩余: ${coverQueue.length}`)
+    console.log(`📷 [自动生成] 处理 articleId: ${articleId}, 队列剩余: ${coverQueue.length}`)
 
     const article = pendingArticles.value.find(a => a.id === articleId)
     if (!article) {
@@ -856,18 +872,25 @@ async function processCoverQueue() {
       const { user, pass } = readSiteApiCreds()
       const requestBody = {
         title: articleTitle_text,
-        keywords,
+        keywords: Array.isArray(keywords) ? keywords.join(', ') : keywords,
         summary,
-        backend: 'dify',
+        backend: imageBackend.value,
         authUser: user,
         authPass: pass,
       }
+
+      // 添加超时控制（60秒超时）
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000)
 
       const res = await fetch('/api/cover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       const data = await res.json()
       if (res.ok && data.ok && data.imageUrl) {
@@ -887,7 +910,11 @@ async function processCoverQueue() {
         resolve(null)
       }
     } catch (e) {
-      console.error(`📷 [自动生成] "${articleTitle_text}" 异常:`, e)
+      if (e.name === 'AbortError') {
+        console.error(`📷 [自动生成] "${articleTitle_text}" 超时: 请求超过60秒`)
+      } else {
+        console.error(`📷 [自动生成] "${articleTitle_text}" 异常:`, e)
+      }
       resolve(null)
     }
 
@@ -899,14 +926,49 @@ async function processCoverQueue() {
 
   isGeneratingCover = false
   console.log(`📷 [自动生成] 队列处理完成`)
+
+  // 检查批量处理是否完成
+  checkBatchCompletion()
 }
 
-// 自动生成封面（加入队列，串行执行）
+// 检查批量处理是否完成
+function checkBatchCompletion() {
+  if (!isBatchProcessing.value) return
+
+  // 检查是否所有文章都已有真实封面
+  const allHaveCovers = pendingArticles.value.every(article => {
+    return article.cover && !article.cover.startsWith('data:image/svg+xml')
+  })
+
+  console.log(`📷 [批量完成检查] pendingArticles: ${pendingArticles.value.length}, allHaveCovers: ${allHaveCovers}`)
+
+  if (allHaveCovers && pendingArticles.value.length > 0) {
+    console.log('📷 [批量完成] 所有封面已生成，准备自动关闭面板')
+    isBatchProcessing.value = false
+
+    if (!commitMsg.value.trim()) {
+      commitMsg.value = buildDefaultCommitMessage()
+    }
+
+    // 延迟切换到推送面板，确保所有封面都显示出来
+    setTimeout(() => {
+      open.value = false
+      pushSheetOpen.value = true
+      loadHistory()
+      console.log('📷 [自动收尾] 已切换到推送面板，准备提交本次改动')
+    }, 2000)
+  }
+}
+
+
+// 自动生成封面（加入队列，串行执行，FIFO顺序）
 function autoGenerateCover(articleId) {
-  console.log(`📷 [自动生成] 加入队列: ${articleId}`)
+  console.log(`📷 [自动生成] 加入队列: ${articleId}, 当前队列长度: ${coverQueue.length}`)
 
   return new Promise((resolve) => {
+    // push() 确保新加入的项目在队列末尾（先进先出）
     coverQueue.push({ articleId, resolve })
+    console.log(`📷 [自动生成] 入队完成，队列:`, coverQueue.map(q => q.articleId))
     // 触发队列处理
     processCoverQueue()
   })
@@ -1084,9 +1146,41 @@ watch(pendingArticles, (val) => {
   }, 100)
 }, { deep: true })
 
+function buildDefaultCommitMessage() {
+  const parts = []
+
+  if (pendingArticles.value.length > 0) {
+    const articleTitles = pendingArticles.value
+      .slice(0, 3)
+      .map(article => article.title || article.slug)
+      .filter(Boolean)
+    const articlePart = articleTitles.length > 0
+      ? `新增 ${articleTitles.join('、')}${pendingArticles.value.length > 3 ? ' 等文章' : ''}`
+      : `新增 ${pendingArticles.value.length} 篇文章`
+    parts.push(articlePart)
+  }
+
+  if (pendingDeletes.value.length > 0) {
+    const deleteTitles = pendingDeletes.value
+      .slice(0, 3)
+      .map(article => article.title || article.slug)
+      .filter(Boolean)
+    const deletePart = deleteTitles.length > 0
+      ? `删除 ${deleteTitles.join('、')}${pendingDeletes.value.length > 3 ? ' 等文章' : ''}`
+      : `删除 ${pendingDeletes.value.length} 篇文章`
+    parts.push(deletePart)
+  }
+
+  if (parts.length === 0) return '更新站点内容'
+  return parts.join('；')
+}
+
 // 打开推送面板
 function openPushSheet() {
   if (!isLoggedIn.value) return
+  if (!commitMsg.value.trim() && (pendingArticles.value.length > 0 || pendingDeletes.value.length > 0)) {
+    commitMsg.value = buildDefaultCommitMessage()
+  }
   pushSheetOpen.value = true
   open.value = false
   loadHistory()
@@ -1138,6 +1232,11 @@ function handleClearPendingDeletes() {
   pendingDeletes.value = []
 }
 
+function handleOpenPushSheet() {
+  console.log('🔍 [PublishFab] handleOpenPushSheet 被调用')
+  openPushSheet()
+}
+
 // 推送到Vercel
 async function doPush() {
   console.log('🔍 [PublishFab] doPush 开始执行')
@@ -1145,10 +1244,9 @@ async function doPush() {
   console.log('  - pendingArticles.length:', pendingArticles.value.length)
   console.log('  - pendingDeletes.length:', pendingDeletes.value.length)
 
-  const cm = commitMsg.value.trim()
-  if (!cm) {
-    setPushMsg('请填写提交说明', 'err')
-    return
+  const cm = commitMsg.value.trim() || buildDefaultCommitMessage()
+  if (!commitMsg.value.trim()) {
+    commitMsg.value = cm
   }
   const { user, pass } = readSiteApiCreds()
   console.log('  - 认证状态:', !!(user && pass))
@@ -1173,8 +1271,12 @@ async function doPush() {
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
-        setPushMsg('推送成功！Vercel正在部署...', 'ok')
-        loadHistory()
+        if (data.noChanges) {
+          setPushMsg(data.message || '没有改动需要推送', 'info')
+        } else {
+          setPushMsg(data.commitSha ? `推送成功：${data.commitSha}，Vercel正在部署...` : '推送成功！Vercel正在部署...', 'ok')
+          loadHistory()
+        }
       } else {
         setPushMsg(data.error || '推送失败', 'err')
       }
@@ -1336,11 +1438,22 @@ async function doPush() {
     busy.value = false
     loadHistory()
 
-    // 只有全部成功时才刷新页面
+    // 只有全部成功时才关闭面板并刷新页面
     if (failCount === 0 && (addCount > 0 || delCount > 0)) {
-      setPushMsg(`操作完成，正在刷新页面...`, 'ok')
+      setPushMsg(`操作完成，正在关闭面板并刷新页面...`, 'ok')
+      isClosing.value = true // 设置正在关闭状态
+
+      // 触发推送完成事件（用于其他组件）
+      window.dispatchEvent(new CustomEvent('publish-push-finished'))
+
+      // 1.5秒后关闭面板并刷新页面
       setTimeout(() => {
-        window.location.reload()
+        // 先关闭推送面板
+        pushSheetOpen.value = false
+        // 2秒后刷新页面（给关闭动画留出时间）
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       }, 1500)
     }
   }
@@ -1385,6 +1498,7 @@ onMounted(() => {
   console.log('🔍 [PublishFab] 注册事件监听: add-pending-delete, clear-pending-deletes')
   window.addEventListener('add-pending-delete', handleAddPendingDelete)
   window.addEventListener('clear-pending-deletes', handleClearPendingDeletes)
+  window.addEventListener('open-push-sheet', handleOpenPushSheet)
 
   // 监听主题切换事件
   document.addEventListener('themechange', handleThemeChange)
@@ -1415,6 +1529,7 @@ function handleThemeChange() {
 onUnmounted(() => {
   window.removeEventListener('add-pending-delete', handleAddPendingDelete)
   window.removeEventListener('clear-pending-deletes', handleClearPendingDeletes)
+  window.removeEventListener('open-push-sheet', handleOpenPushSheet)
   document.removeEventListener('themechange', handleThemeChange)
 })
 
@@ -1578,7 +1693,12 @@ watch(pendingDeletes, (val) => {
 
       <!-- 推送管理面板 -->
       <Transition name="lk-publish-sheet">
-        <div v-if="pushSheetOpen" class="lk-publish-backdrop lk-publish-backdrop--sheet" @click.self="pushSheetOpen = false">
+        <div
+          v-if="pushSheetOpen"
+          class="lk-publish-backdrop lk-publish-backdrop--sheet"
+          :class="{ 'lk-publish-backdrop--closing': isClosing }"
+          @click.self="pushSheetOpen = false"
+        >
           <div class="lk-publish-push-sheet" @click.stop>
             <div class="lk-publish-panel__head">
               <h2 class="lk-publish-panel__title">推送管理</h2>
@@ -1675,10 +1795,10 @@ watch(pendingDeletes, (val) => {
             <button
               type="button"
               class="lk-publish-push-btn"
-              :disabled="busy"
+              :disabled="busy || isClosing"
               @click="doPush"
             >
-              {{ busy ? '推送中...' : (pendingArticles.length + pendingDeletes.length) > 0 ? `推送 ${pendingArticles.length > 0 ? `${pendingArticles.length}篇新增` : ''}${pendingArticles.length > 0 && pendingDeletes.length > 0 ? ' / ' : ''}${pendingDeletes.length > 0 ? `${pendingDeletes.length}篇删除` : ''}` : '推送所有改动' }}
+              {{ isClosing ? '操作完成，正在关闭...' : (busy ? '推送中...' : (pendingArticles.length + pendingDeletes.length) > 0 ? `推送 ${pendingArticles.length > 0 ? `${pendingArticles.length}篇新增` : ''}${pendingArticles.length > 0 && pendingDeletes.length > 0 ? ' / ' : ''}${pendingDeletes.length > 0 ? `${pendingDeletes.length}篇删除` : ''}` : '推送所有改动') }}
             </button>
 
             <p v-if="pushMessage" class="lk-publish-msg" :class="`lk-publish-msg--${pushMessageKind}`">{{ pushMessage }}</p>
@@ -2278,6 +2398,32 @@ watch(pendingDeletes, (val) => {
 .lk-publish-panel-enter-from,
 .lk-publish-panel-leave-to {
   opacity: 0;
+}
+
+/* 推送面板关闭动画 */
+.lk-publish-sheet-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.lk-publish-sheet-leave-active {
+  transition: all 0.5s ease-in;
+}
+
+.lk-publish-sheet-enter-from {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.lk-publish-sheet-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+/* 关闭中的面板样式 */
+.lk-publish-push-sheet.lk-publish-push-sheet--closing {
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.5s ease-in;
 }
 
 /* AI 封面生成按钮 */
