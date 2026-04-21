@@ -1,0 +1,71 @@
+{
+  "project": {
+    "name": "network-page",
+    "description": "VuePress 2.x with Vercel deployment",
+    "type": "vuepress"
+  },
+  "environments": {
+    "development": {
+      "command": "npm run dev",
+      "port": 8080,
+      "url": "http://localhost:8080"
+    },
+    "staging": {
+      "command": "vercel dev",
+      "port": 3000,
+      "url": "http://localhost:3000"
+    },
+    "production": {
+      "command": "npm run build",
+      "output": ".vuepress/dist"
+    }
+  },
+  "scripts": {
+    "dev": "vuepress dev docs",
+    "build": "vuepress build docs",
+    "build:trace": "vuepress build docs --debug",
+    "publish:batch": "node scripts/publish-batch.mjs",
+    "push": "node scripts/push.mjs"
+  },
+  "paths": {
+    "docs": "docs",
+    "api": "api",
+    "public": ".vuepress/public",
+    "dist": ".vuepress/dist",
+    "workspace": "workspace"
+  },
+  "ai": {
+    "models": {
+      "default": "claude-sonnet-4-6",
+      "alternatives": ["claude-opus-4-7", "claude-haiku-4-5"]
+    },
+    "prompts": {
+      "development": "Use rapid iteration with local testing",
+      "testing": "Use systematic debugging approach",
+      "deployment": "Use finishing workflow for releases"
+    }
+  },
+  "tools": {
+    "vercel": {
+      "command": "vercel",
+      "dev": "vercel dev",
+      "prod": "vercel --prod"
+    },
+    "git": {
+      "commit": "git commit -m",
+      "push": "git push origin main"
+    }
+  },
+  "features": {
+    "live2d": true,
+    "particles": true,
+    "ai-covers": true,
+    "batch-publishing": true
+  },
+  "compatibility": {
+    "claude-code": true,
+    "codex": true,
+    "cursor": true,
+    "vscode": true
+  }
+}

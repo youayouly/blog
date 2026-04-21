@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev        # Start dev server (localhost:8080)
 npm run build      # Production build with cache cleanup
+npm run build:trace # Build with page-by-page logging for debugging
 ```
 
 ## Architecture Overview
@@ -38,3 +39,50 @@ npm run build      # Production build with cache cleanup
    - Components use scoped styles with `<style scoped>`
 
 **Root Redirect**: The site root `/` redirects to `/about`. The themed homepage is at `/home`.
+
+## Article Publishing System
+
+The site includes a custom article publishing system with the following workflows:
+
+### API Endpoints (in `api/` and `docs/api/`):
+- `/api/publish` - Publish single article
+- `/api/publish-batch` - Publish multiple articles in one commit
+- `/api/delete` - Delete single article
+- `/api/delete-batch` - Delete multiple articles in one commit
+- `/api/cover` - Generate article covers using Dify AI
+
+### Key Scripts:
+- `scripts/copy-api.mjs` - Copies API files to root for Vercel deployment
+- `scripts/article.mjs` - CLI tool for article management (create, push, status)
+- `scripts/push.mjs` - Git push utility with commit message formatting
+- `scripts/sync-article-readme-to-github.mjs` - Syncs README with GitHub
+
+### Article Cover Generation:
+- Uses Dify AI API to generate covers
+- Queued processing (serial generation)
+- Covers stored in `docs/.vuepress/public/gallery/`
+- Supports batch generation with manual application
+
+## Development Notes
+
+### Environment Variables:
+- `LK_PUBLISH_API_URL` - Custom API endpoint for publishing
+- `DIFY_API_URL` / `DIFY_API_KEY` - For AI cover generation
+
+### Vercel Deployment:
+- API files are copied to root before build via `copy-api.mjs`
+- Build process uses `--max-old-space-size=8192` for memory optimization
+- The root `/` redirects to `/about` in VuePress config
+
+### Styling System:
+- Theme uses CSS variables for colors (`--vp-c-brand-1`, etc.)
+- Custom styles in `index.scss` override theme defaults
+- Glassmorphism effects throughout with backdrop-filter
+- Responsive design with mobile-first approach
+
+### Special Features:
+- Live2D widget (toggleable in navbar)
+- Network particle background effects
+- Custom navbar with accessibility controls
+- WeChat Moments-style travel pages
+- Dynamic article cover generation

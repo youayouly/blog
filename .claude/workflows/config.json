@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "projectType": "vuepress-vercel",
+  "defaultWorkflow": "vuepress-vercel-workflow.md",
+  "autoDetect": {
+    "patterns": [
+      "**/vuepress/**",
+      "**/.vuepress/**",
+      "**/vercel.json",
+      "**/api/**/*.js"
+    ]
+  },
+  "commands": {
+    "dev": "npm run dev",
+    "dev:vercel": "vercel dev",
+    "build": "npm run build",
+    "build:trace": "npm run build:trace",
+    "publish:batch": "npm run publish:batch"
+  },
+  "environment": {
+    "development": {
+      "port": 8080,
+      "command": "npm run dev"
+    },
+    "staging": {
+      "port": 3000,
+      "command": "vercel dev"
+    }
+  }
+}
