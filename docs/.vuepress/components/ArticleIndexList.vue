@@ -1,6 +1,33 @@
 <script setup>
 const articles = [
   {
+    slug: 'openclaw',
+    href: '/article/openclaw.html',
+    cover: '/gallery/article-cover-openclaw-1776786251288.svg',
+    date: '2026-04-21T15:45:00.321Z',
+    title: 'openclaw',
+    excerpt: '如果你想在本地玩转大模型，这是最标准的起步流程：',
+    tags: ['AI', 'Local'],
+  },
+  {
+    slug: 'langchain',
+    href: '/article/langchain.html',
+    cover: '/gallery/article-cover-ai-infra-1776786248933.svg',
+    date: '2026-04-21T15:45:00.878Z',
+    title: 'ai infra',
+    excerpt: '设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码。',
+    tags: ['Agent', 'Infra'],
+  },
+  {
+    slug: 'ai模板',
+    href: '/article/ai模板.html',
+    cover: '/gallery/article-cover-ai模板-1776786246873.svg',
+    date: '2026-04-21T15:45:01.300Z',
+    title: 'ai模板',
+    excerpt: '你是 [领域：例如资深前端 / VuePress / DevOps / 数据库] 工程师。优先给出**可验证**的结论与**可执行**的步骤；不确定时明确写「假...',
+    tags: ['Prompt', 'Workflow'],
+  },
+  {
     slug: 'git-release-map',
     href: '/article/git-release-map.html',
     cover: '/gallery/article-cover-2.png',
