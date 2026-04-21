@@ -288,6 +288,73 @@ function countExistingItems(content) {
   return matches ? matches.length : 0
 }
 
+function escapeJsString(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r?\n/g, ' ')
+}
+
+function guessTags(title, excerpt) {
+  const text = `${title} ${excerpt}`.toLowerCase()
+  if (text.includes('agent') || text.includes('mcp') || text.includes('infra')) return ['Agent', 'Infra']
+  if (text.includes('prompt') || text.includes('模板')) return ['Prompt', 'Workflow']
+  if (text.includes('openclaw') || text.includes('langchain') || text.includes('大模型')) return ['AI', 'Local']
+  return ['Article']
+}
+
+function removeObjectByMarker(content, marker) {
+  const markerIndex = content.indexOf(marker)
+  if (markerIndex === -1) return content
+
+  const start = content.lastIndexOf('\n  {', markerIndex)
+  if (start === -1) return content
+
+  let end = content.indexOf('\n  },', markerIndex)
+  let trailingLength = 5
+  if (end === -1) {
+    end = content.indexOf('\n  }', markerIndex)
+    trailingLength = 4
+  }
+  if (end === -1) return content
+
+  return content.slice(0, start) + content.slice(end + trailingLength)
+}
+
+function generateArticleIndexObject(item) {
+  const tags = guessTags(item.title, item.excerpt).map(tag => `'${escapeJsString(tag)}'`).join(', ')
+  return `  {
+    slug: '${escapeJsString(item.slug)}',
+    href: '/article/${escapeJsString(item.slug)}.html',
+    cover: '${escapeJsString(item.cover)}',
+    date: '${escapeJsString(item.date)}',
+    title: '${escapeJsString(item.title)}',
+    excerpt: '${escapeJsString(item.excerpt)}',
+    tags: [${tags}],
+  },`
+}
+
+function updateArticleIndexList(content, items) {
+  const marker = 'const articles = [\n'
+  if (!content.includes(marker)) return null
+
+  let next = content
+  for (const item of items) {
+    next = removeObjectByMarker(next, `slug: '${item.slug}'`)
+  }
+
+  const insertion = items.map(generateArticleIndexObject).join('\n')
+  return next.replace(marker, `${marker}${insertion}\n`)
+}
+
+function readSourceFile(token, repo, branch, filePath) {
+  if (isLocalDev()) {
+    const local = readLocal(filePath)
+    if (local !== null) return Promise.resolve(local)
+  }
+  return getFileContent(token, repo, filePath, branch)
+}
+
 function isLocalDev() {
   return process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === 'development'
 }
@@ -457,6 +524,24 @@ ${content}`
           }
 
           console.log(`[Publish-Batch] 准备更新 README，新增 ${articleItems.length} 篇文章`)
+        }
+      }
+    }
+
+    if (articleItems.length > 0) {
+      const articleIndexPath = 'docs/.vuepress/components/ArticleIndexList.vue'
+      const articleIndexContent = await readSourceFile(GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, articleIndexPath)
+      if (articleIndexContent) {
+        const updatedIndex = updateArticleIndexList(articleIndexContent, articleItems)
+        if (updatedIndex && updatedIndex !== articleIndexContent) {
+          files.push({
+            path: articleIndexPath,
+            content: updatedIndex,
+          })
+          if (isLocalDev()) {
+            saveToLocal(articleIndexPath, updatedIndex)
+          }
+          console.log(`[Publish-Batch] 准备更新 ArticleIndexList，新增 ${articleItems.length} 篇文章`)
         }
       }
     }

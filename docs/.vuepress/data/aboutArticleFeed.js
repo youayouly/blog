@@ -20,6 +20,27 @@ export const recommendedArticles = [
     categories: ['Embedded', 'ML'],
   },
   {
+    title: 'openclaw',
+    href: '/article/openclaw.html',
+    date: '2026-04-21',
+    excerpt: '如果想在本地玩转大模型，这是一条更标准、更可复用的起步流程。',
+    categories: ['AI', 'Local'],
+  },
+  {
+    title: 'ai infra',
+    href: '/article/langchain.html',
+    date: '2026-04-21',
+    excerpt: '设计 Agent、Memory、Chains 与 MCP 交互时，先拆清楚 AI 什么时候查资料、什么时候写代码。',
+    categories: ['Agent', 'Infra'],
+  },
+  {
+    title: 'ai模板',
+    href: '/article/ai模板.html',
+    date: '2026-04-21',
+    excerpt: '把可验证结论、可执行步骤和不确定性说明写进模板，让 AI 输出更稳定。',
+    categories: ['Prompt', 'Workflow'],
+  },
+  {
     title: '用 VuePress 2 搭静态个人站',
     href: '/article/vuepress-stack-notes.html',
     date: '2026-04-02',
@@ -48,6 +69,12 @@ export const timelineItems = [
   {
     date: '2026-04-21',
     title: '收敛 blog-v1：删除测试短文，保留可发布文章索引',
+    category: 'Article',
+  },
+  {
+    date: '2026-04-21',
+    title: '批量发布 openclaw、ai infra、ai模板 三篇短文',
+    href: '/article/openclaw.html',
     category: 'Article',
   },
   {

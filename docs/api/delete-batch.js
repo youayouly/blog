@@ -271,13 +271,9 @@ module.exports = async function handler(req, res) {
     for (const slug of slugs) {
       const filePath = `${dir}/${slug}.md`
       const sha = await getFileSha(GITHUB_TOKEN, GITHUB_REPO, filePath, GITHUB_BRANCH)
-      const existsLocal = fs.existsSync(localPath(filePath))
 
       if (sha) {
         filesToDelete.push({ path: filePath, sha })
-        succeededSlugs.push(slug)
-      } else if (existsLocal && isLocalDev()) {
-        deleteLocal(filePath)
         succeededSlugs.push(slug)
       }
     }
@@ -333,7 +329,7 @@ module.exports = async function handler(req, res) {
       )
     }
 
-    if (isLocalDev()) {
+    if (isLocalDev() && commitSha) {
       for (const slug of succeededSlugs) deleteLocal(`${dir}/${slug}.md`)
     }
 

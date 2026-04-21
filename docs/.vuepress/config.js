@@ -138,6 +138,9 @@ export default defineUserConfig({
       '/article/': [
         { text: 'Articles', link: '/article/' },
         { text: 'Git Release Map', link: '/article/git-release-map.html' },
+        { text: 'OpenClaw Local Setup', link: '/article/openclaw.html' },
+        { text: 'AI Infra Notes', link: '/article/langchain.html' },
+        { text: 'AI Prompt Template', link: '/article/ai模板.html' },
         { text: 'Edge AI Sketch', link: '/article/edge-ai-sketch.html' },
         { text: 'VuePress Stack Notes', link: '/article/vuepress-stack-notes.html' },
       ],

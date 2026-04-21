@@ -23,6 +23,33 @@ const articles = [
     tags: ['Embedded', 'ML'],
   },
   {
+    slug: 'openclaw',
+    href: '/article/openclaw.html',
+    cover: '/gallery/article-cover-openclaw-1776784367802.svg',
+    date: '2026-04-21T15:14:27.497Z',
+    title: 'openclaw',
+    excerpt: '如果你想在本地玩转大模型，这是最标准的起步流程。',
+    tags: ['AI', 'Local'],
+  },
+  {
+    slug: 'langchain',
+    href: '/article/langchain.html',
+    cover: '/gallery/article-cover-ai-infra-1776784365723.svg',
+    date: '2026-04-21T15:14:28.143Z',
+    title: 'ai infra',
+    excerpt: '设计 Agent、Memory、Chains 与 MCP 交互时，先拆清楚 AI 什么时候查资料、什么时候写代码。',
+    tags: ['Agent', 'Infra'],
+  },
+  {
+    slug: 'ai模板',
+    href: '/article/ai模板.html',
+    cover: '/gallery/article-cover-ai模板-1776784363590.svg',
+    date: '2026-04-21T15:14:28.969Z',
+    title: 'ai模板',
+    excerpt: '把可验证结论、可执行步骤和不确定性说明写进模板，让 AI 输出更稳定。',
+    tags: ['Prompt', 'Workflow'],
+  },
+  {
     slug: 'vuepress-stack-notes',
     href: '/article/vuepress-stack-notes.html',
     cover:
