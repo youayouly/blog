@@ -6,3 +6,16 @@ docs/.vuepress/.temp/
 .vercel
 .env*.local
 api/
+.npmrc
+.cursor/debug-*.log
+docs/agents/
+docs/skills/
+docs/article/*_backup.md
+docs/article/test-article.md
+scripts/add-covers-to-git.js
+scripts/queue-order-test.mjs
+scripts/test-cover-generation.mjs
+\#
+\{
+形成死循环。
+workspace/cloud/temp/vuepress-dev*.log

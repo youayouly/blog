@@ -1,0 +1,4 @@
+interface:
+  display_name: "Context Checkpoint"
+  short_description: "Write and restore compact task handoff checkpoints."
+  default_prompt: "Create a compact checkpoint for the current task, including state, evidence, next actions, and verification."

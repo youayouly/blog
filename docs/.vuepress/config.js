@@ -25,6 +25,7 @@ function countArticleMarkdown(rootDir) {
     }
     for (const name of names) {
       if (name.startsWith('.')) continue
+      if (name === 'agents' || name === 'skills') continue
       const full = join(dir, name)
       let st
       try {
@@ -33,7 +34,12 @@ function countArticleMarkdown(rootDir) {
         continue
       }
       if (st.isDirectory()) walk(full)
-      else if (name.endsWith('.md') && normPath(full) !== readme) n++
+      else if (
+        name.endsWith('.md') &&
+        !name.endsWith('_backup.md') &&
+        !name.startsWith('test-') &&
+        normPath(full) !== readme
+      ) n++
     }
   }
   walk(rootDir)
@@ -62,7 +68,10 @@ export default defineUserConfig({
   pagePatterns: [
     '**/*.md',
     '!.vuepress',
+    '!agents/**',
+    '!skills/**',
     '!**/*_backup.md',
+    '!**/test-*.md',
   ],
   plugins: [lkBuildTracePlugin()],
   bundler: viteBundler({
@@ -128,9 +137,8 @@ export default defineUserConfig({
       '/travel/': 'structure',
       '/article/': [
         { text: 'Articles', link: '/article/' },
-        { text: 'Edge AI 随笔', link: '/article/edge-ai-sketch.html' },
-        { text: 'VuePress 短文', link: '/article/vuepress-stack-notes.html' },
-        { text: '大模型', link: '/article/langchain.html' },
+        { text: 'Git Release Map', link: '/article/git-release-map.html' },
+        { text: 'VuePress Stack Notes', link: '/article/vuepress-stack-notes.html' },
       ],
       '/': 'structure',
     },
