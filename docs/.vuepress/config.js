@@ -150,6 +150,7 @@ export default defineUserConfig({
     plugins: {
       redirect: {
         config: {
+          '/article.html': '/article/',
           '/comments/': '/article/',
           '/comments': '/article/',
         },
