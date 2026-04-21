@@ -7,35 +7,9 @@ const articles = [
     date: '2026-04-21',
     title: 'Git 发布流水线：从本地改动到 Vercel Release',
     excerpt:
-      '把暂存、提交、同步、推送、部署和排错拆成几个稳定模块，顺手记录这几次图片与批量发布 Release 踩过的坑。',
-    tags: ['Git', 'Release'],
-  },
-  {
-    slug: 'openclaw',
-    href: '/article/openclaw.html',
-    cover: '/gallery/article-cover-openclaw-1776709183886.jpg',
-    date: '2026-04-20T18:19:56.004Z',
-    title: 'openclaw',
-    excerpt: '如果你想在本地玩转大模型，这是最标准的起步流程。',
-    tags: ['AI', 'Local'],
-  },
-  {
-    slug: 'langchain',
-    href: '/article/langchain.html',
-    cover: '/gallery/article-cover-ai-infra-1776709132684.jpg',
-    date: '2026-04-20T18:19:56.540Z',
-    title: 'ai infra',
-    excerpt: '设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码。',
-    tags: ['Agent', 'Infra'],
-  },
-  {
-    slug: 'ai模板',
-    href: '/article/ai模板.html',
-    cover: '/gallery/article-cover-ai模板-1776709103241.jpg',
-    date: '2026-04-20T18:19:56.943Z',
-    title: 'ai模板',
-    excerpt: '把可验证结论、可执行步骤和不确定性说明写进模板，让 AI 输出更稳定。',
-    tags: ['Prompt', 'Workflow'],
+      '把暂存、提交、同步、推送、部署和排错拆成几个稳定模块，记录图片、批量发布和 Vercel Release 踩过的坑。',
+    tags: ['Pinned', 'Git', 'Release'],
+    pinned: true,
   },
   {
     slug: 'edge-ai-sketch',
@@ -73,6 +47,11 @@ const articles = [
   },
 ]
 
+const sortedArticles = [...articles].sort((a, b) => {
+  if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+  return new Date(b.date).getTime() - new Date(a.date).getTime()
+})
+
 function isReverse(index) {
   return index % 2 === 1
 }
@@ -81,15 +60,15 @@ function isReverse(index) {
 <template>
   <div class="lk-blog">
     <p class="lk-blog__intro">
-      工程笔记、工具链与项目随笔，按时间倒序排列。新发布的短文会优先出现在列表上方。
+      工程笔记、工具链与项目随笔。置顶文章会优先展示，其余内容按时间倒序排列。
     </p>
 
     <ol class="lk-blog__list">
       <li
-        v-for="(article, index) in articles"
+        v-for="(article, index) in sortedArticles"
         :key="article.href"
         class="lk-blog__item"
-        :class="{ 'lk-blog__item--external': article.external }"
+        :class="{ 'lk-blog__item--external': article.external, 'lk-blog__item--pinned': article.pinned }"
         :data-slug="article.slug"
       >
         <a class="lk-blog__card" :href="article.href">
