@@ -290,12 +290,19 @@ function extractKeywords(text, maxKeywords = 3) {
 
 // 图片生成后端选项
 const imageBackendOptions = [
+  { value: 'svg', label: '本地 SVG（免费稳定）', free: true },
+  { value: 'pollinations', label: 'Pollinations（免费额度/API Key）', free: true },
   { value: 'unsplash', label: 'Unsplash（照片）', free: true },
+  { value: 'cloudflare', label: 'Cloudflare Workers AI', free: true },
   { value: 'siliconflow', label: '硅基流动（AI生图）', free: false },
   { value: 'dify', label: 'Dify 工作流', free: false },
   { value: 'huggingface', label: 'Hugging Face（免费）', free: true },
 ]
-const imageBackend = ref('dify')
+const imageBackend = ref('svg')
+
+function shouldAutoGenerateCovers() {
+  return imageBackend.value !== 'unsplash'
+}
 
 // AI 封面生成状态
 const generatingCover = ref(false)
@@ -649,7 +656,7 @@ async function readFile(file) {
 
     // Dify 后端：使用占位图，稍后自动生成真实封面
     // 其他后端：直接生成封面 URL
-    const shouldAutoGenerate = imageBackend.value === 'dify'
+    const shouldAutoGenerate = shouldAutoGenerateCovers()
     const cover = shouldAutoGenerate
       ? generatePlaceholderImage(extractedTitle || fileSlug, [])
       : generateCoverUrl(extractedTitle || fileSlug, extractedExcerpt || '', text)
@@ -705,7 +712,7 @@ async function readFiles(files) {
   }
 
   // 所有文件添加完后，按顺序生成封面（从下到上，即先拖入的文件先处理）
-  if (articleIds.length > 0 && imageBackend.value === 'dify') {
+  if (articleIds.length > 0 && shouldAutoGenerateCovers()) {
     console.log(`📷 [批量处理] 开始按顺序生成 ${articleIds.length} 篇文章的封面`)
     console.log(`📷 [批量处理] 处理顺序:`, articleIds)
     // 标记正在批量处理
@@ -733,7 +740,7 @@ async function readFileQuick(file) {
     const articleId = `article-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
     // Dify 后端：使用占位图，稍后自动生成真实封面
-    const shouldAutoGenerate = imageBackend.value === 'dify'
+    const shouldAutoGenerate = shouldAutoGenerateCovers()
     const cover = shouldAutoGenerate
       ? generatePlaceholderImage(extractedTitle || fileSlug, [])
       : generateCoverUrl(extractedTitle || fileSlug, extractedExcerpt || '', text)
@@ -818,7 +825,7 @@ function addManualArticle() {
   setMsg(`已添加（共${pendingArticles.value.length}篇待推送）`, 'ok')
 
   // Dify 后端：自动生成真实封面（如果没有手动生成的封面）
-  if (!cover && imageBackend.value === 'dify') {
+  if (!cover && shouldAutoGenerateCovers()) {
     console.log(`📷 [手动添加] 触发自动生成封面, articleId: ${articleId}`)
     autoGenerateCover(articleId)
   }

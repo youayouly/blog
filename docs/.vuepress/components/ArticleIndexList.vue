@@ -12,6 +12,17 @@ const articles = [
     pinned: true,
   },
   {
+    slug: 'edge-ai-sketch',
+    href: '/article/edge-ai-sketch.html',
+    cover:
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    date: '2026-04-12 20:53',
+    title: 'Edge AI 部署流水线的几笔记录',
+    excerpt:
+      '从模型导出、量化到设备端推理验证，整理一条最小可走的检查清单，方便以后项目复用。',
+    tags: ['Embedded', 'ML'],
+  },
+  {
     slug: 'vuepress-stack-notes',
     href: '/article/vuepress-stack-notes.html',
     cover:

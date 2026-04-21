@@ -13,6 +13,13 @@ export const recommendedArticles = [
     categories: ['Git', 'Release'],
   },
   {
+    title: 'Edge AI 部署流水线的几笔记录',
+    href: '/article/edge-ai-sketch.html',
+    date: '2026-04-12',
+    excerpt: '从模型导出、量化到设备端推理验证，整理一条最小可走的检查清单。',
+    categories: ['Embedded', 'ML'],
+  },
+  {
     title: '用 VuePress 2 搭静态个人站',
     href: '/article/vuepress-stack-notes.html',
     date: '2026-04-02',
@@ -47,6 +54,12 @@ export const timelineItems = [
     date: '2026-04-20',
     title: '提交封面图片资源，解决云端构建缺失文件问题',
     category: 'Deploy',
+  },
+  {
+    date: '2026-04-12',
+    title: 'Edge AI 部署流水线的几笔记录',
+    href: '/article/edge-ai-sketch.html',
+    category: 'Article',
   },
   {
     date: '2026-04-02',
