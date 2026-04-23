@@ -130,9 +130,6 @@ function formatDate(value) {
 
 <template>
   <div class="lk-blog lk-blog-fullbleed lk-article-three">
-    <p class="lk-article-three__intro">
-      工程笔记、工具链与项目随笔。左侧按标签分类，中间展示文章。
-    </p>
 
     <div class="lk-article-three__content">
       <aside class="lk-article-three__left">
