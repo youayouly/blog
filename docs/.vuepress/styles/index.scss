@@ -1739,8 +1739,7 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .theme-hope-content {
 
 .lk-proj-hub-fullbleed {
   --lk-proj-portfolio-w: 400px;
-  --lk-proj-main-max: 1360px;
-  --lk-proj-col-gap: 20px;
+  --lk-proj-col-gap: 24px;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
@@ -1793,10 +1792,6 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   gap: var(--lk-proj-col-gap);
   align-items: start;
   width: 100%;
-  max-width: calc(
-    var(--lk-proj-portfolio-w) + var(--lk-proj-main-max) +
-      var(--lk-proj-col-gap)
-  );
   margin: 0 auto;
   flex: none;
   overflow: visible;
@@ -1910,11 +1905,8 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   flex-direction: column;
   min-width: 0;
   width: 100%;
-  max-width: var(--lk-proj-main-max);
   height: auto;
-  justify-self: center;
   overflow: visible;
-  padding-right: 8px;
 }
 
 .lk-proj-hub-layout__main > h2:first-of-type {

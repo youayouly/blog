@@ -102,16 +102,16 @@ export default defineUserConfig({
 
     navbar: [
       { text: 'Home', link: '/home' },
+      { text: 'About Me', link: '/about' },
+      { text: '💻 Projects', link: '/tech/' },
+      { text: '📝 Article', link: '/article/' },
       {
-        text: 'About Me',
-        link: '/about',
+        text: 'More',
         children: [
           { text: '🎓 Study Abroad', link: '/study/' },
           { text: '📷 Album', link: '/travel/' },
         ],
       },
-      { text: '💻 Projects', link: '/tech/' },
-      { text: '📝 Article', link: '/article/' },
     ],
 
     sidebar: {
