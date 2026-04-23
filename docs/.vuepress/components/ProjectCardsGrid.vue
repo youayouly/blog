@@ -44,12 +44,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { PROJECT_ROLES } from '../data/projectRoles.js'
 
 const currentRole = ref('all')
-const gridColumns = ref(4)
 
 const roleMapping = {
   'Product Operations': 'pm',
@@ -126,65 +125,14 @@ const filteredItems = computed(() => {
 })
 
 const visibleItems = computed(() => filteredItems.value)
-const gridRows = computed(() => Math.max(1, Math.ceil(visibleItems.value.length / gridColumns.value)))
 
-function hashString(str) {
-  let h = 2166136261
-  for (let i = 0; i < str.length; i += 1) {
-    h ^= str.charCodeAt(i)
-    h = Math.imul(h, 16777619)
+function cardSurfaceStyle(item) {
+  const style = {}
+  if (item.cover) {
+    style.backgroundImage = `linear-gradient(138deg, rgba(6, 16, 34, 0.92), rgba(7, 18, 40, 0.96)), url('${item.cover}')`
   }
-  return h >>> 0
+  return style
 }
-
-function mulberry32(a) {
-  return function next() {
-    let t = (a += 0x6d2b79f5)
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-function syncGridColumns() {
-  if (typeof window === 'undefined') return
-
-  const width = window.innerWidth
-  if (width <= 1023) gridColumns.value = 1
-  else if (width <= 1399) gridColumns.value = 2
-  else if (width <= 1799) gridColumns.value = 3
-  else gridColumns.value = 4
-}
-
-function cardSurfaceStyle(item, idx) {
-  const seed = hashString(`${item.title}\0${item.to}`)
-  const rnd = mulberry32(seed)
-  const cols = gridColumns.value
-  const rows = gridRows.value
-  const row = Math.floor(idx / cols)
-  const col = idx % cols
-  const tintAlpha = 0.16 + rnd() * 0.1
-  const backgroundX = cols <= 1 ? 50 : (col / (cols - 1)) * 100
-  const backgroundY = rows <= 1 ? 50 : (row / (rows - 1)) * 100
-
-  return {
-    '--proj-grid-cols': String(cols),
-    '--proj-grid-rows': String(rows),
-    '--proj-bg-x': `${backgroundX.toFixed(3)}%`,
-    '--proj-bg-y': `${backgroundY.toFixed(3)}%`,
-    '--proj-tint': `rgba(6, 18, 38, ${tintAlpha.toFixed(3)})`,
-  }
-}
-
-onMounted(() => {
-  syncGridColumns()
-  window.addEventListener('resize', syncGridColumns, { passive: true })
-})
-
-onBeforeUnmount(() => {
-  if (typeof window === 'undefined') return
-  window.removeEventListener('resize', syncGridColumns)
-})
 </script>
 
 <style scoped>
@@ -269,43 +217,17 @@ onBeforeUnmount(() => {
 }
 
 .lk-proj-cards__grid {
-  --lk-proj-card-w: 238px;
-  --lk-proj-card-h: 238px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, var(--lk-proj-card-w)));
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   width: 100%;
-  max-width: calc(4 * var(--lk-proj-card-w) + 3 * 20px);
-  justify-content: start;
-}
-
-@media (max-width: 1799px) {
-  .lk-proj-cards__grid {
-    grid-template-columns: repeat(3, minmax(0, var(--lk-proj-card-w)));
-    max-width: calc(3 * var(--lk-proj-card-w) + 2 * 20px);
-  }
-}
-
-@media (max-width: 1399px) {
-  .lk-proj-cards__grid {
-    grid-template-columns: repeat(2, minmax(0, var(--lk-proj-card-w)));
-    max-width: calc(2 * var(--lk-proj-card-w) + 20px);
-  }
-}
-
-@media (max-width: 1023px) {
-  .lk-proj-cards__grid {
-    grid-template-columns: minmax(0, min(100%, 420px));
-    max-width: 420px;
-  }
 }
 
 .lk-proj-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  min-height: var(--lk-proj-card-h);
-  aspect-ratio: 1 / 1;
+  min-height: 180px;
   border: 1px solid rgba(96, 165, 250, 0.28);
   border-radius: 14px;
   color: rgba(241, 245, 249, 0.96);
@@ -315,21 +237,12 @@ onBeforeUnmount(() => {
     box-shadow 0.18s ease,
     border-color 0.18s ease;
   text-decoration: none;
-  display: block;
+  display: grid;
+  grid-template-columns: 1fr auto;
   background:
-    linear-gradient(138deg, rgba(6, 16, 34, 0.18), rgba(7, 18, 40, 0.34)),
-    url('/gallery/star-source.png'),
-    linear-gradient(138deg, rgba(6, 16, 34, 0.98), rgba(7, 18, 40, 0.96));
-  background-size:
-    cover,
-    calc(var(--proj-grid-cols, 4) * 100%) calc(var(--proj-grid-rows, 3) * 100%),
-    cover,
-    cover;
-  background-position:
-    center,
-    var(--proj-bg-x, 50%) var(--proj-bg-y, 50%),
-    center,
-    center;
+    linear-gradient(138deg, rgba(6, 16, 34, 0.92), rgba(7, 18, 40, 0.96));
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
 }
 
@@ -338,18 +251,16 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    linear-gradient(168deg, rgba(2, 6, 23, 0.32), rgba(2, 6, 23, 0.82)),
-    linear-gradient(0deg, var(--proj-tint), var(--proj-tint));
+  background: linear-gradient(90deg, rgba(2, 6, 23, 0.88) 0%, rgba(2, 6, 23, 0.6) 55%, rgba(2, 6, 23, 0.3) 100%);
 }
 
 .lk-proj-card__body {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 0.85rem;
-  min-height: var(--lk-proj-card-h);
-  padding: 16px 14px 14px;
+  gap: 0.65rem;
+  padding: 20px 24px;
+  align-content: center;
 }
 
 .lk-proj-card__top {
@@ -381,10 +292,9 @@ onBeforeUnmount(() => {
   color: rgba(241, 245, 249, 0.92);
   font-size: 0.88rem;
   line-height: 1.6;
-  min-height: 5.6rem;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
