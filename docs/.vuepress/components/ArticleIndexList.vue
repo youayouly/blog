@@ -261,7 +261,7 @@ function formatDate(value) {
 .lk-article-three__content {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr) 280px;
-  gap: 1.5rem;
+  gap: 2.5rem;
   align-items: start;
 }
 
