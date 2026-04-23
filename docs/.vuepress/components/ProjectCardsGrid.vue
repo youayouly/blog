@@ -23,9 +23,9 @@
         :key="item.title"
         :to="item.to"
         class="lk-proj-card"
-        :style="cardSurfaceStyle(item, idx)"
         :aria-label="item.title"
       >
+        <img v-if="item.cover" class="lk-proj-card__bg" :src="item.cover" alt="" aria-hidden="true" />
         <div class="lk-proj-card__scrim" aria-hidden="true" />
         <div class="lk-proj-card__body">
           <header class="lk-proj-card__top">
@@ -125,14 +125,6 @@ const filteredItems = computed(() => {
 })
 
 const visibleItems = computed(() => filteredItems.value)
-
-function cardSurfaceStyle(item) {
-  const style = {}
-  if (item.cover) {
-    style.backgroundImage = `linear-gradient(138deg, rgba(6, 16, 34, 0.92), rgba(7, 18, 40, 0.96)), url('${item.cover}')`
-  }
-  return style
-}
 </script>
 
 <style scoped>
@@ -243,6 +235,16 @@ function cardSurfaceStyle(item) {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.lk-proj-card__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
 }
 
 .lk-proj-card__scrim {
