@@ -45,6 +45,8 @@ const rows = computed(() => {
 .lk-about-timeline {
   position: relative;
   min-width: 0;
+  margin-left: 0;
+  margin-right: 0;
   --lk-time-rail: rgba(37, 99, 235, 0.2);
   --lk-time-dot: #2563eb;
   --lk-time-year-bg: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
@@ -63,7 +65,7 @@ const rows = computed(() => {
   position: relative;
   list-style: none;
   margin: 0;
-  padding: 0.25rem 0 0.25rem 1rem;
+  padding: 0.25rem 0 0.25rem 1.5rem;
 }
 
 .lk-about-timeline__list::before {
@@ -71,7 +73,7 @@ const rows = computed(() => {
   position: absolute;
   top: 0.35rem;
   bottom: 0.35rem;
-  left: 1.2rem;
+  left: 1.7rem;
   width: 2px;
   background: var(--lk-time-rail);
   border-radius: 1px;
@@ -84,6 +86,7 @@ const rows = computed(() => {
   gap: 0.45rem;
   align-items: start;
   padding: 0.55rem 0;
+  margin-left: 0;
 }
 
 .lk-about-timeline__item:first-child {

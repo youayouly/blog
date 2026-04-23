@@ -23,7 +23,9 @@ const categories = ARTICLE_CATEGORIES
 .lk-about-categories {
   position: sticky;
   top: calc(var(--navbar-height, 3.6rem) + 0.75rem);
-  padding: 0.85rem 0.65rem 0.95rem;
+  padding: 0.85rem 0.95rem 0.95rem 0.65rem;
+  margin-left: 0;
+  margin-right: 0;
   border-radius: 12px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -53,7 +55,7 @@ const categories = ARTICLE_CATEGORIES
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.42rem 0.45rem;
+  padding: 0.42rem 0.55rem;
   margin: 0.1rem 0;
   border-radius: 8px;
   text-decoration: none;

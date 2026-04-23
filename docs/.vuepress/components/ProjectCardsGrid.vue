@@ -456,21 +456,22 @@ const items = [
 
 .lk-proj-cards__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, 320px);
   gap: 20px;
   width: 100%;
   margin: 0;
+  justify-content: center;
 }
 
 @media (max-width: 1799px) {
   .lk-proj-cards__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, 380px);
   }
 }
 
 @media (max-width: 1399px) {
   .lk-proj-cards__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 480px);
   }
 }
 

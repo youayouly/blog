@@ -2384,6 +2384,8 @@ main.vp-page:has(.lk-blog-fullbleed),
   max-width: none;
   margin-left: calc(-1 * var(--lk-about-pull));
   margin-right: calc(-1 * var(--lk-about-push));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   box-sizing: border-box;
 }
 
@@ -2401,6 +2403,8 @@ main.vp-page:has(.lk-about-fullbleed),
   width: 100%;
   max-width: 100%;
   margin-bottom: 1.5rem;
+  padding-left: 0;
+  padding-right: 0;
   box-sizing: border-box;
 
   // 平板：三列变单列
