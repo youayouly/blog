@@ -99,7 +99,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { PROJECT_ROLES } from '@data/projectRoles.js'
+import { PROJECT_ROLES } from '../data/projectRoles.js'
 
 const pageSize = 9
 const currentPage = ref(1)
