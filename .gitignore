@@ -19,3 +19,4 @@ scripts/test-cover-generation.mjs
 \{
 形成死循环。
 workspace/cloud/temp/vuepress-dev*.log
+workspace/configs/env/.env
