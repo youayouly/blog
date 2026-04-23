@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 0.65rem;
   margin-bottom: 1.5rem;
-  padding: 1rem 0.25rem 0.75rem;
+  padding: 1rem 0 0.75rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.22);
   background: linear-gradient(180deg, rgba(30, 41, 59, 0.42) 0%, rgba(15, 23, 42, 0.28) 100%);
   border-radius: 12px;
@@ -276,8 +276,7 @@ onBeforeUnmount(() => {
   gap: 20px;
   width: 100%;
   max-width: calc(4 * var(--lk-proj-card-w) + 3 * 20px);
-  margin: 0 auto;
-  justify-content: center;
+  justify-content: start;
 }
 
 @media (max-width: 1799px) {
