@@ -1,16 +1,15 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useIsLoggedIn } from '../utils/authGate.js'
 
 const isLoggedIn = useIsLoggedIn()
 const batchMode = ref(false)
-const selectedItems = ref([])  // 改用数组，Vue响应式更好
-const deleting = ref(false)
+const selectedItems = ref([])
 const message = ref('')
 const mounted = ref(false)
-
-// 待删除计数（从 localStorage 读取）
+const batchOpsTarget = ref(null)
 const pendingDeleteCount = ref(0)
+const isArticlePage = ref(false)
 
 const selectedCount = computed(() => selectedItems.value.length)
 
@@ -23,12 +22,10 @@ function toggleBatchMode() {
   updateCheckboxVisibility()
 }
 
-// 切换选择（排除预览卡片）
 function toggleItem(slug) {
-  // 检查是否是预览卡片
   const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]`)
   if (item?.classList.contains('lk-blog__item--preview')) {
-    message.value = '预览卡片请从待推送列表移除'
+    message.value = '预览文章请从待推送列表移除'
     return
   }
 
@@ -44,7 +41,7 @@ function toggleItem(slug) {
 function selectAll() {
   const items = document.querySelectorAll('.lk-blog__item[data-slug]:not(.lk-blog__item--preview)')
   selectedItems.value = []
-  items.forEach(item => {
+  items.forEach((item) => {
     const slug = item.getAttribute('data-slug')
     if (slug && !selectedItems.value.includes(slug)) {
       selectedItems.value.push(slug)
@@ -60,7 +57,7 @@ function clearSelection() {
 
 function updateCheckboxes() {
   const items = document.querySelectorAll('.lk-blog__item[data-slug]:not(.lk-blog__item--preview)')
-  items.forEach(item => {
+  items.forEach((item) => {
     const slug = item.getAttribute('data-slug')
     const checkbox = item.querySelector('.lk-batch-checkbox')
     if (checkbox && slug) {
@@ -79,37 +76,32 @@ async function batchDelete() {
   const confirmed = confirm(`将 ${slugs.length} 篇文章标记为待删除？\n\n${slugs.join('\n')}\n\n删除将在推送时生效`)
   if (!confirmed) return
 
-  console.log('🔍 [ArticleBatchOps] batchDelete 开始执行')
+  console.log('[ArticleBatchOps] batchDelete 开始执行')
   console.log('  - 选中的 slugs:', slugs)
 
-  // 获取文章标题并添加到待删除列表
-  slugs.forEach(slug => {
+  slugs.forEach((slug) => {
     const item = document.querySelector(`.lk-blog__item[data-slug="${slug}"]:not(.lk-blog__item--preview)`)
     if (!item) {
       console.log('  - 跳过:', slug, '(未找到 DOM 元素)')
       return
     }
 
-    const titleEl = item?.querySelector('.lk-blog__post-title')
+    const titleEl = item.querySelector('.lk-blog__post-title')
     const title = titleEl?.textContent || slug
 
     console.log('  - 触发事件 add-pending-delete:', { slug, title })
 
-    // 【Bug 3 修复】使用 CustomEvent 替代 __vueParentComponent
     const event = new CustomEvent('add-pending-delete', { detail: { slug, title } })
     const dispatched = window.dispatchEvent(event)
-    console.log('  - 事件已触发, 返回值:', dispatched)
+    console.log('  - 事件已触发? 返回值:', dispatched)
 
-    // 添加删除标记样式
     item.classList.add('lk-blog__item--pending-delete')
 
-    // 隐藏复选框
     const checkboxWrapper = item.querySelector('.lk-batch-checkbox-wrapper')
     if (checkboxWrapper) {
       checkboxWrapper.style.display = 'none'
     }
 
-    // 添加"即将删除"标志（如果不存在）
     if (!item.querySelector('.lk-delete-badge')) {
       const badge = document.createElement('span')
       badge.className = 'lk-delete-badge'
@@ -131,7 +123,7 @@ async function batchDelete() {
     }
   })
 
-  console.log('🔍 [ArticleBatchOps] batchDelete 完成, pendingDeletes 应该已更新')
+  console.log('[ArticleBatchOps] batchDelete 完成, pendingDeletes 应该已更新')
   console.log('  - localStorage lk_pending_deletes:', localStorage.getItem('lk_pending_deletes'))
 
   message.value = `已标记 ${slugs.length} 篇文章为待删除，点击推送按钮完成删除`
@@ -142,16 +134,14 @@ async function batchDelete() {
   window.dispatchEvent(new CustomEvent('open-push-sheet'))
 }
 
-// 取消所有待删除文章
 function cancelAllDeletes() {
   const items = document.querySelectorAll('.lk-blog__item--pending-delete')
-  items.forEach(item => {
+  items.forEach((item) => {
     item.classList.remove('lk-blog__item--pending-delete')
     const badge = item.querySelector('.lk-delete-badge')
     if (badge) badge.remove()
   })
 
-  // 【Bug 3 修复】使用 CustomEvent 清空待删除列表
   window.dispatchEvent(new CustomEvent('clear-pending-deletes'))
   message.value = '已取消所有待删除文章'
   pendingDeleteCount.value = 0
@@ -177,20 +167,18 @@ function batchPrint() {
 }
 
 function injectCheckboxes() {
-  // 选中所有文章项，包括 external 的，但排除预览卡片
   const items = document.querySelectorAll('.lk-blog__item:not(.lk-blog__item--preview)')
-  items.forEach(item => {
+  items.forEach((item) => {
     if (item.querySelector('.lk-batch-checkbox')) return
 
     const link = item.querySelector('a.lk-blog__card')
     if (!link) return
 
     const href = link.getAttribute('href') || ''
-    // 匹配 /article/xxx.html 或 /tech/xxx.html
     const match = href.match(/\/(article|tech)\/(.+)\.html/)
     if (!match) return
-    const slug = match[2] // 获取文件名部分
 
+    const slug = match[2]
     item.setAttribute('data-slug', slug)
 
     const checkboxWrapper = document.createElement('div')
@@ -225,25 +213,27 @@ function injectCheckboxes() {
     item.style.position = 'relative'
     item.insertBefore(checkboxWrapper, item.firstChild)
 
-    // 在整个item上添加点击事件，批量模式下阻止链接跳转
-    item.addEventListener('click', (e) => {
-      if (batchMode.value && !item.classList.contains('lk-blog__item--pending-delete')) {
-        e.preventDefault()
-        e.stopPropagation()
-        toggleItem(slug)
-      }
-    }, true)
+    item.addEventListener(
+      'click',
+      (e) => {
+        if (batchMode.value && !item.classList.contains('lk-blog__item--pending-delete')) {
+          e.preventDefault()
+          e.stopPropagation()
+          toggleItem(slug)
+        }
+      },
+      true,
+    )
   })
 }
 
 function updateCheckboxVisibility() {
   const wrappers = document.querySelectorAll('.lk-batch-checkbox-wrapper')
-  wrappers.forEach(wrapper => {
+  wrappers.forEach((wrapper) => {
     wrapper.style.display = batchMode.value ? 'flex' : 'none'
   })
 }
 
-// 更新待删除计数
 function updatePendingDeleteCount() {
   try {
     const saved = localStorage.getItem('lk_pending_deletes')
@@ -258,26 +248,43 @@ function updatePendingDeleteCount() {
   }
 }
 
-// 在 article 页面才显示
-const isArticlePage = ref(false)
+function resolveBatchOpsTarget() {
+  if (typeof document === 'undefined') return
+
+  batchOpsTarget.value =
+    document.querySelector('.lk-blog__sidebar') ||
+    document.querySelector('.lk-blog__right-sidebar') ||
+    document.querySelector('.theme-hope-content') ||
+    document.querySelector('.vp-page') ||
+    document.body
+}
 
 function checkPage() {
   if (typeof window === 'undefined') return
   const path = window.location.pathname
   isArticlePage.value = path === '/article/' || path === '/article' || path.startsWith('/article/')
+
+  if (isArticlePage.value) {
+    resolveBatchOpsTarget()
+  } else {
+    batchOpsTarget.value = null
+  }
 }
 
 onMounted(() => {
+  resolveBatchOpsTarget()
   mounted.value = true
   checkPage()
   updatePendingDeleteCount()
   setTimeout(injectCheckboxes, 500)
+  setTimeout(resolveBatchOpsTarget, 500)
   setInterval(checkPage, 1000)
   // 定期更新待删除计数
   setInterval(updatePendingDeleteCount, 2000)
 
   const observer = new MutationObserver(() => {
     injectCheckboxes()
+    resolveBatchOpsTarget()
   })
   observer.observe(document.body, { childList: true, subtree: true })
 
@@ -289,15 +296,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <Teleport v-if="mounted && isArticlePage && isLoggedIn" to=".vp-sidebar-links">
-    <li class="lk-batch-sidebar-card">
+  <Teleport v-if="mounted && isArticlePage && isLoggedIn" :to="batchOpsTarget">
+    <div class="lk-batch-sidebar-card">
       <div class="lk-batch-card">
         <div class="lk-batch-card__head">
           <span class="lk-batch-card__title">批量操作</span>
           <span v-if="batchMode" class="lk-batch-card__count">已选 {{ selectedCount }} 篇</span>
         </div>
 
-        <!-- 简化的按钮组 -->
         <div class="lk-batch-card__buttons">
           <button
             v-if="!batchMode"
@@ -316,7 +322,9 @@ onMounted(() => {
               class="lk-batch-card__btn lk-batch-card__btn--delete"
               :disabled="selectedCount === 0"
               @click="batchDelete"
-            >删除 ({{ selectedCount }})</button>
+            >
+              删除 ({{ selectedCount }})
+            </button>
             <button type="button" class="lk-batch-card__btn lk-batch-card__btn--cancel" @click="toggleBatchMode">
               取消
             </button>
@@ -334,7 +342,7 @@ onMounted(() => {
 
         <p v-if="message" class="lk-batch-card__msg">{{ message }}</p>
       </div>
-    </li>
+    </div>
   </Teleport>
 </template>
 

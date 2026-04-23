@@ -5,11 +5,31 @@
  */
 export const recommendedArticles = [
   {
+    title: 'Projects 作品集分页：把岗位、项目和文章串成招聘入口',
+    href: '/article/pm-projects-pagination-galaxy.html',
+    date: '2026-04-22',
+    excerpt: '记录 PM 作品集前置、项目按岗位分页、文章分页，以及 SiliconFlow 星系背景本地化。',
+    categories: ['PM', 'Projects'],
+  },
+  {
+    title: '产品经理作品集改造 PRD：把博客变成求职入口',
+    href: '/article/pm-portfolio-prd.html',
+    date: '2026-04-22',
+    excerpt: '从招聘方视角重构个人站，把技术博客、案例文章和简历信息整理成产品经理作品集。',
+    categories: ['PM', 'Portfolio'],
+  },
+  {
+    title: 'AI Key 路由：SiliconFlow、DeepSeek、Qwen、One API、ZCode 和 CCSwitch',
+    href: '/article/ai-key-router-one-api-zcode-ccswitch.html',
+    date: '2026-04-22',
+    excerpt: '把模型供应商 Key、One API 中转平台和 Claude Code 适配工具串成一套可维护的 AI 开发调用链。',
+    categories: ['AI', 'Infra'],
+  },
+  {
     title: 'Git 发布流水线：从本地改动到 Vercel Release',
     href: '/article/git-release-map.html',
     date: '2026-04-21',
-    excerpt:
-      '把暂存、提交、同步、推送、部署和排错拆成几个稳定模块，方便以后回看每段时间到底在做什么。',
+    excerpt: '把暂存、提交、同步、推送、部署和排错拆成稳定模块，方便以后回看每段时间到底在做什么。',
     categories: ['Git', 'Release'],
   },
   {
@@ -19,34 +39,6 @@ export const recommendedArticles = [
     excerpt: '从模型导出、量化到设备端推理验证，整理一条最小可走的检查清单。',
     categories: ['Embedded', 'ML'],
   },
-  {
-    title: 'openclaw',
-    href: '/article/openclaw.html',
-    date: '2026-04-21',
-    excerpt: '如果想在本地玩转大模型，这是一条更标准、更可复用的起步流程。',
-    categories: ['AI', 'Local'],
-  },
-  {
-    title: 'ai infra',
-    href: '/article/langchain.html',
-    date: '2026-04-21',
-    excerpt: '设计 Agent、Memory、Chains 与 MCP 交互时，先拆清楚 AI 什么时候查资料、什么时候写代码。',
-    categories: ['Agent', 'Infra'],
-  },
-  {
-    title: 'ai模板',
-    href: '/article/ai模板.html',
-    date: '2026-04-21',
-    excerpt: '把可验证结论、可执行步骤和不确定性说明写进模板，让 AI 输出更稳定。',
-    categories: ['Prompt', 'Workflow'],
-  },
-  {
-    title: '用 VuePress 2 搭静态个人站',
-    href: '/article/vuepress-stack-notes.html',
-    date: '2026-04-02',
-    excerpt: '主题选型、目录约定、Sass 全局样式与少量客户端增强的短文版记录。',
-    categories: ['VuePress', 'Frontend'],
-  },
 ]
 
 /**
@@ -55,6 +47,24 @@ export const recommendedArticles = [
  * here so the About page works like a compact project activity log.
  */
 export const timelineItems = [
+  {
+    date: '2026-04-22',
+    title: 'Projects 页面完成 PM 作品集前置、岗位项目分页和星系背景升级',
+    href: '/tech/',
+    category: 'Projects',
+  },
+  {
+    date: '2026-04-22',
+    title: '发布 Projects 分页与星系背景迭代记录',
+    href: '/article/pm-projects-pagination-galaxy.html',
+    category: 'Article',
+  },
+  {
+    date: '2026-04-22',
+    title: '发布 PM Portfolio PRD 与 AI Key 路由两篇文章',
+    href: '/article/pm-portfolio-prd.html',
+    category: 'Article',
+  },
   {
     date: '2026-04-21',
     title: '整理 Git / Release 操作说明，补齐发布流水线文档',
@@ -69,12 +79,6 @@ export const timelineItems = [
   {
     date: '2026-04-21',
     title: '收敛 blog-v1：删除测试短文，保留可发布文章索引',
-    category: 'Article',
-  },
-  {
-    date: '2026-04-21',
-    title: '批量发布 openclaw、ai infra、ai模板 三篇短文',
-    href: '/article/openclaw.html',
     category: 'Article',
   },
   {

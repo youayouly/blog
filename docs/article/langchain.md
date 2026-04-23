@@ -1,6 +1,6 @@
 ---
 title: ai infra
-date: 2026-04-21T15:14:28.143Z
+date: 2026-04-22T04:01:01.517Z
 ---
 
 # ai infra

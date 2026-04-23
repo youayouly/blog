@@ -1,11 +1,11 @@
 /**
- * Projects 首页右侧「岗位」卡片：名称与数量由你维护，用于和项目经历对应。
- * `to` 可指向站内锚点、筛选页或外链；暂用 `/tech/` 占位，后续按需改。
+ * Projects 首页右侧“岗位 / 方向”卡片。
+ * 这里保持轻量：用于招聘方快速理解项目矩阵覆盖哪些能力方向。
  */
 export const PROJECT_ROLES = [
-  { label: '嵌入式 / Embedded', count: 3, to: '/tech/' },
-  { label: '边缘 AI / Edge ML', count: 2, to: '/tech/' },
-  { label: '前端 / Frontend', count: 2, to: '/tech/' },
-  { label: '后端 / Backend', count: 2, to: '/tech/' },
-  { label: '系统与工具链', count: 2, to: '/tech/' },
+  { label: '产品经理 / PM', count: 6, to: '/tech/' },
+  { label: 'AI 产品 / AI Product', count: 5, to: '/tech/' },
+  { label: '前端 / Frontend', count: 5, to: '/tech/' },
+  { label: '嵌入式 / Embedded', count: 4, to: '/tech/' },
+  { label: '工具链 / DevOps', count: 4, to: '/tech/' },
 ]

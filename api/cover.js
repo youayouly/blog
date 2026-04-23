@@ -1,6 +1,17 @@
 const fs = require('fs')
 const path = require('path')
 
+function loadLocalEnv() {
+  try {
+    require('dotenv').config({ path: path.join(process.cwd(), '.env.local'), quiet: true })
+    require('dotenv').config({ quiet: true })
+  } catch {
+    // dotenv is a local/dev convenience. Deployed env vars are already in process.env.
+  }
+}
+
+loadLocalEnv()
+
 let fetch
 try {
   fetch = require('undici').fetch
@@ -46,6 +57,7 @@ function detectImageFormat(buffer, contentType = '') {
 }
 
 function tryGitAdd(filepath) {
+  if (process.env.COVER_SKIP_GIT_ADD === '1') return
   try {
     const { execSync } = require('child_process')
     execSync(`git add "${filepath}"`, { encoding: 'utf8', stdio: 'pipe' })
@@ -144,13 +156,15 @@ function buildPrompt(title, keywords, summary) {
     `Topic: ${title}.`,
     `Keywords: ${keywordText}.`,
     summary ? `Context: ${summary}.` : '',
-    'Modern, cinematic, high contrast, clean composition, no words, no logo, no watermark.',
+    'Visual metaphor only. Do not render the title or keywords as typography.',
+    'No text, no letters, no numbers, no captions, no labels, no UI screenshots, no logo, no watermark.',
+    'Modern, cinematic, high contrast, clean composition, suitable as an article cover.',
   ].filter(Boolean).join(' ')
 }
 
 function backendConfig(bodyBackend) {
   const envBackend = process.env.COVER_IMAGE_BACKEND
-  return String(bodyBackend || envBackend || 'svg').toLowerCase()
+  return String(bodyBackend || envBackend || 'siliconflow').toLowerCase()
 }
 
 function isConfigured(backend) {
@@ -193,7 +207,7 @@ async function fetchImageUrl(url, title) {
   const contentType = res.headers.get('content-type') || ''
   const buffer = Buffer.from(await res.arrayBuffer())
   const saved = await saveBufferLocal(buffer, title, contentType)
-  if (saved) return { imageUrl: saved.url, originalUrl: url, localSaved: true, localPath: saved.localPath }
+  if (saved) return { imageUrl: saved.url, localSaved: true, localPath: saved.localPath }
   return { imageUrl: `data:${contentType || 'image/png'};base64,${buffer.toString('base64')}`, localSaved: false }
 }
 
@@ -221,18 +235,21 @@ async function generateWithDify(title, keywords, summary) {
 }
 
 async function generateWithSiliconFlow(title, keywords, summary) {
-  const res = await fetch('https://api.siliconflow.cn/v1/image/generations', {
+  const apiBase = process.env.SILICONFLOW_API_BASE || 'https://api.siliconflow.com/v1'
+  const body = {
+    model: process.env.SILICONFLOW_IMAGE_MODEL || 'black-forest-labs/FLUX.1-schnell',
+    prompt: buildPrompt(title, keywords, summary),
+    image_size: process.env.SILICONFLOW_IMAGE_SIZE || '1024x768',
+  }
+  if (process.env.SILICONFLOW_IMAGE_SEED) body.seed = Number(process.env.SILICONFLOW_IMAGE_SEED)
+
+  const res = await fetch(`${apiBase.replace(/\/+$/, '')}/images/generations`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${process.env.SILICONFLOW_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model: process.env.SILICONFLOW_IMAGE_MODEL || 'black-forest-labs/FLUX.1-schnell',
-      prompt: buildPrompt(title, keywords, summary),
-      image_size: '1024x768',
-      num_images: 1,
-    }),
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`SiliconFlow API error: ${await res.text()}`)
   const data = await res.json()
@@ -318,8 +335,10 @@ module.exports = async function handler(req, res) {
     }
 
     const requestedBackend = backendConfig(req.body?.backend)
+    const strictBackend = req.body?.strictBackend === true
     const errors = []
-    const order = [requestedBackend, 'pollinations', 'svg'].filter((item, index, arr) => item && arr.indexOf(item) === index)
+    const order = (strictBackend ? [requestedBackend] : [requestedBackend, 'pollinations', 'svg'])
+      .filter((item, index, arr) => item && arr.indexOf(item) === index)
 
     for (const backend of order) {
       const generator = GENERATORS[backend]
@@ -346,6 +365,15 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    if (strictBackend) {
+      return res.status(502).json({
+        ok: false,
+        backend: requestedBackend,
+        error: errors.join('; ') || `${requestedBackend}: unavailable`,
+        errors,
+      })
+    }
+
     const fallback = await saveSvgFallback(title, keywords)
     return res.status(200).json({
       ok: true,
@@ -356,6 +384,14 @@ module.exports = async function handler(req, res) {
     })
   } catch (error) {
     console.error('[Cover] Error:', error)
+    if (req.body?.strictBackend === true) {
+      return res.status(500).json({
+        ok: false,
+        backend: backendConfig(req.body?.backend),
+        error: error.message || 'Internal server error',
+        errors: [error.message || 'Internal server error'],
+      })
+    }
     const fallback = await saveSvgFallback(req.body?.title || 'Article Cover', req.body?.keywords || [])
     return res.status(200).json({
       ok: true,

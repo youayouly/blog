@@ -13,6 +13,8 @@ import AboutTimeline from './components/AboutTimeline.vue'
 import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
 import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
 import ArticleIndexList from './components/ArticleIndexList.vue'
+import ProjectPortfolio from './components/ProjectPortfolio.vue'
+import ProductManagerCases from './components/ProductManagerCases.vue'
 import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
 import SiteAvatar from './components/SiteAvatar.vue'
 import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.js'
@@ -824,6 +826,8 @@ export default defineClientConfig({
     app.component('AboutArticleRecommend', AboutArticleRecommend)
     app.component('AboutCategoriesCard', AboutCategoriesCard)
     app.component('ArticleIndexList', ArticleIndexList)
+    app.component('ProjectPortfolio', ProjectPortfolio)
+    app.component('ProductManagerCases', ProductManagerCases)
     app.component('ProjectsRolesCard', ProjectsRolesCard)
     app.component('SiteAvatar', SiteAvatar)
     router.beforeEach((to) => {

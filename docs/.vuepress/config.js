@@ -137,6 +137,9 @@ export default defineUserConfig({
       '/travel/': 'structure',
       '/article/': [
         { text: 'Articles', link: '/article/' },
+        { text: 'Projects Portfolio Pagination', link: '/article/pm-projects-pagination-galaxy.html' },
+        { text: 'PM Portfolio PRD', link: '/article/pm-portfolio-prd.html' },
+        { text: 'AI Key Router', link: '/article/ai-key-router-one-api-zcode-ccswitch.html' },
         { text: 'Git Release Map', link: '/article/git-release-map.html' },
         { text: 'OpenClaw Local Setup', link: '/article/openclaw.html' },
         { text: 'AI Infra Notes', link: '/article/langchain.html' },

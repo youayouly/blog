@@ -23,8 +23,8 @@ const roles = PROJECT_ROLES
 .lk-proj-roles {
   position: sticky;
   top: calc(var(--navbar-height, 3.6rem) + 0.75rem);
-  padding: 0.85rem 0.65rem 0.95rem;
-  border-radius: 12px;
+  padding: 0.72rem 0.55rem 0.8rem;
+  border-radius: 10px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
@@ -34,7 +34,7 @@ const roles = PROJECT_ROLES
   font-size: 0.75rem;
   font-weight: 600;
   color: #0a0a0a;
-  margin: 0 0 0.55rem 0.35rem;
+  margin: 0 0 0.45rem 0.32rem;
 }
 
 .lk-proj-roles__list {
@@ -53,7 +53,7 @@ const roles = PROJECT_ROLES
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.42rem 0.45rem;
+  padding: 0.34rem 0.4rem;
   margin: 0.1rem 0;
   border-radius: 8px;
   text-decoration: none;
@@ -83,14 +83,14 @@ const roles = PROJECT_ROLES
 
 .lk-proj-roles__count {
   flex-shrink: 0;
-  min-width: 1.5rem;
+  min-width: 1.35rem;
   text-align: center;
   font-size: 0.65rem;
   font-weight: 600;
   color: #0a0a0a;
   background: #e5e7eb;
   border-radius: 6px;
-  padding: 0.12rem 0.4rem;
+  padding: 0.1rem 0.35rem;
 }
 
 [data-theme='dark'] .lk-proj-roles {

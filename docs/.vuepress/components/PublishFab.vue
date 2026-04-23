@@ -290,18 +290,32 @@ function extractKeywords(text, maxKeywords = 3) {
 
 // 图片生成后端选项
 const imageBackendOptions = [
+  { value: 'siliconflow', label: '硅基流动（AI生图）', free: false },
+  { value: 'dify', label: 'Dify 工作流', free: false },
   { value: 'svg', label: '本地 SVG（免费稳定）', free: true },
   { value: 'pollinations', label: 'Pollinations（免费额度/API Key）', free: true },
   { value: 'unsplash', label: 'Unsplash（照片）', free: true },
   { value: 'cloudflare', label: 'Cloudflare Workers AI', free: true },
-  { value: 'siliconflow', label: '硅基流动（AI生图）', free: false },
-  { value: 'dify', label: 'Dify 工作流', free: false },
   { value: 'huggingface', label: 'Hugging Face（免费）', free: true },
 ]
-const imageBackend = ref('svg')
+const imageBackend = ref('siliconflow')
 
 function shouldAutoGenerateCovers() {
   return imageBackend.value !== 'unsplash'
+}
+
+function isPlaceholderCover(cover) {
+  if (!cover) return true
+  if (cover.startsWith('data:image/svg+xml')) return true
+  if (imageBackend.value !== 'svg' && /^\/gallery\/article-cover-.*\.svg(?:$|\?)/i.test(cover)) return true
+  return false
+}
+
+function formatCoverResultMessage(data, successText = '封面生成成功') {
+  if (data.fallbackUsed && data.errors?.length) {
+    return `${successText}，但 ${data.backend} 为回退结果：${data.errors.join('；')}`
+  }
+  return successText
 }
 
 // AI 封面生成状态
@@ -340,8 +354,16 @@ async function generateCoverNow() {
 
     if (res.ok && data.ok && data.imageUrl) {
       generatedCoverUrl.value = data.imageUrl
-      setMsg(data.localSaved ? `封面已保存到本地: ${data.localPath}` : '封面生成成功', 'ok')
+      setMsg(
+        data.localSaved
+          ? formatCoverResultMessage(data, `封面已保存到本地: ${data.localPath}`)
+          : formatCoverResultMessage(data),
+        data.fallbackUsed && data.errors?.length ? 'err' : 'ok',
+      )
       console.log(`📷 [封面生成] 成功: ${data.imageUrl}`)
+      if (data.fallbackUsed) {
+        console.warn('📷 [封面生成] 使用回退后端:', data.backend, data.errors)
+      }
       if (data.localSaved) {
         console.log(`  - 本地路径: ${data.localPath}`)
       }
@@ -521,7 +543,7 @@ async function regenerateArticleCover(articleId) {
       authUser: user,
       authPass: pass,
     }
-    console.log(`📷 [重新生成] 请求体:`, JSON.stringify(requestBody, null, 2))
+    console.log(`📷 [重新生成] 请求体:`, { title: requestBody.title, keywords: requestBody.keywords, summary: requestBody.summary, backend: requestBody.backend })
 
     const res = await fetch('/api/cover', {
       method: 'POST',
@@ -531,6 +553,11 @@ async function regenerateArticleCover(articleId) {
 
     const data = await res.json()
     if (res.ok && data.ok && data.imageUrl) {
+      if (data.fallbackUsed) {
+        console.warn(`📷 [重新生成] "${article.title}" 使用回退后端:`, data.backend, data.errors)
+        setMsg(`封面回退生成：${data.errors?.join('；') || data.backend}`, 'err')
+        return
+      }
       article.cover = data.imageUrl
       console.log(`📷 [重新生成] "${article.title}" 成功: ${data.imageUrl}`)
     } else {
@@ -863,7 +890,7 @@ async function processCoverQueue() {
     }
 
     // 检查是否已有真实封面（非占位图）
-    if (article.cover && !article.cover.startsWith('data:image/svg+xml')) {
+    if (!isPlaceholderCover(article.cover)) {
       console.log(`📷 [自动生成] 文章已有封面，跳过: ${article.title}`)
       resolve(article.cover)
       continue
@@ -901,6 +928,12 @@ async function processCoverQueue() {
 
       const data = await res.json()
       if (res.ok && data.ok && data.imageUrl) {
+        if (data.fallbackUsed) {
+          console.warn(`📷 [自动生成] "${articleTitle_text}" 使用回退后端:`, data.backend, data.errors)
+          setMsg(`封面生成失败，已阻止回退封面发布：${data.errors?.join('；') || data.backend}`, 'err')
+          resolve(null)
+          continue
+        }
         // 重新查找文章（可能在等待期间被移除）
         const currentArticle = pendingArticles.value.find(a => a.id === articleId)
         if (currentArticle) {
@@ -944,7 +977,7 @@ function checkBatchCompletion() {
 
   // 检查是否所有文章都已有真实封面
   const allHaveCovers = pendingArticles.value.every(article => {
-    return article.cover && !article.cover.startsWith('data:image/svg+xml')
+    return !isPlaceholderCover(article.cover)
   })
 
   console.log(`📷 [批量完成检查] pendingArticles: ${pendingArticles.value.length}, allHaveCovers: ${allHaveCovers}`)

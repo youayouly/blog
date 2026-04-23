@@ -305,6 +305,7 @@ let mo = null
 
 // #region agent log
 function agentLog(hypothesisId, location, message, data) {
+  if (import.meta.env?.DEV) return
   if (typeof fetch === 'undefined') return
   fetch('http://127.0.0.1:7655/ingest/296c82e7-8e39-4cb8-9b2f-c70e9a1e3f41', {
     method: 'POST',
