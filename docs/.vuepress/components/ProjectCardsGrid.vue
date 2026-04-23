@@ -396,6 +396,11 @@ const items = [
   border-bottom: 1px solid rgba(148, 163, 184, 0.22);
   background: linear-gradient(180deg, rgba(30, 41, 59, 0.42) 0%, rgba(15, 23, 42, 0.28) 100%);
   border-radius: 12px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  align-items: flex-start;
 }
 
 .lk-proj-filter__tag {
@@ -416,6 +421,8 @@ const items = [
     all 0.16s ease,
     transform 0.08s ease;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .lk-proj-filter__tag:hover {
@@ -500,10 +507,10 @@ const items = [
     url('/gallery/star-source.png'),
     linear-gradient(138deg, rgba(6, 16, 34, 0.98), rgba(7, 18, 40, 0.96));
   background-size:
-    300% 300%,
+    cover,
     cover;
   background-position:
-    calc(var(--proj-cell-col, 0) * 50%) calc(var(--proj-cell-row, 0) * 50%),
+    center,
     center;
   background-repeat: no-repeat;
 }

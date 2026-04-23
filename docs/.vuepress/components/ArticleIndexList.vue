@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 const pageSize = 5
 const currentPage = ref(1)
+const selectedTag = ref(null)
 
 const articles = [
   {
@@ -130,29 +131,27 @@ function formatDate(value) {
 <template>
   <div class="lk-blog lk-blog-fullbleed lk-article-three">
     <p class="lk-article-three__intro">
-      工程笔记、工具链与项目随笔。左侧放导航卡片，中间放文章大卡，右侧保留目录与标签。
+      工程笔记、工具链与项目随笔。左侧按标签分类，中间展示文章。
     </p>
 
     <div class="lk-article-three__content">
       <aside class="lk-article-three__left">
         <div class="lk-article-three__panel">
           <div class="lk-article-three__panel-head">
-            <h3>左侧导航</h3>
-            <p>小卡片列表</p>
+            <h3>标签分类</h3>
+            <p>按主题分类</p>
           </div>
 
-          <nav class="lk-article-three__mini-list">
+          <div class="lk-article-three__tag-cloud">
             <a
-              v-for="article in sortedArticles"
-              :key="`left-${article.slug}`"
-              :href="article.href"
-              class="lk-article-three__mini-card"
-              :class="{ 'is-pinned': article.pinned }"
+              v-for="[tag, count] in tagCounts"
+              :key="tag"
+              href="#"
+              class="lk-article-three__tag-pill"
             >
-              <span class="lk-article-three__mini-title">{{ article.title }}</span>
-              <span class="lk-article-three__mini-date">{{ formatDate(article.date) }}</span>
+              {{ tag }} <span class="lk-article-three__tag-count">{{ count }}</span>
             </a>
-          </nav>
+          </div>
         </div>
       </aside>
 
@@ -204,42 +203,6 @@ function formatDate(value) {
           </button>
         </nav>
       </main>
-
-      <aside class="lk-article-three__right">
-        <div class="lk-article-three__panel">
-          <div class="lk-article-three__panel-head">
-            <h3>目录</h3>
-            <p>快速导航</p>
-          </div>
-          <nav class="lk-article-three__toc">
-            <a
-              v-for="article in sortedArticles"
-              :key="`toc-${article.slug}`"
-              :href="article.href"
-              class="lk-article-three__toc-item"
-            >
-              {{ article.title }}
-            </a>
-          </nav>
-        </div>
-
-        <div class="lk-article-three__panel">
-          <div class="lk-article-three__panel-head">
-            <h3>标签</h3>
-            <p>按主题分类</p>
-          </div>
-          <div class="lk-article-three__tag-cloud">
-            <a
-              v-for="[tag, count] in tagCounts"
-              :key="tag"
-              href="#"
-              class="lk-article-three__tag-pill"
-            >
-              {{ tag }} <span class="lk-article-three__tag-count">{{ count }}</span>
-            </a>
-          </div>
-        </div>
-      </aside>
     </div>
   </div>
 </template>
@@ -260,7 +223,7 @@ function formatDate(value) {
 
 .lk-article-three__content {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  grid-template-columns: 280px minmax(0, 1fr);
   gap: 2.5rem;
   align-items: start;
 }
@@ -272,14 +235,6 @@ function formatDate(value) {
 
 .lk-article-three__middle {
   min-width: 0;
-}
-
-.lk-article-three__right {
-  position: sticky;
-  top: 84px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
 }
 
 .lk-article-three__panel {
@@ -304,45 +259,6 @@ function formatDate(value) {
   margin: 0;
   color: rgba(148, 163, 184, 0.86);
   font-size: 0.82rem;
-}
-
-.lk-article-three__mini-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.lk-article-three__mini-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.8rem 0.9rem;
-  border-radius: 16px;
-  text-decoration: none;
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-}
-
-.lk-article-three__mini-card:hover {
-  transform: translateY(-1px);
-  border-color: rgba(103, 232, 249, 0.34);
-  background: rgba(11, 28, 45, 0.94);
-}
-
-.lk-article-three__mini-card.is-pinned {
-  border-color: rgba(45, 212, 191, 0.28);
-}
-
-.lk-article-three__mini-title {
-  color: #f8fafc;
-  line-height: 1.42;
-  font-size: 0.9rem;
-}
-
-.lk-article-three__mini-date {
-  color: rgba(148, 163, 184, 0.88);
-  font-size: 0.76rem;
 }
 
 .lk-article-three__list {
@@ -449,27 +365,6 @@ function formatDate(value) {
   object-fit: cover;
 }
 
-.lk-article-three__toc {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.lk-article-three__toc-item {
-  padding: 0.55rem 0.65rem;
-  border-radius: 12px;
-  text-decoration: none;
-  color: rgba(226, 232, 240, 0.9);
-  font-size: 0.86rem;
-  line-height: 1.42;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.lk-article-three__toc-item:hover {
-  background: rgba(103, 232, 249, 0.12);
-  color: #67e8f9;
-}
-
 .lk-article-three__tag-cloud {
   display: flex;
   flex-wrap: wrap;
@@ -529,7 +424,7 @@ function formatDate(value) {
 
 @media (max-width: 1400px) {
   .lk-article-three__content {
-    grid-template-columns: 220px minmax(0, 1fr) 260px;
+    grid-template-columns: 260px minmax(0, 1fr);
   }
 
   .lk-article-three__card {
@@ -542,8 +437,7 @@ function formatDate(value) {
     grid-template-columns: 1fr;
   }
 
-  .lk-article-three__left,
-  .lk-article-three__right {
+  .lk-article-three__left {
     position: static;
   }
 
@@ -553,10 +447,6 @@ function formatDate(value) {
 
   .lk-article-three__left {
     order: 2;
-  }
-
-  .lk-article-three__right {
-    order: 3;
   }
 
   .lk-article-three__card {
