@@ -841,6 +841,23 @@ export default defineClientConfig({
   },
 
   setup() {
+    function makeNavbarParentLinksClickable() {
+      if (typeof window === 'undefined') return
+      const navbarItems = document.querySelectorAll('.vp-navbar-item')
+      navbarItems.forEach((item) => {
+        const link = item.querySelector(':scope > a')
+        const dropdown = item.querySelector(':scope > .vp-navbar-dropdown')
+        if (link && dropdown) {
+          link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href')
+            if (href && href !== '#') {
+              e.preventDefault()
+              window.location.href = href
+            }
+          })
+        }
+      })
+    }
     const route = useRoute()
 
     const microtask =
@@ -898,6 +915,7 @@ export default defineClientConfig({
     )
 
     onMounted(() => {
+      makeNavbarParentLinksClickable()
       syncSiteNonHomeClass(route.path)
       applyLive2dRouteClass(route.path)
       syncLive2dPref()

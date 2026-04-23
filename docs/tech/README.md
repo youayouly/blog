@@ -29,8 +29,5 @@ index: true
       <hr />
       <p>持续更新中，更多项目陆续添加。</p>
     </div>
-    <aside class="lk-proj-hub-layout__roles" aria-label="相关岗位">
-      <ProjectsRolesCard />
-    </aside>
   </div>
 </div>
