@@ -1706,6 +1706,15 @@ main.vp-page:has(.lk-proj-hub-fullbleed),
   overflow-x: visible;
 }
 
+// 移除 VuePress 默认的宽度限制
+main.vp-page:has(.lk-proj-hub-fullbleed) {
+  max-width: 100%;
+}
+
+main.vp-page:has(.lk-proj-hub-fullbleed) [vp-content]:not(.custom):has(.lk-proj-hub-fullbleed) {
+  max-width: 100%;
+}
+
 .lk-proj-hub-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--lk-proj-roles-w);
