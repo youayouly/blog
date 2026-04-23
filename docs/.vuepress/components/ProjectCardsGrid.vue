@@ -239,8 +239,7 @@ function cardSurfaceStyle(item) {
   text-decoration: none;
   display: grid;
   grid-template-columns: 1fr auto;
-  background:
-    linear-gradient(138deg, rgba(6, 16, 34, 0.92), rgba(7, 18, 40, 0.96));
+  background-color: rgba(7, 18, 40, 0.96);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
