@@ -21,8 +21,7 @@ const roles = PROJECT_ROLES
 
 <style scoped>
 .lk-proj-roles {
-  position: sticky;
-  top: calc(var(--navbar-height, 3.6rem) + 0.75rem);
+  position: static;
   padding: 0.72rem 0.55rem 0.8rem;
   border-radius: 10px;
   background: #fff;
@@ -64,6 +63,7 @@ const roles = PROJECT_ROLES
   transition:
     background 0.15s ease,
     border-color 0.15s ease;
+  overflow: hidden;
 }
 
 .lk-proj-roles__row:hover {
@@ -83,7 +83,7 @@ const roles = PROJECT_ROLES
 
 .lk-proj-roles__count {
   flex-shrink: 0;
-  min-width: 1.35rem;
+  min-width: 1.75rem;
   text-align: center;
   font-size: 0.65rem;
   font-weight: 600;

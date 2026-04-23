@@ -1694,24 +1694,25 @@ main.vp-page:has(.lk-proj-hub-fullbleed)
 // 设置 Projects 页面容器为视口高度减去导航栏
 .page-projects .theme-hope-content,
 main.vp-page:has(.lk-proj-hub-fullbleed) .theme-hope-content {
-  height: calc(100vh - var(--navbar-height, 3.5rem));
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
 
 .lk-proj-hub-fullbleed {
   --lk-proj-portfolio-w: 400px;
+  --lk-proj-main-max: 1120px;
   --lk-proj-roles-w: 220px;
   --lk-proj-col-gap: 20px;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  flex: 1;
+  flex: none;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .theme-container:has(.lk-proj-hub-fullbleed),
@@ -1756,22 +1757,33 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   gap: var(--lk-proj-col-gap);
   align-items: start;
   width: 100%;
-  flex: 1;
-  overflow: hidden;
+  max-width: calc(
+    var(--lk-proj-portfolio-w) + var(--lk-proj-main-max) + var(--lk-proj-roles-w) +
+      2 * var(--lk-proj-col-gap)
+  );
+  margin: 0 auto;
+  flex: none;
+  overflow: visible;
   box-sizing: border-box;
 }
 
 .lk-proj-hub-layout__portfolio {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   max-width: var(--lk-proj-portfolio-w);
+  height: fit-content;
   flex-shrink: 0;
-  overflow-y: auto;
+  overflow: visible;
   padding-right: 8px;
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + 0.9rem);
 }
 
 // 产品作品集头部
 .portfolio-header {
-  padding: 1rem 0;
+  flex: 0 0 auto;
+  padding: 0 0 1rem;
   margin-bottom: 0.5rem;
 }
 
@@ -1818,6 +1830,12 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   gap: 16px;
 }
 
+.lk-proj-hub-layout__portfolio .lk-pm-grid {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
 @media (max-width: 959px) {
   .lk-proj-hub-layout__portfolio .lk-pm-grid__grid {
     grid-template-columns: 1fr;
@@ -1858,16 +1876,41 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
 }
 
 .lk-proj-hub-layout__main {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  overflow-y: auto;
+  width: 100%;
+  max-width: var(--lk-proj-main-max);
+  height: auto;
+  justify-self: center;
+  overflow: visible;
   padding-right: 8px;
 }
 
 .lk-proj-hub-layout__roles {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   max-width: var(--lk-proj-roles-w);
+  width: 100%;
+  height: fit-content;
+  justify-self: stretch;
   flex-shrink: 0;
-  overflow-y: auto;
+  overflow: visible;
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + 0.9rem);
+}
+
+.lk-proj-hub-layout__main > h2:first-of-type {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  line-height: 1.22;
+}
+
+.lk-proj-hub-layout__main > h2:not(:first-of-type),
+.lk-proj-hub-layout__main > p,
+.lk-proj-hub-layout__main > hr {
+  flex: 0 0 auto;
 }
 
 // 平板：三列变单列，恢复正常堆叠
@@ -1896,17 +1939,22 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
 
   .lk-proj-hub-layout__portfolio {
     max-width: none;
+    height: auto;
+    position: static;
     overflow: visible;
     padding-right: 0;
   }
 
   .lk-proj-hub-layout__main {
+    height: auto;
     overflow: visible;
     padding-right: 0;
   }
 
   .lk-proj-hub-layout__roles {
     max-width: none;
+    height: auto;
+    position: static;
     overflow: visible;
   }
 }
@@ -2053,7 +2101,16 @@ main.vp-page:has(.lk-blog-fullbleed),
 .page-article-index .vp-page-title h1,
 .page-article-index .vp-page-title .vp-breadcrumb,
 .page-article-index .vp-page-title .reading-time-info {
-  text-align: center;
+  text-align: left;
+}
+
+.page-article-index .vp-page-title {
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+
+.page-article-index .vp-page-title .page-info {
+  margin-left: auto !important;
 }
 
 .page-article-index .vp-page-title h1 {

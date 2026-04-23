@@ -209,23 +209,29 @@ function formatDate(value) {
 
 <style>
 .lk-article-three {
+  --lk-article-side-w: 260px;
+  --lk-article-gap: 2.5rem;
   width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 0.5rem 2rem;
   box-sizing: border-box;
 }
 
 .lk-article-three__intro {
-  max-width: 58rem;
-  margin: 0 auto 1.5rem;
-  text-align: center;
+  max-width: none;
+  margin: 0 0 1.25rem;
+  text-align: left;
   color: rgba(226, 232, 240, 0.82);
   line-height: 1.7;
 }
 
 .lk-article-three__content {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 2.5rem;
+  grid-template-columns: var(--lk-article-side-w) minmax(0, 860px);
+  gap: var(--lk-article-gap);
   align-items: start;
+  justify-content: center;
 }
 
 .lk-article-three__left {
@@ -235,6 +241,8 @@ function formatDate(value) {
 
 .lk-article-three__middle {
   min-width: 0;
+  width: 100%;
+  max-width: 860px;
 }
 
 .lk-article-three__panel {
@@ -423,8 +431,12 @@ function formatDate(value) {
 }
 
 @media (max-width: 1400px) {
+  .lk-article-three {
+    --lk-article-side-w: 240px;
+  }
+
   .lk-article-three__content {
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 240px minmax(0, 760px);
   }
 
   .lk-article-three__card {
@@ -433,6 +445,10 @@ function formatDate(value) {
 }
 
 @media (max-width: 1100px) {
+  .lk-article-three__intro {
+    margin-left: 0;
+  }
+
   .lk-article-three__content {
     grid-template-columns: 1fr;
   }

@@ -56,12 +56,62 @@ const pmCases = [
     to: '/study/',
     image: '/gallery/article-cover-pm-education-planner-galaxy-background-1776845371967.png',
   },
+  {
+    title: 'PM Portfolio PRD',
+    area: 'Portfolio',
+    role: '求职叙事',
+    summary: '把博客内容重构成更适合招聘方理解的产品经理作品集入口，突出问题、方案与结果。',
+    tags: ['作品集', '招聘叙事', '案例结构'],
+    to: '/article/pm-portfolio-prd.html',
+    image: '/gallery/article-cover-product-manager-portfolio-prd-1776831264136.png',
+  },
+  {
+    title: 'Projects Pagination',
+    area: 'Portfolio',
+    role: '信息架构',
+    summary: '把项目入口拆成更容易扫描的结构，方便快速理解能力范围和案例深度。',
+    tags: ['分页', '信息架构', '浏览效率'],
+    to: '/article/pm-projects-pagination-galaxy.html',
+    image: '/gallery/article-cover-pm-ai-operations-galaxy-background-1776845342410.png',
+  },
+  {
+    title: 'Article Index Design',
+    area: 'Content',
+    role: '内容产品',
+    summary: '把文章页做成更清晰的目录入口，让标签、分页和入口层级更接近产品化浏览体验。',
+    tags: ['内容产品', '标签体系', '目录设计'],
+    to: '/article/',
+    image: '/gallery/article-cover-personal-knowledge-garden-1776832492231.png',
+  },
 ]
 </script>
 
 <style scoped>
 .lk-pm-grid {
   padding: 0;
+  max-height: min(68vh, 860px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.lk-pm-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lk-pm-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lk-pm-grid::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.4);
+  border-radius: 3px;
+}
+
+.lk-pm-grid::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.6);
 }
 
 .lk-pm-grid__grid {
@@ -179,6 +229,12 @@ const pmCases = [
 }
 
 @media (max-width: 719px) {
+  .lk-pm-grid {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
   .lk-pm-grid__grid {
     grid-template-columns: 1fr;
   }
