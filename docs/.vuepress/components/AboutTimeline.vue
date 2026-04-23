@@ -63,7 +63,7 @@ const rows = computed(() => {
   position: relative;
   list-style: none;
   margin: 0;
-  padding: 0 0 0.25rem;
+  padding: 0.25rem 0 0.25rem 1rem;
 }
 
 .lk-about-timeline__list::before {
@@ -71,7 +71,7 @@ const rows = computed(() => {
   position: absolute;
   top: 0.35rem;
   bottom: 0.35rem;
-  left: 10px;
+  left: 1.2rem;
   width: 2px;
   background: var(--lk-time-rail);
   border-radius: 1px;
