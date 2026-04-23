@@ -239,4 +239,48 @@ const pmCases = [
     grid-template-columns: 1fr;
   }
 }
+
+/* Light mode */
+[data-theme='light'] .lk-pm-card {
+  background:
+    var(--pm-card-bg),
+    linear-gradient(138deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.94));
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme='light'] .lk-pm-card__scrim {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6) 58%, rgba(255, 255, 255, 0.7));
+}
+
+[data-theme='light'] .lk-pm-card__top {
+  color: rgba(30, 41, 59, 0.8);
+  text-shadow: none;
+}
+
+[data-theme='light'] .lk-pm-card__top strong {
+  color: #0d9488;
+}
+
+[data-theme='light'] .lk-pm-card h3 {
+  color: #0f172a;
+  text-shadow: none;
+}
+
+[data-theme='light'] .lk-pm-card p {
+  color: rgba(30, 41, 59, 0.78);
+  text-shadow: none;
+}
+
+[data-theme='light'] .lk-pm-card__tags span {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(13, 148, 136, 0.2);
+  color: #0d9488;
+  box-shadow: none;
+}
+
+[data-theme='light'] .lk-pm-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+}
 </style>

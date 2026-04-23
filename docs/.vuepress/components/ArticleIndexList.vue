@@ -470,4 +470,72 @@ function formatDate(value) {
     height: 200px;
   }
 }
+
+/* Light mode */
+[data-theme='light'] .lk-article-three__panel {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme='light'] .lk-article-three__panel-head h3 {
+  color: #0d9488;
+}
+
+[data-theme='light'] .lk-article-three__panel-head p {
+  color: #64748b;
+}
+
+[data-theme='light'] .lk-article-three__tag-pill {
+  color: #475569;
+  background: rgba(241, 245, 249, 0.8);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .lk-article-three__tag-pill:hover {
+  background: rgba(13, 148, 136, 0.1);
+  border-color: rgba(13, 148, 136, 0.3);
+  color: #0d9488;
+}
+
+[data-theme='light'] .lk-article-three__tag-count {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .lk-article-three__card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme='light'] .lk-article-three__card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+}
+
+[data-theme='light'] .lk-article-three__date {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .lk-article-three__title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .lk-article-three__excerpt {
+  color: #475569;
+}
+
+[data-theme='light'] .lk-article-three__tag {
+  color: #1e40af;
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme='light'] .lk-article-three__read {
+  color: #0d9488;
+}
+
+[data-theme='light'] .lk-article-three__cover-wrap {
+  background: rgba(241, 245, 249, 0.8);
+}
 </style>

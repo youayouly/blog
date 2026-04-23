@@ -84,11 +84,11 @@ onBeforeUnmount(() => {
 }
 
 .lk-cursor__ring {
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  margin: -18px 0 0 -18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  margin: -12px 0 0 -12px;
   transition:
     width 0.25s ease,
     height 0.25s ease,
@@ -100,19 +100,19 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 5px;
-  height: 5px;
-  margin: -2.5px 0 0 -2.5px;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.7);
   transition: opacity 0.2s ease;
 }
 
 .lk-cursor.is-hover .lk-cursor__ring {
-  width: 56px;
-  height: 56px;
-  margin: -28px 0 0 -28px;
-  border-color: rgba(96, 165, 250, 0.8);
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-color: rgba(96, 165, 250, 0.7);
 }
 
 .lk-cursor.is-hover .lk-cursor__dot {

@@ -3,13 +3,13 @@ export const PARTICLES_PREF_KEY = 'lk-network-particles-enabled'
 export const PARTICLES_PREF_EVENT = 'lk-particles-pref-changed'
 
 export function readParticlesPref() {
-  if (typeof window === 'undefined') return true
+  if (typeof window === 'undefined') return false
   try {
     const v = window.localStorage.getItem(PARTICLES_PREF_KEY)
-    if (v === null) return true
+    if (v === null) return false
     return v !== '0'
   } catch {
-    return true
+    return false
   }
 }
 
