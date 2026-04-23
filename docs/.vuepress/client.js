@@ -17,6 +17,7 @@ import ProjectPortfolio from './components/ProjectPortfolio.vue'
 import ProductManagerCases from './components/ProductManagerCases.vue'
 import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
 import SiteAvatar from './components/SiteAvatar.vue'
+import CursorEffect from './components/CursorEffect.vue'
 import { authedRef, isPublicPath, normPath, readAuthed } from './utils/authGate.js'
 import {
   LIVE2D_PREF_EVENT,
@@ -808,6 +809,7 @@ function unmountHome() {
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
   rootComponents: [
+    CursorEffect,
     NetworkParticlesBgClient,
     ParticlesNavbarToggleClient,
     SiteFooter,

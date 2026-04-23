@@ -1116,7 +1116,7 @@ body,
   background: rgba(255, 255, 255, 0.55) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  border-bottom: none;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
@@ -1784,6 +1784,25 @@ main.vp-page:has(.lk-proj-hub-fullbleed) [vp-content]:not(.custom):has(.lk-proj-
 // 隐藏 VuePress 默认的页面标题
 main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   display: none !important;
+}
+
+// Light mode for Projects page
+[data-theme='light'] .lk-proj-hub-title h1 {
+  color: #0f172a;
+}
+
+[data-theme='light'] .portfolio-eyebrow {
+  color: #0d9488;
+}
+
+[data-theme='light'] .portfolio-header h2 {
+  color: #0f172a;
+  text-shadow: none;
+}
+
+[data-theme='light'] .portfolio-header p:last-child {
+  color: #475569;
+  text-shadow: none;
 }
 
 .lk-proj-hub-layout {
