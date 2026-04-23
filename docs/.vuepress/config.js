@@ -102,20 +102,16 @@ export default defineUserConfig({
 
     navbar: [
       { text: 'Home', link: '/home' },
-      { text: 'About Me', link: '/about' },
-      { text: '💻 Projects', link: '/tech/' },
-      { text: '📝 Article', link: '/article/' },
       {
-        text: '🎓 Study Abroad',
-        prefix: '/study/',
+        text: 'About Me',
+        link: '/about',
         children: [
-          { text: 'Overview', link: '' },
-          { text: '🇭🇰 Hong Kong', link: 'hk' },
-          { text: '🇬🇧 United Kingdom', link: 'uk' },
-          { text: '🇸🇬 Singapore', link: 'singapore' },
+          { text: '🎓 Study Abroad', link: '/study/' },
+          { text: '📷 Album', link: '/travel/' },
         ],
       },
-      { text: '📷 Album', link: '/travel/' },
+      { text: '💻 Projects', link: '/tech/' },
+      { text: '📝 Article', link: '/article/' },
     ],
 
     sidebar: {
