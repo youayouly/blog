@@ -34,44 +34,6 @@
             <h3 class="lk-proj-card__title">{{ item.title }}</h3>
             <p class="lk-proj-card__preview">{{ previewText(item) }}</p>
           </header>
-
-          <div class="lk-proj-card__details">
-            <dl class="lk-proj-card__meta">
-              <div class="lk-proj-card__meta-row">
-                <dt>项目目标</dt>
-                <dd>{{ item.goal }}</dd>
-              </div>
-              <div class="lk-proj-card__meta-row">
-                <dt>我的贡献</dt>
-                <dd>{{ item.contribution }}</dd>
-              </div>
-              <div class="lk-proj-card__meta-row">
-                <dt>最终成果</dt>
-                <dd>{{ item.outcome }}</dd>
-              </div>
-            </dl>
-
-            <div class="lk-proj-card__tags">
-              <div class="lk-proj-card__tag-group">
-                <span
-                  v-for="tag in item.techTags"
-                  :key="`${item.title}-${tag}`"
-                  class="lk-proj-card__tag lk-proj-card__tag--tech"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-              <div class="lk-proj-card__tag-group">
-                <span
-                  v-for="tag in item.businessTags"
-                  :key="`${item.title}-${tag}`"
-                  class="lk-proj-card__tag lk-proj-card__tag--business"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </RouterLink>
     </div>
@@ -596,79 +558,10 @@ const items = [
   min-height: 2.8rem;
 }
 
-.lk-proj-card__details {
-  display: grid;
-  gap: 0.8rem;
-  align-self: end;
-}
-
-.lk-proj-card__meta {
-  display: grid;
-  gap: 0.55rem;
-  margin: 0;
-}
-
-.lk-proj-card__meta-row {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.lk-proj-card__meta-row dt {
-  font-size: 0.72rem;
-  font-weight: 760;
-  color: #93c5fd;
-}
-
-.lk-proj-card__meta-row dd {
-  margin: 0;
-  color: rgba(241, 245, 249, 0.95);
-  font-size: 0.82rem;
-  line-height: 1.55;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.lk-proj-card__tags {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.lk-proj-card__tag-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.lk-proj-card__tag {
-  padding: 0.26rem 0.58rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 760;
-  line-height: 1.2;
-}
-
-.lk-proj-card__tag--tech {
-  color: #dbeafe;
-  background: rgba(59, 130, 246, 0.22);
-  border: 1px solid rgba(147, 197, 253, 0.4);
-}
-
-.lk-proj-card__tag--business {
-  color: #dcfce7;
-  background: rgba(34, 197, 94, 0.18);
-  border: 1px solid rgba(134, 239, 172, 0.34);
-}
-
 .lk-proj-card:hover {
   transform: translateY(-3px);
   border-color: rgba(125, 211, 252, 0.5);
   box-shadow: 0 14px 34px rgba(2, 6, 23, 0.45);
-}
-
-.lk-proj-card:hover .lk-proj-card__meta-row dd {
-  -webkit-line-clamp: unset;
 }
 
 .lk-proj-cards__empty {
