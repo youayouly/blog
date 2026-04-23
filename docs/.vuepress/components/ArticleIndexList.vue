@@ -128,60 +128,60 @@ function formatDate(value) {
 </script>
 
 <template>
-  <div class="lk-blog lk-blog-fullbleed lk-article-three">
-    <p class="lk-article-three__intro">
-      工程笔记、工具链与项目随笔。左侧放导航卡片，中间放文章大卡，右侧保留目录与标签。
+  <div class="lk-blog lk-blog-fullbleed lk-article-two">
+    <p class="lk-article-two__intro">
+      工程笔记、工具链与项目随笔。左侧放导航卡片，中间放文章大卡。
     </p>
 
-    <div class="lk-article-three__content">
-      <aside class="lk-article-three__left">
-        <div class="lk-article-three__panel">
-          <div class="lk-article-three__panel-head">
-            <h3>左侧导航</h3>
-            <p>小卡片列表</p>
+    <div class="lk-article-two__content">
+      <aside class="lk-article-two__left">
+        <div class="lk-article-two__panel">
+          <div class="lk-article-two__panel-head">
+            <h3>文章导航</h3>
+            <p>快速跳转</p>
           </div>
 
-          <nav class="lk-article-three__mini-list">
+          <nav class="lk-article-two__mini-list">
             <a
               v-for="article in sortedArticles"
               :key="`left-${article.slug}`"
               :href="article.href"
-              class="lk-article-three__mini-card"
+              class="lk-article-two__mini-card"
               :class="{ 'is-pinned': article.pinned }"
             >
-              <span class="lk-article-three__mini-title">{{ article.title }}</span>
-              <span class="lk-article-three__mini-date">{{ formatDate(article.date) }}</span>
+              <span class="lk-article-two__mini-title">{{ article.title }}</span>
+              <span class="lk-article-two__mini-date">{{ formatDate(article.date) }}</span>
             </a>
           </nav>
         </div>
       </aside>
 
-      <main class="lk-article-three__middle">
-        <ol class="lk-article-three__list">
+      <main class="lk-article-two__main">
+        <ol class="lk-article-two__list">
           <li
             v-for="article in visibleArticles"
             :key="article.href"
-            class="lk-article-three__item"
+            class="lk-article-two__item"
             :class="{
               'is-pinned': article.pinned,
               'is-external': article.external,
             }"
           >
-            <a class="lk-article-three__card" :href="article.href">
-              <div class="lk-article-three__text">
-                <time class="lk-article-three__date" :datetime="article.date">{{ formatDate(article.date) }}</time>
-                <h3 class="lk-article-three__title">{{ article.title }}</h3>
-                <p class="lk-article-three__excerpt">{{ article.excerpt }}</p>
-                <div class="lk-article-three__meta">
-                  <span v-for="tag in article.tags" :key="tag" class="lk-article-three__tag">{{ tag }}</span>
+            <a class="lk-article-two__card" :href="article.href">
+              <div class="lk-article-two__text">
+                <time class="lk-article-two__date" :datetime="article.date">{{ formatDate(article.date) }}</time>
+                <h3 class="lk-article-two__title">{{ article.title }}</h3>
+                <p class="lk-article-two__excerpt">{{ article.excerpt }}</p>
+                <div class="lk-article-two__meta">
+                  <span v-for="tag in article.tags" :key="tag" class="lk-article-two__tag">{{ tag }}</span>
                 </div>
-                <span class="lk-article-three__read">{{ article.external ? 'Open ->' : 'Read ->' }}</span>
+                <span class="lk-article-two__read">{{ article.external ? 'Open ->' : 'Read ->' }}</span>
               </div>
 
-              <div class="lk-article-three__cover-wrap">
+              <div class="lk-article-two__cover-wrap">
                 <img
                   v-if="article.cover"
-                  class="lk-article-three__cover"
+                  class="lk-article-two__cover"
                   :src="article.cover"
                   :alt="article.title"
                 />
@@ -190,12 +190,12 @@ function formatDate(value) {
           </li>
         </ol>
 
-        <nav class="lk-article-three__pager" aria-label="Articles pagination">
+        <nav class="lk-article-two__pager" aria-label="Articles pagination">
           <button
             v-for="page in totalPages"
             :key="page"
             type="button"
-            class="lk-article-three__pager-button"
+            class="lk-article-two__pager-button"
             :class="{ 'is-active': page === currentPage }"
             :aria-current="page === currentPage ? 'page' : undefined"
             @click="currentPage = page"
@@ -204,56 +204,17 @@ function formatDate(value) {
           </button>
         </nav>
       </main>
-
-      <aside class="lk-article-three__right">
-        <div class="lk-article-three__panel">
-          <div class="lk-article-three__panel-head">
-            <h3>文章目录</h3>
-            <p>右侧目录，不要滚动条</p>
-          </div>
-
-          <nav class="lk-article-three__toc">
-            <a
-              v-for="article in sortedArticles"
-              :key="`right-${article.slug}`"
-              :href="article.href"
-              class="lk-article-three__toc-item"
-              :class="{ 'is-pinned': article.pinned }"
-            >
-              <span class="lk-article-three__toc-title">{{ article.title }}</span>
-              <span class="lk-article-three__toc-date">{{ formatDate(article.date) }}</span>
-            </a>
-          </nav>
-        </div>
-
-        <div class="lk-article-three__panel">
-          <div class="lk-article-three__panel-head">
-            <h3>标签速览</h3>
-            <p>紧凑展示，不做高卡片</p>
-          </div>
-
-          <div class="lk-article-three__tag-cloud">
-            <span
-              v-for="[tag, count] in tagCounts"
-              :key="`tag-${tag}`"
-              class="lk-article-three__tag-chip"
-            >
-              {{ tag }} · {{ count }}
-            </span>
-          </div>
-        </div>
-      </aside>
     </div>
   </div>
 </template>
 
 <style>
-.lk-article-three {
+.lk-article-two {
   width: 100%;
   box-sizing: border-box;
 }
 
-.lk-article-three__intro {
+.lk-article-two__intro {
   max-width: 58rem;
   margin: 0 auto 1.5rem;
   text-align: center;
@@ -261,20 +222,19 @@ function formatDate(value) {
   line-height: 1.7;
 }
 
-.lk-article-three__content {
+.lk-article-two__content {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 300px;
-  gap: 1.25rem;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.5rem;
   align-items: start;
 }
 
-.lk-article-three__left,
-.lk-article-three__right {
+.lk-article-two__left {
   position: sticky;
   top: 84px;
 }
 
-.lk-article-three__panel {
+.lk-article-two__panel {
   border: 1px solid rgba(110, 231, 223, 0.18);
   border-radius: 20px;
   padding: 1rem;
@@ -282,37 +242,29 @@ function formatDate(value) {
   box-shadow: 0 20px 48px rgba(2, 6, 23, 0.24);
 }
 
-.lk-article-three__right {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.lk-article-three__panel-head {
+.lk-article-two__panel-head {
   margin-bottom: 0.9rem;
 }
 
-.lk-article-three__panel-head h3 {
+.lk-article-two__panel-head h3 {
   margin: 0 0 0.35rem;
   color: #67e8f9;
   font-size: 1rem;
 }
 
-.lk-article-three__panel-head p {
+.lk-article-two__panel-head p {
   margin: 0;
   color: rgba(148, 163, 184, 0.86);
   font-size: 0.82rem;
 }
 
-.lk-article-three__mini-list,
-.lk-article-three__toc {
+.lk-article-two__mini-list {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
 }
 
-.lk-article-three__mini-card,
-.lk-article-three__toc-item {
+.lk-article-two__mini-card {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -324,36 +276,32 @@ function formatDate(value) {
   transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
-.lk-article-three__mini-card:hover,
-.lk-article-three__toc-item:hover {
+.lk-article-two__mini-card:hover {
   transform: translateY(-1px);
   border-color: rgba(103, 232, 249, 0.34);
   background: rgba(11, 28, 45, 0.94);
 }
 
-.lk-article-three__mini-card.is-pinned,
-.lk-article-three__toc-item.is-pinned {
+.lk-article-two__mini-card.is-pinned {
   border-color: rgba(45, 212, 191, 0.28);
 }
 
-.lk-article-three__mini-title,
-.lk-article-three__toc-title {
+.lk-article-two__mini-title {
   color: #f8fafc;
   line-height: 1.42;
   font-size: 0.9rem;
 }
 
-.lk-article-three__mini-date,
-.lk-article-three__toc-date {
+.lk-article-two__mini-date {
   color: rgba(148, 163, 184, 0.88);
   font-size: 0.76rem;
 }
 
-.lk-article-three__middle {
+.lk-article-two__main {
   min-width: 0;
 }
 
-.lk-article-three__list {
+.lk-article-two__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -361,38 +309,38 @@ function formatDate(value) {
   gap: 1.1rem;
 }
 
-.lk-article-three__item {
+.lk-article-two__item {
   margin: 0;
 }
 
-.lk-article-three__card {
+.lk-article-two__card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   overflow: hidden;
   border-radius: 24px;
   text-decoration: none;
   border: 1px solid rgba(148, 163, 184, 0.2);
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(12, 20, 36, 0.92));
   box-shadow: 0 22px 56px rgba(2, 6, 23, 0.28);
-  min-height: 248px;
+  min-height: 220px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.lk-article-three__card:hover {
+.lk-article-two__card:hover {
   transform: translateY(-4px);
   border-color: rgba(125, 211, 252, 0.38);
   box-shadow: 0 28px 72px rgba(15, 23, 42, 0.44);
 }
 
-.lk-article-three__item.is-pinned .lk-article-three__card {
+.lk-article-two__item.is-pinned .lk-article-two__card {
   border-color: rgba(45, 212, 191, 0.34);
 }
 
-.lk-article-three__item.is-external .lk-article-three__card {
+.lk-article-two__item.is-external .lk-article-two__card {
   border-color: rgba(96, 165, 250, 0.32);
 }
 
-.lk-article-three__text {
+.lk-article-two__text {
   display: flex;
   flex-direction: column;
   gap: 0.72rem;
@@ -400,34 +348,33 @@ function formatDate(value) {
   min-width: 0;
 }
 
-.lk-article-three__date {
+.lk-article-two__date {
   color: rgba(148, 163, 184, 0.95);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
-.lk-article-three__title {
+.lk-article-two__title {
   margin: 0;
   color: #f8fafc;
   font-size: 1.42rem;
   line-height: 1.42;
 }
 
-.lk-article-three__excerpt {
+.lk-article-two__excerpt {
   margin: 0;
   color: rgba(226, 232, 240, 0.82);
   line-height: 1.72;
 }
 
-.lk-article-three__meta {
+.lk-article-two__meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   margin-top: auto;
 }
 
-.lk-article-three__tag,
-.lk-article-three__tag-chip {
+.lk-article-two__tag {
   display: inline-flex;
   align-items: center;
   padding: 0.28rem 0.7rem;
@@ -438,32 +385,26 @@ function formatDate(value) {
   border: 1px solid rgba(96, 165, 250, 0.22);
 }
 
-.lk-article-three__read {
+.lk-article-two__read {
   align-self: flex-end;
   color: #67e8f9;
   font-weight: 700;
 }
 
-.lk-article-three__cover-wrap {
+.lk-article-two__cover-wrap {
   min-width: 0;
   height: 100%;
   background: rgba(9, 14, 26, 0.94);
 }
 
-.lk-article-three__cover {
+.lk-article-two__cover {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.lk-article-three__tag-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.lk-article-three__pager {
+.lk-article-two__pager {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
@@ -471,7 +412,7 @@ function formatDate(value) {
   margin-top: 1.25rem;
 }
 
-.lk-article-three__pager-button {
+.lk-article-two__pager-button {
   min-width: 2.2rem;
   height: 2.2rem;
   padding: 0 0.75rem;
@@ -483,56 +424,42 @@ function formatDate(value) {
   cursor: pointer;
 }
 
-.lk-article-three__pager-button.is-active {
+.lk-article-two__pager-button.is-active {
   background: #67e8f9;
   color: #082032;
   border-color: transparent;
 }
 
-@media (max-width: 1360px) {
-  .lk-article-three__content {
-    grid-template-columns: 220px minmax(0, 1fr) 260px;
-  }
-
-  .lk-article-three__card {
-    grid-template-columns: minmax(0, 1fr) 280px;
-  }
-}
-
-@media (max-width: 1100px) {
-  .lk-article-three__content {
+@media (max-width: 1200px) {
+  .lk-article-two__content {
     grid-template-columns: 220px minmax(0, 1fr);
   }
 
-  .lk-article-three__right {
-    display: none;
+  .lk-article-two__card {
+    grid-template-columns: minmax(0, 1fr) 300px;
   }
 }
 
-@media (max-width: 820px) {
-  .lk-article-three__content {
+@media (max-width: 900px) {
+  .lk-article-two__content {
     grid-template-columns: 1fr;
   }
 
-  .lk-article-three__left,
-  .lk-article-three__right {
+  .lk-article-two__left {
     position: static;
-  }
-
-  .lk-article-three__left {
     order: 1;
   }
 
-  .lk-article-three__middle {
+  .lk-article-two__main {
     order: 2;
   }
 
-  .lk-article-three__card {
+  .lk-article-two__card {
     grid-template-columns: 1fr;
   }
 
-  .lk-article-three__cover-wrap {
-    height: 220px;
+  .lk-article-two__cover-wrap {
+    height: 200px;
   }
 }
 </style>

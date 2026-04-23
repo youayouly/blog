@@ -5,6 +5,43 @@
   --lk-brand-dark: #2d7bc7;
 }
 
+// ── 通用布局系统 ───────────────────────────────────────────────────────────────
+// 两列布局：左侧固定宽度，右侧自适应
+.lk-grid-2-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--lk-col-gap, 1.5rem);
+  align-items: start;
+}
+
+// 三列布局：左右固定宽度，中间自适应
+.lk-grid-3-col {
+  display: grid;
+  grid-template-columns: var(--lk-col-left-w, 280px) minmax(0, 1fr) var(--lk-col-right-w, 280px);
+  gap: var(--lk-col-gap, 1.5rem);
+  align-items: start;
+}
+
+// 响应式断点系统
+.lk-breakpoint-mobile {
+  @media (max-width: 719px) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.lk-breakpoint-tablet {
+  @media (max-width: 959px) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+// ── 品牌色 CSS 变量覆盖 ───────────────────────────────────────────────────────
+:root {
+  --vp-c-brand-1: var(--lk-brand);
+  --vp-c-brand-soft: rgba(74, 144, 217, 0.15);
+  --vp-c-brand-2: var(--lk-brand);
+}
+
 :root[data-theme='light'] {
   --vp-c-brand-1: var(--lk-brand);
   --vp-c-brand-soft: rgba(74, 144, 217, 0.15);
@@ -548,7 +585,10 @@ main.vp-project-home.lk-home-dual {
   box-sizing: border-box !important;
 }
 
-// Standalone selector – works even if .page-home ancestor is absent
+/*
+ * 首页两列布局：左侧个人卡片栏（固定宽度 33%） | 右侧主内容列（自适应）
+ * 使用 Flexbox 实现两列布局，确保左右对齐
+ */
 .lk-home-body-grid {
   display: flex !important;
   flex-direction: row !important;
@@ -558,6 +598,12 @@ main.vp-project-home.lk-home-dual {
   width: 100% !important;
   min-height: auto;
   box-sizing: border-box !important;
+
+  // 手机：两列变单列
+  @media (max-width: 719px) {
+    flex-direction: column !important;
+    min-height: auto;
+  }
 }
 
 // Extra specificity for good measure
@@ -1000,23 +1046,6 @@ body,
 .wm-header,
 .wm-feed {
   overflow-anchor: none;
-}
-
-// Mobile: collapse to single column.
-// Using !important so it overrides the inline styles set by JavaScript.
-@media (max-width: 719px) {
-
-  .lk-home-profile-col,
-  .page-home .lk-home-profile-col {
-    position: static !important;
-    max-width: 100% !important;
-  }
-
-  .lk-home-body-grid,
-  .page-home .lk-home-body-grid {
-    flex-direction: column !important;
-    min-height: auto;
-  }
 }
 
 // ── Navbar ───────────────────────────────────────────────────────────────────
@@ -1836,6 +1865,10 @@ main.vp-page:has(.lk-blog-fullbleed),
   margin: 0;
 }
 
+/*
+ * 博客卡片两列布局：左侧文字 | 右侧封面
+ * 使用 CSS Grid 确保两列对齐，偶数项左右互换
+ */
 .lk-blog__card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 38%;
@@ -1846,10 +1879,44 @@ main.vp-page:has(.lk-blog-fullbleed),
   background: rgba(15, 23, 42, 0.56);
   box-shadow: 0 8px 24px rgba(2, 6, 23, 0.34);
   min-height: 220px;
-}
 
-.lk-blog__item:nth-child(even) .lk-blog__card {
-  grid-template-columns: 38% minmax(0, 1fr);
+  // 偶数项：左右互换
+  &:nth-child(even) {
+    grid-template-columns: 38% minmax(0, 1fr);
+
+    .lk-blog__cover {
+      order: -1;
+    }
+  }
+
+  // 手机：两列变单列
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+
+    &:nth-child(even) {
+      grid-template-columns: 1fr;
+
+      .lk-blog__cover {
+        order: 0;
+      }
+    }
+
+    .lk-blog__cover {
+      min-height: 150px;
+    }
+
+    .lk-blog__post-title {
+      font-size: 1.2rem;
+    }
+
+    .lk-blog__excerpt {
+      font-size: 0.92rem;
+    }
+
+    .lk-blog__read {
+      margin-left: 0;
+    }
+  }
 }
 
 .lk-blog__date {
@@ -1875,10 +1942,6 @@ main.vp-page:has(.lk-blog-fullbleed),
   object-fit: cover;
   display: block;
   aspect-ratio: 3/2;
-}
-
-.lk-blog__item:nth-child(even) .lk-blog__cover {
-  order: -1;
 }
 
 .lk-blog__post-title {
@@ -1988,48 +2051,10 @@ main.vp-page:has(.lk-blog-fullbleed),
   outline-offset: 2px;
 }
 
-@media (max-width: 640px) {
-  .lk-blog__card {
-    grid-template-columns: 1fr;
-  }
-
-  .lk-blog__item:nth-child(even) .lk-blog__card {
-    grid-template-columns: 1fr;
-  }
-
-  .lk-blog__item:nth-child(even) .lk-blog__cover {
-    order: 0;
-  }
-
-  .lk-blog__cover {
-    min-height: 150px;
-  }
-
-  .lk-blog__post-title {
-    font-size: 1.2rem;
-  }
-
-  .lk-blog__excerpt {
-    font-size: 0.92rem;
-  }
-
-  .lk-blog__read {
-    margin-left: 0;
-  }
-}
-
 @media (max-width: 1280px) {
   .page-article-index .vp-page,
   .page-article-index .theme-hope-content {
     max-width: min(100rem, calc(100vw - 18px));
-  }
-}
-
-@media (max-width: 1024px) {
-  .lk-blog-fullbleed {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
   }
 }
 
@@ -2055,9 +2080,8 @@ main.vp-page:has(.lk-blog-fullbleed),
 }
 
 /*
- * About 三栏与标题下分隔线对齐：`.vp-page-title` 与 `[vp-content]:not(.custom)` 均为
- * max-width: var(--content-width); padding-inline: 2.5rem。正文区域宽度即「线」的内侧宽。
- * 左右栏固定 px，通过负 margin + 加宽 wrapper 把侧栏摆到线的垂直边界外侧，中间列天然等于线宽。
+ * About 三栏布局优化：时间线 | 主内容 | 分类
+ * 使用 CSS Grid 确保三列对齐，响应式断点清晰
  */
 .lk-about-fullbleed {
   --lk-about-rail-w: 220px;
@@ -2087,6 +2111,39 @@ main.vp-page:has(.lk-about-fullbleed),
   max-width: 100%;
   margin-bottom: 1.5rem;
   box-sizing: border-box;
+
+  // 平板：三列变单列
+  @media (max-width: 959px) {
+    grid-template-columns: 1fr;
+    gap: 22px;
+
+    .about-page-layout__rail {
+      order: 1;
+    }
+
+    .about-page-layout__main {
+      order: 2;
+    }
+
+    .about-page-layout__cats {
+      order: 3;
+    }
+  }
+
+  // 手机：时间线栏移到底部
+  @media (max-width: 719px) {
+    .about-page-layout__main {
+      order: 1;
+    }
+
+    .about-page-layout__cats {
+      order: 2;
+    }
+
+    .about-page-layout__rail {
+      order: 3;
+    }
+  }
 }
 
 .about-page-layout__main {
@@ -2107,6 +2164,10 @@ main.vp-page:has(.lk-about-fullbleed),
     font-size: 0.95rem;
     line-height: 1.55;
   }
+
+  @media (max-width: 959px) {
+    padding-left: 0;
+  }
 }
 
 .about-page-layout__rail {
@@ -2115,51 +2176,6 @@ main.vp-page:has(.lk-about-fullbleed),
 
 .about-page-layout__cats {
   min-width: 0;
-}
-
-@media (max-width: 959px) {
-  .lk-about-fullbleed {
-    width: 100%;
-    max-width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .about-page-layout {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
-
-  .about-page-layout__rail {
-    order: 1;
-  }
-
-  .about-page-layout__main {
-    order: 2;
-  }
-
-  .about-page-layout__cats {
-    order: 3;
-  }
-
-  .about-outro {
-    padding-left: 0;
-  }
-}
-
-/* 手机：个人卡与正文先出现，「动态」时间线栏压到整页最底 */
-@media (max-width: 719px) {
-  .about-page-layout__main {
-    order: 1;
-  }
-
-  .about-page-layout__cats {
-    order: 2;
-  }
-
-  .about-page-layout__rail {
-    order: 3;
-  }
 }
 
 // ── About Page (Apple-style layout system) ─────────────────────────────────
@@ -2211,12 +2227,34 @@ main.vp-page:has(.lk-about-fullbleed),
   transform: translateX(var(--lk-about-title-shift-x));
 }
 
+/*
+ * About 三栏布局优化：左侧栏 | 主内容 | 右侧栏
+ * 使用 CSS Grid 确保三列对齐，响应式断点清晰
+ */
 .lk-about-grid {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr) 280px;
   gap: var(--lk-space-24);
   align-items: start;
   transform: translateY(calc(-1 * var(--lk-about-content-lift)));
+
+  // 平板：三列变单列
+  @media (max-width: 959px) {
+    grid-template-columns: 1fr;
+    gap: var(--lk-space-24);
+
+    .lk-about-grid__main {
+      order: 1;
+    }
+
+    .lk-about-grid__left {
+      order: 2;
+    }
+
+    .lk-about-grid__right {
+      order: 3;
+    }
+  }
 }
 
 .lk-about-grid__left,
@@ -2249,23 +2287,6 @@ main.vp-page:has(.lk-about-fullbleed),
     --lk-about-content-lift: 0px;
     padding-top: var(--lk-space-32);
     padding-bottom: var(--lk-space-64);
-  }
-
-  .lk-about-grid {
-    grid-template-columns: 1fr;
-    gap: var(--lk-space-24);
-  }
-
-  .lk-about-grid__main {
-    order: 1;
-  }
-
-  .lk-about-grid__left {
-    order: 2;
-  }
-
-  .lk-about-grid__right {
-    order: 3;
   }
 }
 
