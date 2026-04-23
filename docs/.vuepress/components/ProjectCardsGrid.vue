@@ -1,5 +1,23 @@
 <template>
   <section class="lk-proj-cards" aria-label="Projects list cards">
+    <!-- 岗位筛选标签栏 -->
+    <div class="lk-proj-filter" role="tablist" aria-label="Filter projects by role">
+      <button
+        v-for="role in roleOptions"
+        :key="role.id"
+        type="button"
+        class="lk-proj-filter__tag"
+        :class="{ 'is-active': currentRole === role.id }"
+        role="tab"
+        :aria-selected="currentRole === role.id"
+        :aria-label="`${role.label} (${role.count})`"
+        @click="currentRole = role.id"
+      >
+        {{ role.label }}
+        <span class="lk-proj-filter__count">{{ role.count }}</span>
+      </button>
+    </div>
+
     <div class="lk-proj-cards__grid">
       <RouterLink
         v-for="(item, idx) in visibleItems"
@@ -58,7 +76,11 @@
       </RouterLink>
     </div>
 
-    <nav class="lk-pager" aria-label="Projects pagination">
+    <div v-if="filteredItems.length === 0" class="lk-proj-cards__empty">
+      该分类下暂无项目，请尝试其他筛选条件。
+    </div>
+
+    <nav v-else class="lk-pager" aria-label="Projects pagination">
       <button
         v-for="page in totalPages"
         :key="page"
@@ -75,11 +97,107 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { PROJECT_ROLES } from '@data/projectRoles.js'
 
 const pageSize = 9
 const currentPage = ref(1)
+const currentRole = ref('all')
+
+// 岗位映射：将项目 role 字段映射到岗位分类
+const roleMapping = {
+  // 产品经理相关
+  'Product Operations': 'pm',
+  'AI Product': 'ai-product',
+  'Education Product': 'pm',
+  'Product Strategy': 'pm',
+  'Portfolio IA': 'pm',
+
+  // 前端相关
+  'Frontend': 'frontend',
+  'Portfolio Frontend': 'frontend',
+  'Frontend Docs': 'frontend',
+  'UX Systems': 'frontend',
+
+  // 嵌入式相关
+  'Embedded': 'embedded',
+  'Robotics': 'embedded',
+  'Edge ML': 'embedded',
+
+  // AI 工程相关
+  'AI Infrastructure': 'ai-engineering',
+  'AI Application': 'ai-engineering',
+  'AI Productivity': 'ai-engineering',
+
+  // 机器学习相关
+  'Machine Learning': 'ml',
+
+  // 工具链/DevOps 相关
+  'Creator Tools': 'devops',
+
+  // 后端相关
+  'Content Product': 'backend',
+
+  // 系统架构相关
+  'Portfolio Frontend': 'architecture',
+
+  // 未分类
+  'default': 'uncategorized'
+}
+
+// 构建筛选选项
+const roleOptions = computed(() => {
+  return [
+    { id: 'all', label: '全部', count: items.length },
+    ...PROJECT_ROLES.filter(r => r.label !== '未分类项目').map(role => ({
+      id: roleToId(role.label),
+      label: role.label.split(' / ')[0],
+      count: role.count
+    }))
+  ]
+})
+
+// 将岗位标签转换为 ID
+function roleToId(label) {
+  const map = {
+    '产品经理 / PM': 'pm',
+    'AI 产品 / AI Product': 'ai-product',
+    '前端 / Frontend': 'frontend',
+    '嵌入式 / Embedded': 'embedded',
+    '工具链 / DevOps': 'devops',
+    'AI 工程 / AI Engineering': 'ai-engineering',
+    '机器学习 / ML': 'ml',
+    '后端 / Backend': 'backend',
+    '系统架构 / Architecture': 'architecture',
+    '未分类项目': 'uncategorized'
+  }
+  return map[label] || 'uncategorized'
+}
+
+// 根据项目 role 获取岗位 ID
+function getProjectRoleId(role) {
+  return roleMapping[role] || 'uncategorized'
+}
+
+// 筛选后的项目列表
+const filteredItems = computed(() => {
+  if (currentRole.value === 'all') {
+    return items
+  }
+  return items.filter(item => getProjectRoleId(item.role) === currentRole.value)
+})
+
+// 监听筛选变化，重置到第一页
+watch(currentRole, () => {
+  currentPage.value = 1
+})
+
+const totalPages = computed(() => Math.ceil(filteredItems.value.length / pageSize))
+const visibleItems = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredItems.value.slice(start, start + pageSize)
+})
 
 function hashString(str) {
   let h = 2166136261
@@ -300,16 +418,78 @@ const items = [
   },
 ]
 
-const totalPages = computed(() => Math.ceil(items.length / pageSize))
-const visibleItems = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return items.slice(start, start + pageSize)
-})
 </script>
 
 <style scoped>
 .lk-proj-cards {
   padding: 0.25rem 0 1.25rem;
+}
+
+.lk-proj-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0.5rem 0.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.42) 0%, rgba(15, 23, 42, 0.28) 100%);
+  border-radius: 12px;
+}
+
+.lk-proj-filter__tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.56);
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.85rem;
+  font-weight: 620;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    all 0.16s ease,
+    transform 0.08s ease;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+}
+
+.lk-proj-filter__tag:hover {
+  background: rgba(51, 65, 85, 0.72);
+  border-color: rgba(148, 163, 184, 0.52);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+}
+
+.lk-proj-filter__tag.is-active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.38), rgba(37, 99, 235, 0.42));
+  border-color: rgba(96, 165, 250, 0.68);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.18),
+    0 4px 14px rgba(37, 99, 235, 0.38);
+  transform: translateY(-1px);
+}
+
+.lk-proj-filter__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.62);
+  font-size: 0.72rem;
+  font-weight: 720;
+  color: rgba(203, 213, 225, 0.96);
+}
+
+.lk-proj-filter__tag.is-active .lk-proj-filter__count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .lk-proj-cards__grid {
@@ -489,5 +669,17 @@ const visibleItems = computed(() => {
 
 .lk-proj-card:hover .lk-proj-card__meta-row dd {
   -webkit-line-clamp: unset;
+}
+
+.lk-proj-cards__empty {
+  grid-column: 1 / -1;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: rgba(203, 213, 225, 0.86);
+  font-size: 0.95rem;
+  background: rgba(30, 41, 59, 0.38);
+  border: 2px dashed rgba(148, 163, 184, 0.32);
+  border-radius: 12px;
+  margin-top: 1rem;
 }
 </style>

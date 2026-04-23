@@ -1692,6 +1692,7 @@ main.vp-page:has(.lk-proj-hub-fullbleed)
 }
 
 .lk-proj-hub-fullbleed {
+  --lk-proj-portfolio-w: 400px;
   --lk-proj-roles-w: 220px;
   --lk-proj-col-gap: 20px;
   width: 100%;
@@ -1715,14 +1716,120 @@ main.vp-page:has(.lk-proj-hub-fullbleed) [vp-content]:not(.custom):has(.lk-proj-
   max-width: 100%;
 }
 
+// Projects 页面标题：移到左上角
+.lk-proj-hub-title {
+  margin-bottom: 1.5rem;
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.lk-proj-hub-title h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--vp-c-text-1);
+}
+
+// 隐藏 VuePress 默认的页面标题
+main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
+  display: none !important;
+}
+
 .lk-proj-hub-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--lk-proj-roles-w);
+  grid-template-columns: var(--lk-proj-portfolio-w) minmax(0, 1fr) var(--lk-proj-roles-w);
   gap: var(--lk-proj-col-gap);
   align-items: start;
   width: 100%;
   margin-top: 0;
   box-sizing: border-box;
+}
+
+.lk-proj-hub-layout__portfolio {
+  min-width: 0;
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + 20px);
+  max-height: calc(100vh - var(--navbar-height, 3.5rem) - 40px);
+  overflow-y: auto;
+}
+
+// 产品作品集头部
+.portfolio-header {
+  padding: 1rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.portfolio-eyebrow {
+  margin: 0 0 0.35rem;
+  color: #14b8a6;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.portfolio-header h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.5rem;
+  line-height: 1.22;
+  font-weight: 820;
+  letter-spacing: 0;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.78);
+}
+
+.portfolio-header p:last-child {
+  margin: 0.5rem 0 0;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.64);
+}
+
+[data-theme='light'] .portfolio-header h2 {
+  color: #0f172a;
+  text-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme='light'] .portfolio-header p:last-child {
+  color: #4b5563;
+  text-shadow: none;
+}
+
+// 产品作品集卡片网格
+.lk-proj-hub-layout__portfolio .lk-pm-grid__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 959px) {
+  .lk-proj-hub-layout__portfolio .lk-pm-grid__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 产品作品集容器滚动条样式
+.lk-proj-hub-layout__portfolio {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.lk-proj-hub-layout__portfolio::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lk-proj-hub-layout__portfolio::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lk-proj-hub-layout__portfolio::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.4);
+  border-radius: 3px;
+}
+
+.lk-proj-hub-layout__portfolio::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.6);
 }
 
 .lk-proj-hub-layout__main {
@@ -1731,13 +1838,11 @@ main.vp-page:has(.lk-proj-hub-fullbleed) [vp-content]:not(.custom):has(.lk-proj-
 
 .lk-proj-hub-layout__roles {
   min-width: 0;
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + 20px);
 }
 
-/* Projects 全路径：关闭侧栏后仍可能残留右侧 TOC 占位 */
-.theme-container.page-projects [vp-toc] {
-  display: none !important;
-}
-
+// 平板：三列变单列
 @media (max-width: 959px) {
   .lk-proj-hub-fullbleed {
     width: 100%;
@@ -1750,12 +1855,40 @@ main.vp-page:has(.lk-proj-hub-fullbleed) [vp-content]:not(.custom):has(.lk-proj-
     gap: 22px;
   }
 
+  .lk-proj-hub-layout__portfolio {
+    order: 1;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .lk-proj-hub-layout__main {
+    order: 2;
+  }
+
+  .lk-proj-hub-layout__roles {
+    order: 3;
+    position: static;
+  }
+}
+
+// 手机：调整顺序，主内容在前
+@media (max-width: 719px) {
+  .lk-proj-hub-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
   .lk-proj-hub-layout__main {
     order: 1;
   }
 
-  .lk-proj-hub-layout__roles {
+  .lk-proj-hub-layout__portfolio {
     order: 2;
+  }
+
+  .lk-proj-hub-layout__roles {
+    order: 3;
   }
 }
 

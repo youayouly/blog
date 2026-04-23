@@ -1,11 +1,5 @@
 <template>
   <section class="lk-pm-grid" aria-label="产品经理作品集">
-    <div class="lk-pm-grid__head">
-      <p class="lk-pm-grid__eyebrow">Product Manager Portfolio</p>
-      <h2>产品经理作品集</h2>
-      <p>把现有技术项目重新包装成招聘方更容易扫读的产品案例。</p>
-    </div>
-
     <div class="lk-pm-grid__grid">
       <RouterLink
         v-for="pmCase in pmCases"
@@ -67,47 +61,13 @@ const pmCases = [
 
 <style scoped>
 .lk-pm-grid {
-  padding: 0.5rem 0 1.35rem;
-}
-
-.lk-pm-grid__head {
-  max-width: 1120px;
-  margin: 0 auto 1rem;
-}
-
-.lk-pm-grid__eyebrow {
-  margin: 0 0 0.35rem;
-  color: #14b8a6;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.lk-pm-grid__head h2 {
-  margin: 0;
-  color: #f8fafc;
-  font-size: 1.7rem;
-  line-height: 1.22;
-  font-weight: 820;
-  letter-spacing: 0;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.78);
-}
-
-.lk-pm-grid__head p:last-child {
-  margin: 0.5rem 0 0;
-  color: rgba(226, 232, 240, 0.92);
-  font-size: 0.98rem;
-  line-height: 1.65;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.64);
+  padding: 0;
 }
 
 .lk-pm-grid__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
-  max-width: 1120px;
-  margin: 0 auto;
 }
 
 .lk-pm-card {
