@@ -3,13 +3,13 @@ export const LIVE2D_PREF_KEY = 'lk-live2d-enabled'
 export const LIVE2D_PREF_EVENT = 'lk-live2d-pref-changed'
 
 export function readLive2dPref() {
-  if (typeof window === 'undefined') return true
+  if (typeof window === 'undefined') return false
   try {
     const v = window.localStorage.getItem(LIVE2D_PREF_KEY)
-    if (v === null) return true
+    if (v === null) return false
     return v !== '0'
   } catch {
-    return true
+    return false
   }
 }
 

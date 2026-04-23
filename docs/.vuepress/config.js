@@ -97,7 +97,7 @@ export default defineUserConfig({
     logo: '/gallery/avatar-bread.svg',
     darkmode: 'toggle',
     pure: false,
-    appearance: 'dark', // ✅ 默认暗黑
+    appearance: 'light', // 默认浅色，登录后可切换
     backToTop: false,
 
     navbar: [
