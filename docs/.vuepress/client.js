@@ -277,44 +277,6 @@ function syncSplitPageHeader(path) {
   document.documentElement.classList.toggle('lk-header-split', use)
 }
 
-function debugAboutHeaderMetrics(runId) {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return
-  const p = normPath(window.location.pathname || '')
-  if (!(p === '/about' || p.startsWith('/about/'))) return
-
-  const pageTitle = document.querySelector('.vp-page-title')
-  const pageTitleH1 = document.querySelector('.vp-page-title h1')
-  const aboutLayout = document.querySelector('.lk-about-fullbleed .about-page-layout')
-  const navbar = document.querySelector('.vp-navbar')
-
-  const pageTitleRect = pageTitle?.getBoundingClientRect?.() || null
-  const h1Rect = pageTitleH1?.getBoundingClientRect?.() || null
-  const layoutRect = aboutLayout?.getBoundingClientRect?.() || null
-  const navbarRect = navbar?.getBoundingClientRect?.() || null
-
-  const data = {
-    path: p,
-    hasHeaderSplitClass: document.documentElement.classList.contains('lk-header-split'),
-    hasPageTitle: !!pageTitle,
-    hasPageTitleH1: !!pageTitleH1,
-    hasAboutLayout: !!aboutLayout,
-    pageTitlePaddingTop: pageTitle ? window.getComputedStyle(pageTitle).paddingTop : null,
-    pageTitleMarginTop: pageTitle ? window.getComputedStyle(pageTitle).marginTop : null,
-    h1Transform: pageTitleH1 ? window.getComputedStyle(pageTitleH1).transform : null,
-    layoutTransform: aboutLayout ? window.getComputedStyle(aboutLayout).transform : null,
-    navbarBottom: navbarRect ? Math.round(navbarRect.bottom) : null,
-    titleTop: pageTitleRect ? Math.round(pageTitleRect.top) : null,
-    h1Top: h1Rect ? Math.round(h1Rect.top) : null,
-    layoutTop: layoutRect ? Math.round(layoutRect.top) : null,
-    gapNavbarToTitle: navbarRect && pageTitleRect ? Math.round(pageTitleRect.top - navbarRect.bottom) : null,
-    gapTitleToLayout: pageTitleRect && layoutRect ? Math.round(layoutRect.top - pageTitleRect.bottom) : null,
-  }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7655/ingest/296c82e7-8e39-4cb8-9b2f-c70e9a1e3f41',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'53a7cd'},body:JSON.stringify({sessionId:'53a7cd',runId,hypothesisId:'H1-H4',location:'docs/.vuepress/client.js:debugAboutHeaderMetrics',message:'About header/layout metrics snapshot',data,timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
-}
-
 /** After hydration: toggles navbar/sidebar glass styles on non-home routes. */
 function syncSiteNonHomeClass(path) {
   if (typeof document === 'undefined') return
@@ -498,18 +460,50 @@ function nudgeLive2dForCurrentRoute() {
   }
 }
 
-/* ── Scroll progress bar + scrolled class (global) ─────────────────────── */
-let progressBar = null
+/* ── 全局背景模糊蒙版（#lk-blur-layer）── ──────────────────────────────
+ * 替代 CSS ::before 方案，直接由 JS 管理 div 的 class，
+ * 避免 lk-site-non-home !important 导致的 backdrop-filter 清零问题。
+ *
+ * 三种状态（对应 CSS 类）：
+ *   lk-blur--clear  : About 页顶部，不模糊
+ *   lk-blur--soft   : About 页滚动后，轻度模糊
+ *   lk-blur--static : 其他页面，固定轻度模糊，切页时无 transition
+ */
+let blurLayer = null
+const LK_SCROLL_BLUR_THRESHOLD = 100  // 滚过 Hero 的安全高度
 
-/** Hero / 全局背景的「滚动后模糊」依赖 html.lk-scrolled。
- *  阈值 80px 是 navbar 高度上下，scroll 一点就启动。 */
-const LK_SCROLL_BLUR_THRESHOLD = 80
-
-function syncScrolledClass() {
+function ensureBlurLayer() {
   if (typeof document === 'undefined') return
-  const scrolled = (window.scrollY || document.documentElement.scrollTop || 0) > LK_SCROLL_BLUR_THRESHOLD
-  document.documentElement.classList.toggle('lk-scrolled', scrolled)
+  if (blurLayer) return
+  blurLayer = document.createElement('div')
+  blurLayer.id = 'lk-blur-layer'
+  document.body.insertBefore(blurLayer, document.body.firstChild)
 }
+
+function isAboutRoute(path) {
+  // dev 模式 path 形如 /about.html、prod 形如 /about 或 /about/。
+  // 先剥 .html 后缀，再去 trailing slash，最后做精确 / 前缀匹配。
+  const raw = path || (typeof window !== 'undefined' ? window.location.pathname : '/')
+  const p = raw.replace(/\.html$/, '').replace(/\/+$/, '') || '/'
+  return p === '/' || p === '/about' || p.startsWith('/about/')
+}
+
+function updateBlurLayer(path) {
+  if (!blurLayer) return
+  const scrollY = window.scrollY || 0
+  const aboutHit = isAboutRoute(path)
+  blurLayer.classList.remove('lk-blur--clear', 'lk-blur--soft', 'lk-blur--static')
+  let appliedClass
+  if (aboutHit) {
+    appliedClass = scrollY > LK_SCROLL_BLUR_THRESHOLD ? 'lk-blur--soft' : 'lk-blur--clear'
+  } else {
+    appliedClass = 'lk-blur--static'
+  }
+  blurLayer.classList.add(appliedClass)
+}
+
+/* ── Scroll progress bar (global) ─────────────────────────────────────── */
+let progressBar = null
 
 function initProgressBar() {
   if (document.getElementById('lk-progress')) return
@@ -524,14 +518,12 @@ function initProgressBar() {
       requestAnimationFrame(() => {
         const h = document.documentElement.scrollHeight - window.innerHeight
         bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%'
-        syncScrolledClass()
+        updateBlurLayer(window.location.pathname)
         ticking = false
       })
       ticking = true
     }
   }, { passive: true })
-
-  syncScrolledClass()
 }
 
 function rescueLive2dFromHomeGrid() {
@@ -601,6 +593,7 @@ export default defineClientConfig({
       () => route.path,
       (path) => {
         syncSiteNonHomeClass(path)
+        updateBlurLayer(path)
       },
       { flush: 'post' },
     )
@@ -617,9 +610,6 @@ export default defineClientConfig({
       () => route.path,
       (path) => {
         syncSplitPageHeader(path)
-        nextTick(() => {
-          debugAboutHeaderMetrics('run-before-fix-route-watch')
-        })
       },
       { flush: 'post', immediate: true },
     )
@@ -636,13 +626,12 @@ export default defineClientConfig({
     )
 
     onMounted(() => {
+      ensureBlurLayer()
+      updateBlurLayer(route.path)
       syncSiteNonHomeClass(route.path)
       applyLive2dRouteClass(route.path)
       syncLive2dPref()
       syncSplitPageHeader(route.path)
-      nextTick(() => {
-        debugAboutHeaderMetrics('run-before-fix-mounted')
-      })
       ensureNavbarHideObserver()
       applyHiddenNavbarItems()
       nextTick(() => {
@@ -691,7 +680,6 @@ export default defineClientConfig({
       async () => {
         await nextTick()
         nudgeLive2dForCurrentRoute()
-        debugAboutHeaderMetrics('run-before-fix-route-post-nexttick')
       },
       { flush: 'post' },
     )

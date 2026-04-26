@@ -305,25 +305,6 @@ const live2dHint = computed(() =>
 
 let mo = null
 
-// #region agent log
-function agentLog(hypothesisId, location, message, data) {
-  if (import.meta.env?.DEV) return
-  if (typeof fetch === 'undefined') return
-  fetch('http://127.0.0.1:7655/ingest/296c82e7-8e39-4cb8-9b2f-c70e9a1e3f41', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7f7323' },
-    body: JSON.stringify({
-      sessionId: '7f7323',
-      hypothesisId,
-      location,
-      message,
-      data: data || {},
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {})
-}
-// #endregion
-
 function isMobileViewport() {
   if (typeof window === 'undefined') return false
   return window.matchMedia('(max-width: 719px)').matches
@@ -357,19 +338,10 @@ function hoistColorModeIntoGroup() {
   const group = el.querySelector('.lk-navbar-fx-group')
   const sw = document.getElementById('color-mode-switch')
   if (!group || !sw) {
-    agentLog('H2', 'ParticlesNavbarToggle.vue:hoist', 'hoist skip: missing group or #color-mode-switch', {
-      hasGroup: !!group,
-      hasSw: !!sw,
-    })
     return
   }
   const colorWrap = sw.closest('.vp-nav-item')
   if (!colorWrap || colorWrap === el || el.contains(colorWrap)) {
-    agentLog('H3', 'ParticlesNavbarToggle.vue:hoist', 'hoist skip: bad colorWrap', {
-      hasColorWrap: !!colorWrap,
-      sameAsEl: colorWrap === el,
-      alreadyInside: colorWrap ? el.contains(colorWrap) : false,
-    })
     return
   }
   /* Hope 默认把主题包在 `.hide-in-mobile` 里；搬到顶栏后必须在窄屏可见 */
@@ -377,19 +349,11 @@ function hoistColorModeIntoGroup() {
   colorWrap.classList.add('lk-navbar-theme-slot')
 
   const liveBtn = live2dBtnRef.value
-  const mode = liveBtn && liveBtn.parentNode === group ? 'insertBeforeLive2d' : 'appendToGroup'
   if (liveBtn && liveBtn.parentNode === group) {
     group.insertBefore(colorWrap, liveBtn)
   } else {
     group.appendChild(colorWrap)
   }
-  agentLog('H4', 'ParticlesNavbarToggle.vue:hoist', 'hoist applied', {
-    mode,
-    hasLiveBtn: !!liveBtn,
-    swInNavbar: !!document.querySelector('#navbar #color-mode-switch'),
-    swInSidebar: !!document.querySelector('#sidebar #color-mode-switch'),
-    strippedHideInMobile: true,
-  })
 }
 
 function tryAnchor() {
@@ -400,20 +364,6 @@ function tryAnchor() {
   if (!end) return false
 
   const insertBefore = findFxInsertBefore(end, el)
-  const endChildSummary = [...end.children].map((n) => ({
-    tag: n.tagName,
-    cls: (n.className && String(n.className).slice(0, 80)) || '',
-  }))
-  const directBtnCount = [...end.querySelectorAll(':scope > button')].filter((n) => n !== el).length
-  agentLog('H1', 'ParticlesNavbarToggle.vue:tryAnchor', 'anchor placement', {
-    mobile: isMobileViewport(),
-    directBtnCount,
-    hasInsertBefore: !!insertBefore,
-    insertTag: insertBefore?.tagName,
-    insertCls: insertBefore?.className && String(insertBefore.className).slice(0, 80),
-    endChildCount: end.children.length,
-    endChildSummary: endChildSummary.slice(0, 12),
-  })
   if (insertBefore && insertBefore.parentNode === end) {
     if (el.parentNode !== end || el.nextSibling !== insertBefore) {
       end.insertBefore(el, insertBefore)
@@ -424,30 +374,6 @@ function tryAnchor() {
 
   hoistColorModeIntoGroup()
   anchored.value = true
-  const sw = document.getElementById('color-mode-switch')
-  agentLog('H5', 'ParticlesNavbarToggle.vue:tryAnchor', 'post-anchor state', {
-    elParent: el.parentNode?.id || el.parentNode?.className,
-    rootContainsSw: !!(wrapRef.value && sw && wrapRef.value.contains(sw)),
-    path: route.path,
-    loggedIn: isLoggedIn.value,
-    showL2d: showLive2dToggle.value,
-  })
-  // #region agent log
-  const navScreen = document.querySelector('#nav-screen')
-  const drawerColorBlocks = navScreen
-    ? navScreen.querySelectorAll('.vp-color-mode').length
-    : 0
-  const drawerTitles = navScreen
-    ? navScreen.querySelectorAll('.vp-color-mode-title').length
-    : 0
-  const modeSwitches = document.querySelectorAll('button#color-mode-switch').length
-  agentLog('H6', 'ParticlesNavbarToggle.vue:tryAnchor', 'nav-screen theme duplicate probe', {
-    hasNavScreen: !!navScreen,
-    drawerVpColorModeCount: drawerColorBlocks,
-    drawerTitleCount: drawerTitles,
-    duplicateIdSwitchCount: modeSwitches,
-  })
-  // #endregion
   return true
 }
 

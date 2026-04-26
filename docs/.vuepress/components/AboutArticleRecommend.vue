@@ -77,7 +77,11 @@ function indexLabel(i) {
   margin: 0 0 1rem;
   font-size: 0.84rem;
   line-height: 1.6;
-  color: var(--vp-c-text-2, #64748b);
+  /* 区块叠在全局模糊背景上：避免 vp-c-text-2 灰度融进暖色底图 */
+  color: #1e293b;
+  text-shadow:
+    0 0 1px rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(255, 255, 255, 0.75);
 }
 
 .lk-about-articles__list {
@@ -294,7 +298,10 @@ function indexLabel(i) {
 }
 
 [data-theme='dark'] .lk-about-articles__lead {
-  color: #cbd5e1;
+  color: #e2e8f0;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 10px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme='dark'] .lk-about-articles__excerpt {

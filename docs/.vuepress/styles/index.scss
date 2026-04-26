@@ -1174,32 +1174,61 @@ body,
   padding-bottom: 2px;
 }
 
+/* ── Navbar underline 进度条 ──────────────────────────────────────────────
+ * 实现方式：a::after 作为绝对定位的 2.5px 线条，从 scaleX(0) 到 scaleX(1)。
+ * 注意：overflow: hidden 的父级会裁掉 bottom:-6px 的线，所以 a 要有 pb 补偿。
+ */
+.vp-navbar .vp-navbar-item > a {
+  position: relative !important;
+  display: inline-block !important;
+  padding-bottom: 4px !important;
+  overflow: visible !important;
+}
+
 .vp-navbar .vp-navbar-item > a::after {
   content: '' !important;
   display: block !important;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -3px;
-  height: 2px;
-  background: var(--lk-accent);
-  border-radius: 2px;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
-  pointer-events: none;
-  /* 覆盖更早的 display:none 规则（靠选择器特异度） */
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  border-radius: 3px !important;
+  background: #343A40 !important;
+  transform: scaleX(0) !important;
+  transform-origin: left center !important;
+  transition: transform 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) !important;
+  pointer-events: none !important;
   visibility: visible !important;
   opacity: 1 !important;
+  z-index: 99 !important;
+  /* 确保不被 backdrop-filter:none 规则误伤 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
+[data-theme='dark'] .vp-navbar .vp-navbar-item > a::after {
+  background: #DEE2E6 !important;
+}
+
+/* hover：快速注满 */
 .vp-navbar .vp-navbar-item > a:hover::after,
-.vp-navbar .vp-navbar-item > a:focus-visible::after,
+.vp-navbar .vp-navbar-item > a:focus-visible::after {
+  transform: scaleX(1) !important;
+}
+
+/* active 态：满状态 + fill 动画 */
 .vp-navbar .vp-navbar-item.vp-active > a::after,
 .vp-navbar .vp-navbar-item.active > a::after,
 .vp-navbar .vp-navbar-item > a.router-link-active::after,
 .vp-navbar .vp-navbar-item > a[aria-current='page']::after {
-  transform: scaleX(1);
+  transform: scaleX(1) !important;
+  animation: lk-nav-underline-fill 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both !important;
+}
+
+@keyframes lk-nav-underline-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
 .vp-navbar .vp-navbar-item.vp-active > a,
@@ -1474,9 +1503,14 @@ body,
 }
 
 // ── 全站背景：hangmoon 黄昏湖畔，固定全视口 ───────────────────────────────
+// 关键 stacking 顺序（从下到上）：
+//   1. <html> 兜底色
+//   2. <body> background-image（hangmoon）
+//   3. #lk-blur-layer（z-index: -1，模糊 layer 2 即 body bg）
+//   4. #app 内所有内容（z-index: auto，画在 blur 层之上保持清晰）
 //
-// /about：Hero 区域显示原图；用户向下滚动时，通过 html.lk-scrolled 触发模糊蒙版
-// 其它路由：永远模糊（一致的"内容焦点"叙事）
+// 必须给 body 加 isolation: isolate 让它成为 stacking context root，
+// 否则 z-index: -1 元素会逃出 body，blur 看到的是 html 的透明背景。
 html,
 body {
   background-image: url('/gallery/hero-hangmoon-gaze.jpg') !important;
@@ -1494,49 +1528,42 @@ html {
   background-color: #0b1222;
 }
 
-/* 主题容器：作为模糊蒙版的定位锚点 */
-.theme-container {
+body {
   position: relative;
-  z-index: 0;
   isolation: isolate;
 }
 
-/* 模糊蒙版：fixed 全视口，初始透明；条件下变模糊 */
-.theme-container::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background: transparent;
+/* 模糊蒙版 div（由 JS 创建并 insertBefore 到 body 首位） */
+#lk-blur-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
   backdrop-filter: blur(0);
   -webkit-backdrop-filter: blur(0);
-  pointer-events: none;
   transition:
-    background 0.5s ease,
-    backdrop-filter 0.5s ease,
-    -webkit-backdrop-filter 0.5s ease;
+    backdrop-filter 0.6s ease-out,
+    -webkit-backdrop-filter 0.6s ease-out;
+  will-change: backdrop-filter;
 }
 
-/* 非 About 页面：永远模糊（纯 blur，无色彩叠层） */
-.theme-container:not(.page-about)::before {
-  backdrop-filter: blur(22px) saturate(1.3);
-  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+/* About 首页顶部：完全清晰（无 blur） */
+#lk-blur-layer.lk-blur--clear {
+  backdrop-filter: blur(0) !important;
+  -webkit-backdrop-filter: blur(0) !important;
 }
 
-/* About 页：滚动到 Hero 之外才启用模糊（纯 blur，无白色遮罩） */
-html.lk-scrolled .theme-container.page-about::before {
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+/* About 首页滚动后：轻度渐变模糊 */
+#lk-blur-layer.lk-blur--soft {
+  backdrop-filter: blur(10px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.15) !important;
 }
 
-/* 主内容必须在模糊蒙版之上 */
-.theme-container > main,
-.theme-container > .vp-navbar,
-.theme-container > .vp-sidebar,
-.theme-container > footer,
-.theme-container > [class*='vp-'] {
-  position: relative;
-  z-index: 1;
+/* 其他页面：固定轻度静态模糊，切页时无 transition 避免闪 */
+#lk-blur-layer.lk-blur--static {
+  backdrop-filter: blur(12px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.1) !important;
+  transition: none !important;
 }
 
 /* 深色模式首页：同一套浅色底图 + 罩层压暗，避免与整站 Dark 割裂过重 */
@@ -2725,7 +2752,11 @@ main.vp-page:has(.lk-about-fullbleed),
   margin: 1.75rem 0 0;
   padding: 0 0 0 1rem;
   border: none;
-  color: var(--vp-c-text-2, #64748b);
+  /* 叠在 hangmoon 模糊底图上：用偏深字色 + 轻量亮描边，避免灰字融进背景 */
+  color: #1e293b;
+  text-shadow:
+    0 0 1px rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(255, 255, 255, 0.75);
 
   p {
     margin: 0;
@@ -2736,6 +2767,13 @@ main.vp-page:has(.lk-about-fullbleed),
   @media (max-width: 959px) {
     padding-left: 0;
   }
+}
+
+[data-theme='dark'] .about-outro {
+  color: #f1f5f9;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(0, 0, 0, 0.45);
 }
 
 /* ── About v2：整页背景（随内容增高，含页面底部）+ 首屏 Hero + 左下滚动 ─ */
@@ -2875,7 +2913,8 @@ body:has(.lk-about-v2.lk-about-fullbleed) {
 .lk-about-v2-hero__btn:hover {
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.92);
-  color: var(--lk-accent-strong, #212529);
+  /* 浅色药丸底：勿用 --lk-accent-strong（深色主题下为白字 → 与底同色） */
+  color: #0f172a;
   border-color: rgba(255, 255, 255, 0.85);
   box-shadow:
     0 14px 32px rgba(2, 6, 23, 0.28),
@@ -2889,7 +2928,7 @@ body:has(.lk-about-v2.lk-about-fullbleed) {
 
 .lk-about-v2-hero__btn--primary {
   background: rgba(255, 255, 255, 0.92);
-  color: var(--lk-accent-strong, #212529);
+  color: #0f172a;
   border-color: rgba(255, 255, 255, 0.96);
   box-shadow:
     0 10px 28px rgba(2, 6, 23, 0.32),
@@ -3067,9 +3106,7 @@ button.lk-about-v2-hero__btn {
 }
 
 body:has(.lk-stats-hub--triple) {
-  background:
-    radial-gradient(120% 80% at 50% -10%, rgba(255, 255, 255, 0.95) 0%, transparent 55%),
-    linear-gradient(165deg, #fffdfb 0%, #f5f0ff 38%, #eef6ff 100%);
+  /* 统计页背景由全局 hangmoon 承担，不再单独画渐变 */
   min-height: 100vh;
 }
 
@@ -3966,6 +4003,8 @@ html.lk-site-non-home #app .vp-navbar {
   backdrop-filter: blur(18px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
 }
+
+/* 模糊蒙版已由 JS #lk-blur-layer 接管，无需 CSS 覆盖 */
 
 /* 2026-04-26: 思源黑体（Noto Sans SC）+ JetBrains Mono 数字 / 等宽 + 衬线展示 */
 :root {

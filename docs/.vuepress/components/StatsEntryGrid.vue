@@ -29,19 +29,8 @@ const items = [
 </script>
 
 <template>
-  <div class="lk-stats-hub-inner">
-    <p class="lk-stats-hub__lead">
-      站点入口与分区导航（由原首页四个卡片迁移而来）。
-    </p>
-  <div class="lk-stats-grid" role="navigation" aria-label="站点入口统计">
-    <a v-for="(it, i) in items" :key="i" class="lk-stats-card" :href="it.href">
-      <span class="lk-stats-card__tag">{{ it.tag }}</span>
-      <h2 class="lk-stats-card__title">{{ it.title }}</h2>
-      <p class="lk-stats-card__details">{{ it.details }}</p>
-      <span class="lk-stats-card__go" aria-hidden="true">→</span>
-    </a>
-  </div>
-  </div>
+  <!-- 原入口卡片已隐藏：统计页专注于数据，导航由顶部 navbar 承担 -->
+  <div />
 </template>
 
 <style scoped>
