@@ -87,10 +87,32 @@ function startPolling() {
   }, POLL_INTERVAL_MS)
 }
 
+function isLocalHost() {
+  if (typeof window === 'undefined') return false
+  const h = window.location.hostname || ''
+  return (
+    h === 'localhost' ||
+    h === '127.0.0.1' ||
+    h === '::1' ||
+    h.endsWith('.local') ||
+    h.startsWith('192.168.') ||
+    h.startsWith('10.')
+  )
+}
+
 export function ensureBusuanzi() {
   if (typeof document === 'undefined') return
 
   if (busuanziState.loadFailed) return
+
+  // 本地开发 / 内网环境：不蒜子会返回全站汇总的巨大数字，
+  // 直接走 dash 占位，避免误导真实访问量。
+  if (isLocalHost()) {
+    busuanziState.uv = '—'
+    busuanziState.pv = '—'
+    settleMissingAsDash()
+    return
+  }
 
   if (!document.getElementById('busuanzi_value_site_uv')) {
     const uv = document.createElement('span')

@@ -183,7 +183,7 @@ import {
 const wrapRef = ref(null)
 const anchored = ref(false)
 const enabled = ref(true)
-const live2dOn = ref(true)
+const live2dOn = ref(false)
 const blockedAccessIds = ref([])
 const hiddenNavIds = ref([])
 const showAccessModal = ref(false)
@@ -198,6 +198,8 @@ function isLive2dHiddenPath(path) {
   return (
     p === '/about' ||
     p.startsWith('/about/') ||
+    p === '/stats' ||
+    p.startsWith('/stats/') ||
     p === '/tech' ||
     p.startsWith('/tech/') ||
     p === '/article' ||

@@ -2,9 +2,11 @@ import { computed, ref } from 'vue'
 
 export const AVATAR_PREF_KEY = 'lk-avatar-src'
 export const AVATAR_PREF_EVENT = 'lk-avatar-changed'
-export const DEFAULT_AVATAR = '/gallery/avatar-bread.svg'
+export const AVATAR_HISTORY_KEY = 'lk-avatar-history'
+export const DEFAULT_AVATAR = '/gallery/avatar-bread-light.svg'
 
 export const avatarChoices = [
+  { src: '/gallery/avatar-bread-light.svg', label: '浅色三角形（默认）' },
   { src: '/gallery/avatar-bread.svg', label: '深色三角形' },
   { src: '/gallery/avatar-bread-backup.svg', label: '动漫面包(备份)' },
   { src: '/avatar.png', label: '当前动漫头像' },
@@ -12,8 +14,27 @@ export const avatarChoices = [
   { src: '/gallery/avatar-old-backup.jpg', label: '历史头像 2' },
 ]
 
+function readAvatarHistory() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(AVATAR_HISTORY_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((item) => item?.src) : []
+  } catch {
+    return []
+  }
+}
+
+function isDataUrl(src) {
+  return typeof src === 'string' && src.startsWith('data:image/')
+}
+
 function normalizeAvatar(src) {
-  return avatarChoices.some((item) => item.src === src) ? src : DEFAULT_AVATAR
+  const known = [
+    ...avatarChoices.map((item) => item.src),
+    ...readAvatarHistory().map((item) => item.src),
+  ]
+  return known.includes(src) || isDataUrl(src) ? src : DEFAULT_AVATAR
 }
 
 export function readAvatar() {
@@ -38,11 +59,33 @@ export function writeAvatar(src) {
 }
 
 export const avatarSrcRef = ref(DEFAULT_AVATAR)
+export const avatarHistoryRef = ref([])
 
 export function syncAvatarFromStorage() {
   avatarSrcRef.value = readAvatar()
+  avatarHistoryRef.value = readAvatarHistory()
 }
 
 export function useAvatarSrc() {
   return computed(() => avatarSrcRef.value)
+}
+
+export function useAvatarOptions() {
+  return computed(() => [...avatarChoices, ...avatarHistoryRef.value])
+}
+
+export function addAvatarUpload(src) {
+  if (typeof window === 'undefined' || !isDataUrl(src)) return
+  const label = `Uploaded ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`
+  const next = [
+    { src, label },
+    ...readAvatarHistory().filter((item) => item.src !== src),
+  ].slice(0, 8)
+  try {
+    window.localStorage.setItem(AVATAR_HISTORY_KEY, JSON.stringify(next))
+    window.localStorage.setItem(AVATAR_PREF_KEY, src)
+  } catch {
+    /* ignore */
+  }
+  window.dispatchEvent(new CustomEvent(AVATAR_PREF_EVENT, { detail: { src } }))
 }

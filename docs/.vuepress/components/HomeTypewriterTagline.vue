@@ -1,5 +1,5 @@
 <template>
-  <div id="main-description" class="home-typewriter-tagline" role="status" aria-live="polite">
+  <div class="home-typewriter-tagline" role="status" aria-live="polite">
     <span class="home-typewriter-tagline__text">{{ visible }}</span><span
       class="home-typewriter-tagline__cursor"
       aria-hidden="true"

@@ -15,10 +15,7 @@
             <strong>{{ pmCase.role }}</strong>
           </div>
           <h3>{{ pmCase.title }}</h3>
-          <p>{{ pmCase.summary }}</p>
-          <div class="lk-pm-card__tags" aria-label="案例亮点">
-            <span v-for="tag in pmCase.tags" :key="tag">{{ tag }}</span>
-          </div>
+          <p class="lk-pm-card__summary">{{ pmCase.summary }}</p>
         </div>
       </RouterLink>
     </div>
@@ -33,55 +30,49 @@ const pmCases = [
     title: '博客发布工作流',
     area: 'Creator Tools',
     role: '需求到发布',
-    summary: '把文章上传、预览、删除队列和本地发布串成一个更稳定的内容生产流程。',
-    tags: ['批量发布', '删除队列', '发布校验'],
+    summary: '把上传、预览、删除队列和本地发布串成一条更稳定的内容生产流程。',
     to: '/article/git-release-map.html',
-    image: '/gallery/article-cover-pm-creator-tools-galaxy-background-1776845225450.png',
+    image: '/gallery/proj-card-pm-blog-publishing-workflow-1777018373147.png',
   },
   {
     title: 'AI 封面生成工作流',
     area: 'AI Operations',
     role: '体验与质量',
-    summary: '接入 SiliconFlow 生图能力，解决封面 fallback、乱码文字和本地资产沉淀问题。',
-    tags: ['AI 生图', '本地存储', '失败可见'],
+    summary: '接入 SiliconFlow 生图能力，补齐封面 fallback、可见性和本地素材沉淀。',
     to: '/article/ai-key-router-one-api-zcode-ccswitch.html',
-    image: '/gallery/article-cover-pm-ai-operations-galaxy-background-1776845342410.png',
+    image: '/gallery/proj-card-pm-ai-cover-workflow-1777018390268.png',
   },
   {
     title: '留学信息规划器',
     area: 'Education',
     role: '信息架构',
-    summary: '把分散的国家、申请路径和个人研究整理成可比较、可复用的决策信息层。',
-    tags: ['信息架构', '决策支持', '内容组织'],
+    summary: '把国家、申请路径和个人研究整理成更易比较和复用的决策信息层。',
     to: '/study/',
-    image: '/gallery/article-cover-pm-education-planner-galaxy-background-1776845371967.png',
+    image: '/gallery/proj-card-pm-study-abroad-planner-1777018410083.png',
   },
   {
-    title: 'PM Portfolio PRD',
+    title: 'PM 作品集 PRD',
     area: 'Portfolio',
     role: '求职叙事',
-    summary: '把博客内容重构成更适合招聘方理解的产品经理作品集入口，突出问题、方案与结果。',
-    tags: ['作品集', '招聘叙事', '案例结构'],
+    summary: '把博客内容重构成更适合招聘方理解的问题、方案与结果入口。',
     to: '/article/pm-portfolio-prd.html',
-    image: '/gallery/article-cover-product-manager-portfolio-prd-1776831264136.png',
+    image: '/gallery/proj-card-pm-portfolio-prd-1777018426515.png',
   },
   {
-    title: 'Projects Pagination',
+    title: 'Projects 分页设计',
     area: 'Portfolio',
     role: '信息架构',
-    summary: '把项目入口拆成更容易扫描的结构，方便快速理解能力范围和案例深度。',
-    tags: ['分页', '信息架构', '浏览效率'],
+    summary: '把项目入口拆成更易扫描的结构，降低浏览成本并强化案例层次。',
     to: '/article/pm-projects-pagination-galaxy.html',
-    image: '/gallery/article-cover-pm-ai-operations-galaxy-background-1776845342410.png',
+    image: '/gallery/proj-card-pm-projects-pagination-1777018443481.png',
   },
   {
-    title: 'Article Index Design',
+    title: '文章索引设计',
     area: 'Content',
     role: '内容产品',
-    summary: '把文章页做成更清晰的目录入口，让标签、分页和入口层级更接近产品化浏览体验。',
-    tags: ['内容产品', '标签体系', '目录设计'],
+    summary: '把文章页做成更清晰的目录入口，让标签、分页和层级更接近产品体验。',
     to: '/article/',
-    image: '/gallery/article-cover-personal-knowledge-garden-1776832492231.png',
+    image: '/gallery/proj-card-pm-article-index-design-1777018459314.png',
   },
 ]
 </script>
@@ -149,15 +140,15 @@ const pmCases = [
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 18%, rgba(20, 184, 166, 0.25), transparent 34%),
-    linear-gradient(160deg, rgba(2, 6, 23, 0.92), rgba(2, 6, 23, 0.68) 58%, rgba(2, 6, 23, 0.78));
+    radial-gradient(circle at 18% 18%, rgba(20, 184, 166, 0.2), transparent 34%),
+    linear-gradient(160deg, rgba(2, 6, 23, 0.76), rgba(2, 6, 23, 0.42) 58%, rgba(2, 6, 23, 0.54));
 }
 
 .lk-pm-card__body {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 0.7rem;
+  gap: 0.85rem;
   min-height: 196px;
   padding: 18px 16px 16px;
 }
@@ -190,42 +181,44 @@ const pmCases = [
   overflow-wrap: anywhere;
 }
 
-.lk-pm-card p {
-  margin: 0;
-  color: rgba(241, 245, 249, 0.95);
-  font-size: 0.9rem;
+.lk-pm-card__summary {
+  margin: auto 0 0;
+  color: rgba(241, 245, 249, 0.96);
+  font-size: 0.92rem;
   line-height: 1.7;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.78);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.72);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   overflow: hidden;
 }
 
-.lk-pm-card__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  align-self: end;
+.lk-pm-card__summary::after {
+  content: '';
 }
 
-.lk-pm-card__tags span {
-  max-width: 100%;
-  padding: 0.2rem 0.52rem;
-  border-radius: 999px;
-  border: 1px solid rgba(204, 251, 241, 0.42);
-  background: rgba(15, 23, 42, 0.58);
-  color: #ccfbf1;
-  font-size: 0.72rem;
-  font-weight: 760;
-  line-height: 1.35;
-  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.28);
+[data-theme='light'] .lk-pm-card__summary {
+  margin-top: auto;
+  color: rgba(241, 245, 249, 0.96);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.68);
 }
 
 .lk-pm-card:hover {
   transform: translateY(-3px);
   border-color: rgba(125, 211, 252, 0.64);
   box-shadow: 0 18px 42px rgba(2, 6, 23, 0.5);
+  text-decoration: none;
+}
+
+.lk-pm-card,
+.lk-pm-card:hover,
+.lk-pm-card:focus,
+.lk-pm-card:active,
+.lk-pm-card *,
+.lk-pm-card *:hover,
+.lk-pm-card *:focus,
+.lk-pm-card *:active {
+  text-decoration: none !important;
 }
 
 @media (max-width: 719px) {
@@ -240,7 +233,6 @@ const pmCases = [
   }
 }
 
-/* Light mode */
 [data-theme='light'] .lk-pm-card {
   background:
     var(--pm-card-bg),
@@ -250,33 +242,21 @@ const pmCases = [
 }
 
 [data-theme='light'] .lk-pm-card__scrim {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6) 58%, rgba(255, 255, 255, 0.7));
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.52), rgba(15, 23, 42, 0.28) 58%, rgba(15, 23, 42, 0.38));
 }
 
 [data-theme='light'] .lk-pm-card__top {
-  color: rgba(30, 41, 59, 0.8);
-  text-shadow: none;
+  color: rgba(248, 250, 252, 0.96);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.62);
 }
 
 [data-theme='light'] .lk-pm-card__top strong {
-  color: #0d9488;
+  color: #99f6e4;
 }
 
 [data-theme='light'] .lk-pm-card h3 {
-  color: #0f172a;
-  text-shadow: none;
-}
-
-[data-theme='light'] .lk-pm-card p {
-  color: rgba(30, 41, 59, 0.78);
-  text-shadow: none;
-}
-
-[data-theme='light'] .lk-pm-card__tags span {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(13, 148, 136, 0.2);
-  color: #0d9488;
-  box-shadow: none;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.72);
 }
 
 [data-theme='light'] .lk-pm-card:hover {

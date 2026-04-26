@@ -13,6 +13,7 @@
         class="lk-home-side-panel__block lk-home-side-panel__block--notice"
       />
       <SiteStatsCard
+        v-if="!hideSiteStats"
         variant="sidebar"
         embedded
         class="lk-home-side-panel__block lk-home-side-panel__block--stats"
@@ -26,6 +27,11 @@ import VisitorWelcomeCard from './VisitorWelcomeCard.vue'
 import ProfileCard from './ProfileCard.vue'
 import NoticeCard from './NoticeCard.vue'
 import SiteStatsCard from './SiteStatsCard.vue'
+
+defineProps({
+  /** 统计页等场景：由右侧「统计」大卡承接网站数据，隐藏侧栏内小块 */
+  hideSiteStats: { type: Boolean, default: false },
+})
 </script>
 
 <style scoped>

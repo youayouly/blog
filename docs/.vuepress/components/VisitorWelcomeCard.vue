@@ -1,15 +1,22 @@
 <template>
   <section class="lk-welcome" aria-label="欢迎来访者">
     <h2 class="lk-welcome__title">
-      <span class="lk-welcome__icon" aria-hidden="true">👤</span>
-      欢迎来访者！
+      <span class="lk-welcome__icon" aria-hidden="true">👋</span>
+      欢迎你
     </h2>
     <div class="lk-welcome__body" aria-live="polite">
-      <p class="lk-welcome__line">{{ visitor.placeLine }}</p>
-      <p class="lk-welcome__line">IP：{{ visitor.ip }}</p>
-      <p v-if="visitor.distanceKm != null" class="lk-welcome__line">
-        距主站直线约 {{ visitor.distanceKm }} 公里
+      <p v-if="visitor.loading" class="lk-welcome__line lk-welcome__line--muted">
+        正在识别你来自哪里…
       </p>
+      <template v-else>
+        <p v-if="visitor.regionText" class="lk-welcome__place">
+          来自 <strong>{{ visitor.regionText }}</strong> 的朋友
+        </p>
+        <p v-else class="lk-welcome__place">你好，欢迎来 Luke 的空间</p>
+        <p v-if="visitor.distanceKm != null" class="lk-welcome__line">
+          距主站约 {{ visitor.distanceKm.toLocaleString('zh-CN') }} km
+        </p>
+      </template>
       <p class="lk-welcome__tip">{{ visitor.tip }}</p>
     </div>
   </section>
@@ -20,23 +27,29 @@ import { reactive, onMounted } from 'vue'
 import { fetchVisitorSnapshot, timeTipByHour } from '../utils/visitorClient.js'
 
 const visitor = reactive({
-  placeLine: '正在解析访问信息…',
-  ip: '—',
+  loading: true,
+  regionText: '',
   distanceKm: null,
-  tip: '',
+  tip: timeTipByHour(new Date().getHours()),
 })
 
-visitor.tip = timeTipByHour(new Date().getHours())
+function stripUnknownFragments(text) {
+  if (!text) return ''
+  const cleaned = text.replace(/^来自\s*/, '').replace(/\s*的朋友$/, '').trim()
+  if (!cleaned || cleaned === '未知地区') return ''
+  return cleaned
+}
 
 onMounted(async () => {
   try {
     const s = await fetchVisitorSnapshot()
-    visitor.placeLine = s.placeLine
-    visitor.ip = s.ip
+    visitor.regionText = stripUnknownFragments(s.placeLine)
     visitor.distanceKm = s.distanceKm
-    visitor.tip = s.tip
+    visitor.tip = s.tip || visitor.tip
   } catch {
-    visitor.placeLine = '暂时无法获取位置信息'
+    // swallow: keep default greeting + time tip
+  } finally {
+    visitor.loading = false
   }
 })
 </script>
@@ -72,12 +85,29 @@ onMounted(async () => {
   line-height: 1;
 }
 
+.lk-welcome__place {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.lk-welcome__place strong {
+  color: #2563eb;
+  font-weight: 700;
+}
+
 .lk-welcome__line {
   margin: 0 0 5px;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   line-height: 1.45;
   color: #334155;
   word-break: break-word;
+}
+
+.lk-welcome__line--muted {
+  color: #94a3b8;
 }
 
 .lk-welcome__tip {
@@ -100,8 +130,20 @@ onMounted(async () => {
   color: rgba(226, 232, 240, 0.98) !important;
 }
 
+[data-theme='dark'] .lk-welcome__place {
+  color: rgba(241, 245, 249, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-welcome__place strong {
+  color: #93c5fd !important;
+}
+
 [data-theme='dark'] .lk-welcome__line {
   color: rgba(148, 163, 184, 0.98) !important;
+}
+
+[data-theme='dark'] .lk-welcome__line--muted {
+  color: rgba(100, 116, 139, 0.98) !important;
 }
 
 [data-theme='dark'] .lk-welcome__tip {

@@ -3,18 +3,32 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { normPath, setAuthed, syncAuthedFromStorage, useIsLoggedIn } from '../utils/authGate.js'
 import {
+  addAvatarUpload,
   AVATAR_PREF_EVENT,
   AVATAR_PREF_KEY,
-  avatarChoices,
   readAvatar,
   syncAvatarFromStorage,
+  useAvatarOptions,
   useAvatarSrc,
   writeAvatar,
 } from '../utils/avatarPref.js'
-import { writeSiteApiCreds, clearSiteApiCreds } from '../utils/siteApiCreds.js'
+import {
+  addHomeBackgroundUpload,
+  addHomePortraitUpload,
+  HOME_VISUAL_PREF_EVENT,
+  syncHomeVisualsFromStorage,
+  useHomeBackgroundOptions,
+  useHomeBackgroundSrc,
+  useHomePortraitOptions,
+  useHomePortraitSrc,
+  writeHomeBackground,
+  writeHomePortrait,
+} from '../utils/homeVisualPref.js'
+import { clearSiteApiCreds, writeSiteApiCreds } from '../utils/siteApiCreds.js'
 
 const EXPECT_USER = 'youayouly'
 const EXPECT_PASS = 'LUyi@541000'
+const ANCHOR_ID = 'lk-logout-anchor'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,7 +39,13 @@ const logoutAnchorReady = ref(false)
 const showLoginModal = ref(false)
 const showAvatarModal = ref(false)
 const isLoggedIn = useIsLoggedIn()
+
 const currentAvatar = useAvatarSrc()
+const avatarOptions = useAvatarOptions()
+const currentHomeBackground = useHomeBackgroundSrc()
+const currentHomePortrait = useHomePortraitSrc()
+const homeBackgroundOptions = useHomeBackgroundOptions()
+const homePortraitOptions = useHomePortraitOptions()
 
 const showLoginEntry = computed(() => {
   if (isLoggedIn.value) return false
@@ -48,7 +68,7 @@ function openLoginModal() {
 
 function openAvatarModal() {
   if (!isLoggedIn.value) return
-  syncAvatarFromStorage()
+  syncAvatarEverywhere()
   showAvatarModal.value = true
 }
 
@@ -68,7 +88,7 @@ function onSubmit(e) {
     showLoginModal.value = false
     return
   }
-  errorMsg.value = '用户名或密码不正确'
+  errorMsg.value = 'Username or password is incorrect.'
 }
 
 async function logout() {
@@ -81,10 +101,6 @@ async function logout() {
   setAuthed(false)
   clearSiteApiCreds()
 }
-
-const ANCHOR_ID = 'lk-logout-anchor'
-let brandLinkEl = null
-let brandLogoCaptureHandler = null
 
 function applyAvatarToDom(src) {
   if (typeof document === 'undefined') return
@@ -108,6 +124,7 @@ function applyAvatarToDom(src) {
 
 function syncAvatarEverywhere() {
   syncAvatarFromStorage()
+  syncHomeVisualsFromStorage()
   applyAvatarToDom(currentAvatar.value)
 }
 
@@ -116,6 +133,62 @@ function selectAvatar(src) {
   writeAvatar(src)
   syncAvatarEverywhere()
 }
+
+function selectHomeBackground(src) {
+  if (!isLoggedIn.value) return
+  writeHomeBackground(src)
+  syncHomeVisualsFromStorage()
+}
+
+function selectHomePortrait(src) {
+  if (!isLoggedIn.value) return
+  writeHomePortrait(src)
+  syncHomeVisualsFromStorage()
+}
+
+function readImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+    reader.onerror = () => reject(reader.error || new Error('Failed to read image'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function onAvatarUpload(e) {
+  const file = e.target?.files?.[0]
+  e.target.value = ''
+  if (!file || !isLoggedIn.value) return
+  const dataUrl = await readImageFile(file).catch(() => '')
+  if (!dataUrl) return
+  addAvatarUpload(dataUrl)
+  syncAvatarEverywhere()
+}
+
+async function onHomeBackgroundUpload(e) {
+  const file = e.target?.files?.[0]
+  e.target.value = ''
+  if (!file || !isLoggedIn.value) return
+  const dataUrl = await readImageFile(file).catch(() => '')
+  if (!dataUrl) return
+  addHomeBackgroundUpload(dataUrl)
+  syncHomeVisualsFromStorage()
+}
+
+async function onHomePortraitUpload(e) {
+  const file = e.target?.files?.[0]
+  e.target.value = ''
+  if (!file || !isLoggedIn.value) return
+  const dataUrl = await readImageFile(file).catch(() => '')
+  if (!dataUrl) return
+  addHomePortraitUpload(dataUrl)
+  syncHomeVisualsFromStorage()
+}
+
+let brandLinkEl = null
+let brandLogoCaptureHandler = null
+let navbarObserver = null
+let anchorRaf = null
 
 function handleNavbarBrandLogoClick(e) {
   const t = e.target
@@ -163,9 +236,6 @@ function ensureLogoutAnchor() {
   logoutAnchorReady.value = true
 }
 
-let navbarObserver = null
-let anchorRaf = null
-
 function scheduleEnsureLogoutAnchor() {
   if (typeof document === 'undefined') return
   if (typeof requestAnimationFrame === 'function') {
@@ -184,7 +254,13 @@ function scheduleEnsureLogoutAnchor() {
 }
 
 function onAvatarStorage(e) {
-  if (!e || e.key === AVATAR_PREF_KEY || e.key === null) syncAvatarEverywhere()
+  if (
+    !e ||
+    e.key === AVATAR_PREF_KEY ||
+    e.key === null
+  ) {
+    syncAvatarEverywhere()
+  }
 }
 
 onMounted(() => {
@@ -202,6 +278,7 @@ onMounted(() => {
   }
   window.addEventListener('storage', onAvatarStorage)
   window.addEventListener(AVATAR_PREF_EVENT, syncAvatarEverywhere)
+  window.addEventListener(HOME_VISUAL_PREF_EVENT, syncAvatarEverywhere)
 })
 
 watch(
@@ -238,6 +315,7 @@ onUnmounted(() => {
   }
   window.removeEventListener('storage', onAvatarStorage)
   window.removeEventListener(AVATAR_PREF_EVENT, syncAvatarEverywhere)
+  window.removeEventListener(HOME_VISUAL_PREF_EVENT, syncAvatarEverywhere)
 })
 </script>
 
@@ -248,16 +326,16 @@ onUnmounted(() => {
       class="lk-login-modal-wrap"
       role="dialog"
       aria-modal="true"
-      aria-label="登录"
+      aria-label="Login"
       @click.self="closeLoginModal"
     >
       <div class="lk-login-entry-card">
-        <button type="button" class="lk-login-close" aria-label="关闭登录框" @click="closeLoginModal">
-          ×
+        <button type="button" class="lk-login-close" aria-label="Close login" @click="closeLoginModal">
+          脳
         </button>
         <h2 class="lk-login-entry-title">登录</h2>
         <p class="lk-login-entry-hint">
-          登录后可访问首页、留学、相册等，也可以在顶部图标区控制其他页面访问权限和隐藏导航页面。
+          登录后可以管理隐藏入口、头像、首页背景和首页人像。
         </p>
         <form class="lk-login-entry-form" @submit="onSubmit">
           <label class="lk-login-entry-label">
@@ -295,31 +373,93 @@ onUnmounted(() => {
       class="lk-login-modal-wrap"
       role="dialog"
       aria-modal="true"
-      aria-label="切换头像"
+      aria-label="Admin settings"
       @click.self="closeAvatarModal"
     >
       <div class="lk-login-entry-card lk-avatar-card">
-        <button type="button" class="lk-login-close" aria-label="关闭头像选择框" @click="closeAvatarModal">
-          ×
+        <button type="button" class="lk-login-close" aria-label="Close settings" @click="closeAvatarModal">
+          脳
         </button>
-        <h2 class="lk-login-entry-title">切换头像</h2>
-        <p class="lk-login-entry-hint">登录后可在这里切换头像，未登录时不可修改。</p>
-        <div class="lk-avatar-grid">
-          <button
-            v-for="item in avatarChoices"
-            :key="item.src"
-            type="button"
-            class="lk-avatar-option"
-            :class="{ 'is-active': currentAvatar === item.src }"
-            :title="item.label"
-            @click="selectAvatar(item.src)"
-          >
-            <img :src="item.src" :alt="item.label" />
-            <span>{{ item.label }}</span>
-          </button>
-        </div>
+        <h2 class="lk-login-entry-title">管理者设置</h2>
+        <p class="lk-login-entry-hint">
+          这里可以切换头像、首页背景和首页人像。上传的内容会保存在当前浏览器，并自动出现在历史选项里。
+        </p>
+
+        <section class="lk-settings-section">
+          <div class="lk-settings-section__head">
+            <h3>头像</h3>
+            <label class="lk-upload-btn">
+              上传头像
+              <input type="file" accept="image/*" @change="onAvatarUpload" />
+            </label>
+          </div>
+          <div class="lk-avatar-grid">
+            <button
+              v-for="item in avatarOptions"
+              :key="item.src"
+              type="button"
+              class="lk-avatar-option"
+              :class="{ 'is-active': currentAvatar === item.src }"
+              :title="item.label"
+              @click="selectAvatar(item.src)"
+            >
+              <img :src="item.src" :alt="item.label" />
+              <span>{{ item.label }}</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="lk-settings-section">
+          <div class="lk-settings-section__head">
+            <h3>首页背景</h3>
+            <label class="lk-upload-btn">
+              上传背景
+              <input type="file" accept="image/*" @change="onHomeBackgroundUpload" />
+            </label>
+          </div>
+          <div class="lk-avatar-grid lk-media-grid">
+            <button
+              v-for="item in homeBackgroundOptions"
+              :key="item.src || item.label"
+              type="button"
+              class="lk-avatar-option"
+              :class="{ 'is-active': currentHomeBackground === item.src }"
+              :title="item.label"
+              @click="selectHomeBackground(item.src)"
+            >
+              <img :src="item.src" :alt="item.label" />
+              <span>{{ item.label }}</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="lk-settings-section">
+          <div class="lk-settings-section__head">
+            <h3>首页人像</h3>
+            <label class="lk-upload-btn">
+              上传人像
+              <input type="file" accept="image/*" @change="onHomePortraitUpload" />
+            </label>
+          </div>
+          <div class="lk-avatar-grid lk-media-grid">
+            <button
+              v-for="item in homePortraitOptions"
+              :key="item.src || item.label"
+              type="button"
+              class="lk-avatar-option"
+              :class="{ 'is-active': currentHomePortrait === item.src }"
+              :title="item.label"
+              @click="selectHomePortrait(item.src)"
+            >
+              <div v-if="!item.src" class="lk-empty-media">隐藏</div>
+              <img v-else :src="item.src" :alt="item.label" />
+              <span>{{ item.label }}</span>
+            </button>
+          </div>
+        </section>
+
         <div class="lk-avatar-actions">
-          <button type="button" class="lk-logout-nav-btn" title="退出登录" @click="logout">
+          <button type="button" class="lk-logout-nav-btn" title="Logout" @click="logout">
             退出登录
           </button>
         </div>
@@ -327,6 +467,16 @@ onUnmounted(() => {
     </div>
   </Teleport>
 
+  <Teleport v-if="logoutAnchorReady && isLoggedIn" to="#lk-logout-anchor">
+    <button
+      type="button"
+      class="lk-account-nav-btn"
+      title="管理者设置"
+      @click="openAvatarModal"
+    >
+      设置
+    </button>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -376,7 +526,7 @@ onUnmounted(() => {
 .lk-login-entry-hint {
   margin: 0 0 0.85rem;
   font-size: 0.72rem;
-  line-height: 1.4;
+  line-height: 1.45;
   color: rgba(148, 163, 184, 0.95);
 }
 
@@ -432,16 +582,40 @@ onUnmounted(() => {
 }
 
 .lk-avatar-card {
-  width: min(15rem, calc(100vw - 2.25rem));
-  padding: 0.7rem 0.65rem 0.65rem;
+  width: min(42rem, calc(100vw - 2.25rem));
+  max-height: min(84vh, 56rem);
+  overflow: auto;
+  padding: 0.9rem 0.85rem 0.8rem;
   border-radius: 10px;
+}
+
+.lk-settings-section + .lk-settings-section {
+  margin-top: 0.9rem;
+}
+
+.lk-settings-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.lk-settings-section__head h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.92);
 }
 
 .lk-avatar-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
   margin-top: 0.2rem;
+}
+
+.lk-media-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .lk-avatar-option {
@@ -475,9 +649,50 @@ onUnmounted(() => {
 }
 
 .lk-avatar-actions {
-  margin-top: 0.45rem;
+  margin-top: 0.7rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.lk-upload-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(226, 232, 240, 0.94);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.lk-upload-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lk-empty-media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(51, 65, 85, 0.6);
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (max-width: 719px) {
+  .lk-avatar-grid,
+  .lk-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>
 
@@ -525,7 +740,8 @@ onUnmounted(() => {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
-[data-theme='light'] .lk-login-entry-title {
+[data-theme='light'] .lk-login-entry-title,
+[data-theme='light'] .lk-settings-section__head h3 {
   color: rgba(15, 23, 42, 0.92);
 }
 
@@ -544,7 +760,8 @@ onUnmounted(() => {
 }
 
 [data-theme='light'] .lk-account-nav-btn,
-[data-theme='light'] .lk-logout-nav-btn {
+[data-theme='light'] .lk-logout-nav-btn,
+[data-theme='light'] .lk-upload-btn {
   border-color: rgba(100, 116, 139, 0.35);
   color: rgba(51, 65, 85, 0.9);
   background: rgba(241, 245, 249, 0.9);
@@ -560,5 +777,10 @@ onUnmounted(() => {
   background: rgba(248, 250, 252, 0.9);
   color: rgba(30, 41, 59, 0.94);
   border-color: rgba(148, 163, 184, 0.45);
+}
+
+[data-theme='light'] .lk-empty-media {
+  background: rgba(226, 232, 240, 0.85);
+  color: rgba(51, 65, 85, 0.94);
 }
 </style>

@@ -1,15 +1,13 @@
 ---
-title: Projects Refactor Note
+title: Projects 改版说明
 comment: false
 toc: false
 sidebar: false
 ---
 
-# Projects Refactor Note
+# Projects 改版说明
 
-当前方向：不再维护独立 PM Portfolio 页面。
-
-PM 相关内容已经并入 `/tech/` 的 Projects 页面，并通过 `ProductManagerCases` 组件展示在“产品经理作品集”板块中。
+当前方向是不再单独维护 `/pm/` 页面，而是把产品经理相关内容直接并入 `/tech/` 的主项目页。
 
 主要文件：
 
@@ -19,7 +17,7 @@ PM 相关内容已经并入 `/tech/` 的 Projects 页面，并通过 `ProductMan
 
 保留原则：
 
-- `/tech/` 仍然是 Projects 主入口。
-- 原有项目列表继续保留。
-- PM 案例使用和项目列表接近的三列卡片排版。
-- 不新增 `/pm/` 独立页面入口。
+- `/tech/` 仍然是 Projects 主入口
+- 原有项目列表继续保留
+- PM 案例和项目列表保持统一的卡片语言
+- 不新增独立的 `/pm/` 入口

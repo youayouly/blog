@@ -1,29 +1,29 @@
 ---
-title: Personal Blog
+title: 个人博客系统
 pageClass: page-projects
 comment: false
 toc: false
 sidebar: false
 ---
 
-# Personal Blog
+# 个人博客系统
 
-This site is built with **VuePress 2** and **vuepress-theme-hope**: a static-first stack with Markdown pages, Vue SFC components for the home layout (hero, typewriter, album grid, project cards), and client-side enhancements in `docs/.vuepress/client.js`.
+这个站点基于 **VuePress 2** 和 **vuepress-theme-hope** 搭建，核心目标是用静态内容承载项目、文章、相册和个人资料页。
 
-## Stack
+## 技术栈
 
-- **VuePress 2** (Vite bundler) for content and build pipeline  
-- **vuepress-theme-hope** for navbar, sidebar, dark mode, and optional comment plugins on selected pages  
-- **Sass** (`docs/.vuepress/styles/index.scss`) for global layout and Chromium-safe glass styles  
-- Typical deploy targets: static hosts (e.g. Vercel, Netlify, Cloudflare Pages) with Git-triggered builds  
+- **VuePress 2**：负责内容组织与构建流程
+- **vuepress-theme-hope**：提供导航、侧边栏和主题切换能力
+- **Sass**：负责全局布局、玻璃态样式和页面细节覆盖
+- **Vercel 等静态托管平台**：适合持续部署
 
-## What lives here
+## 站点内容
 
-- Custom homepage grid (profile column + features)  
-- Travel album with `AlbumFeed` and `ProjectNineGrid`  
-- Tech hub with structured project pages under `/tech/`  
+- 首页双栏布局与自定义 Hero
+- 项目页、文章页和留学页等结构化内容
+- 相册组件 `AlbumFeed` 与 `ProjectNineGrid`
 
-## Next steps
+## 下一步
 
-- Add a public repo link and deployment notes  
-- Document key theme overrides and component map  
+- 补充公开仓库说明与部署记录
+- 继续整理主题覆盖和组件关系文档

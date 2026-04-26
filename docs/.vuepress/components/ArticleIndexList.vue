@@ -9,7 +9,7 @@ const articles = [
   {
     slug: 'pm-projects-pagination-galaxy',
     href: '/article/pm-projects-pagination-galaxy.html',
-    cover: '/gallery/article-cover-pm-ai-operations-galaxy-background-1776845342410.png',
+    cover: '/gallery/home-rec-projects-pagination.png',
     date: '2026-04-22T07:10:00.000Z',
     title: 'Projects 作品集分页：把岗位、项目和文章串成招聘入口',
     excerpt: '记录这次把 PM 作品集前置、项目按岗位分页、文章列表分页，以及用 SiliconFlow 星系图做本地背景的迭代。',
@@ -18,7 +18,7 @@ const articles = [
   {
     slug: 'ai-key-router-one-api-zcode-ccswitch',
     href: '/article/ai-key-router-one-api-zcode-ccswitch.html',
-    cover: '/gallery/article-cover-ai-key-router-one-api-zcode-ccswitch-1776831294920.png',
+    cover: '/gallery/home-rec-ai-key-router.png',
     date: '2026-04-22T05:38:00.000Z',
     title: 'AI Key 路由：SiliconFlow、DeepSeek、Qwen、One API、ZCode 和 CCSwitch',
     excerpt: '把模型供应商 Key、One API 中转平台和 Claude Code 适配工具串成一套可维护的 AI 开发调用链。',
@@ -27,7 +27,7 @@ const articles = [
   {
     slug: 'pm-portfolio-prd',
     href: '/article/pm-portfolio-prd.html',
-    cover: '/gallery/article-cover-product-manager-portfolio-prd-1776831264136.png',
+    cover: '/gallery/home-rec-portfolio-prd.png',
     date: '2026-04-22T05:35:00.000Z',
     title: '产品经理作品集改造 PRD：把博客变成求职入口',
     excerpt: '从招聘方视角重构个人站，把技术博客、案例文章和简历信息整理成产品经理作品集。',
@@ -36,7 +36,7 @@ const articles = [
   {
     slug: 'openclaw',
     href: '/article/openclaw.html',
-    cover: '/gallery/article-cover-local-ai-compute-core-1776832789468.png',
+    cover: '/gallery/article-soft-openclaw.png',
     date: '2026-04-22T04:00:59.216Z',
     title: 'OpenClaw Local Setup',
     excerpt: '如果想在本地玩转大模型，这是一条尽量标准、可复查的起步流程。',
@@ -45,7 +45,7 @@ const articles = [
   {
     slug: 'langchain',
     href: '/article/langchain.html',
-    cover: '/gallery/article-cover-agent-workflow-neural-mesh-1776832699716.png',
+    cover: '/gallery/article-soft-agent-workflow.png',
     date: '2026-04-22T04:01:01.517Z',
     title: 'AI Infra Notes',
     excerpt: '设计 Agent：决定 AI 什么时候该查资料，什么时候该写代码，什么时候该交给人工确认。',
@@ -54,7 +54,7 @@ const articles = [
   {
     slug: 'ai模板',
     href: '/article/ai模板.html',
-    cover: '/gallery/article-cover-prompt-workflow-crystal-grid-1776832732128.png',
+    cover: '/gallery/article-soft-prompt-templates.png',
     date: '2026-04-22T04:01:02.375Z',
     title: 'AI Prompt Template',
     excerpt: '沉淀可复用提示词结构，让 AI 协作输出更稳定、更容易验证。',
@@ -63,7 +63,7 @@ const articles = [
   {
     slug: 'git-release-map',
     href: '/article/git-release-map.html',
-    cover: '/gallery/article-cover-abstract-release-river-lights-1776832409153.png',
+    cover: '/gallery/home-rec-git-release.png',
     date: '2026-04-21',
     title: 'Git 发布流水线：从本地改动到 Vercel Release',
     excerpt: '把暂存、提交、同步、推送、部署和排错拆成稳定模块，记录图片、批量发布和 Vercel Release 踩过的坑。',
@@ -73,7 +73,7 @@ const articles = [
   {
     slug: 'edge-ai-sketch',
     href: '/article/edge-ai-sketch.html',
-    cover: '/gallery/article-cover-edge-ai-silicon-landscape-1776832435287.png',
+    cover: '/gallery/article-soft-edge-ai.png',
     date: '2026-04-12 20:53',
     title: 'Edge AI 部署流水线的几笔记录',
     excerpt: '从模型导出、量化到设备端推理验证，整理一条最小可走的检查清单，方便以后项目复用。',
@@ -82,7 +82,7 @@ const articles = [
   {
     slug: 'vuepress-stack-notes',
     href: '/article/vuepress-stack-notes.html',
-    cover: '/gallery/article-cover-static-site-component-constellation-1776832464149.png',
+    cover: '/gallery/article-soft-vuepress-stack.png',
     date: '2026-04-02 20:49',
     title: '用 VuePress 2 搭静态个人站',
     excerpt: '主题选型、目录约定、Sass 全局样式与少量客户端增强，和 Projects 里的长文互补。',
@@ -91,7 +91,7 @@ const articles = [
   {
     slug: 'my-blog',
     href: '/tech/my-blog.html',
-    cover: '/gallery/article-cover-personal-knowledge-garden-1776832492231.png',
+    cover: '/gallery/article-soft-openclaw.png',
     date: '2026-03-20 18:30',
     title: 'Personal Blog：Projects 文档',
     excerpt: '本站技术栏与组件地图的完整说明，归类在 Projects 分区，列表里一并收录便于检索。',
@@ -163,7 +163,16 @@ function formatDate(value) {
               'is-external': article.external,
             }"
           >
-            <a class="lk-article-three__card" :href="article.href">
+            <a
+              class="lk-article-three__card"
+              :href="article.href"
+              :aria-label="(article.external ? '打开' : '阅读') + '：' + article.title"
+            >
+              <span class="lk-article-three__corner-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
               <div class="lk-article-three__text">
                 <time class="lk-article-three__date" :datetime="article.date">{{ formatDate(article.date) }}</time>
                 <h3 class="lk-article-three__title">{{ article.title }}</h3>
@@ -171,7 +180,6 @@ function formatDate(value) {
                 <div class="lk-article-three__meta">
                   <span v-for="tag in article.tags" :key="tag" class="lk-article-three__tag">{{ tag }}</span>
                 </div>
-                <span class="lk-article-three__read">{{ article.external ? 'Open ->' : 'Read ->' }}</span>
               </div>
 
               <div class="lk-article-three__cover-wrap">
@@ -180,6 +188,7 @@ function formatDate(value) {
                   class="lk-article-three__cover"
                   :src="article.cover"
                   :alt="article.title"
+                  loading="lazy"
                 />
               </div>
             </a>
@@ -279,8 +288,9 @@ function formatDate(value) {
 }
 
 .lk-article-three__card {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 240px;
   overflow: hidden;
   border-radius: 24px;
   text-decoration: none;
@@ -295,6 +305,43 @@ function formatDate(value) {
   transform: translateY(-4px);
   border-color: rgba(125, 211, 252, 0.38);
   box-shadow: 0 28px 72px rgba(15, 23, 42, 0.44);
+  text-decoration: none;
+}
+
+.lk-article-three__corner-arrow {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 2;
+  width: 1.45rem;
+  height: 1.45rem;
+  color: #67e8f9;
+  pointer-events: none;
+  transform: rotate(-45deg);
+  transition: transform 0.22s ease, color 0.2s ease;
+}
+
+.lk-article-three__corner-arrow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lk-article-three__card:hover .lk-article-three__corner-arrow,
+.lk-article-three__card:focus-visible .lk-article-three__corner-arrow {
+  transform: rotate(0deg);
+  color: #a5f3fc;
+}
+
+.lk-article-three__card,
+.lk-article-three__card:hover,
+.lk-article-three__card:focus,
+.lk-article-three__card:active,
+.lk-article-three__card *,
+.lk-article-three__card *:hover,
+.lk-article-three__card *:focus,
+.lk-article-three__card *:active {
+  text-decoration: none !important;
 }
 
 .lk-article-three__item.is-pinned .lk-article-three__card {
@@ -351,16 +398,22 @@ function formatDate(value) {
   border: 1px solid rgba(96, 165, 250, 0.22);
 }
 
-.lk-article-three__read {
-  align-self: flex-end;
-  color: #67e8f9;
-  font-weight: 700;
-}
-
 .lk-article-three__cover-wrap {
+  position: relative;
   min-width: 0;
   height: 100%;
   background: rgba(9, 14, 26, 0.94);
+  isolation: isolate;
+}
+
+.lk-article-three__cover-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(105deg, rgba(15, 23, 42, 0.22) 0%, transparent 42%);
+  mix-blend-mode: multiply;
 }
 
 .lk-article-three__cover {
@@ -368,6 +421,7 @@ function formatDate(value) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: saturate(1.08) contrast(1.03);
 }
 
 .lk-article-three__tag-cloud {
@@ -437,7 +491,7 @@ function formatDate(value) {
   }
 
   .lk-article-three__card {
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr) 220px;
   }
 }
 
@@ -503,9 +557,9 @@ function formatDate(value) {
 }
 
 [data-theme='light'] .lk-article-three__card {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.98);
   border-color: rgba(15, 23, 42, 0.08);
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 [data-theme='light'] .lk-article-three__card:hover {
@@ -531,11 +585,42 @@ function formatDate(value) {
   border-color: rgba(59, 130, 246, 0.15);
 }
 
-[data-theme='light'] .lk-article-three__read {
+[data-theme='light'] .lk-article-three__corner-arrow {
   color: #0d9488;
 }
 
+[data-theme='light'] .lk-article-three__card:hover .lk-article-three__corner-arrow,
+[data-theme='light'] .lk-article-three__card:focus-visible .lk-article-three__corner-arrow {
+  color: #0f766e;
+}
+
 [data-theme='light'] .lk-article-three__cover-wrap {
-  background: rgba(241, 245, 249, 0.8);
+  background: #f8fafc;
+}
+
+[data-theme='light'] .lk-article-three__cover-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0) 40%
+  );
+  mix-blend-mode: normal;
+  display: block;
+}
+
+[data-theme='light'] .lk-article-three__cover {
+  opacity: 0.85;
+  filter: brightness(1.18) contrast(0.85) saturate(0.82);
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+[data-theme='light'] .lk-article-three__card:hover .lk-article-three__cover {
+  opacity: 1;
+  filter: brightness(1.08) contrast(0.95) saturate(0.98);
 }
 </style>

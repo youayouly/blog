@@ -2,6 +2,7 @@
 export const LIVE2D_PREF_KEY = 'lk-live2d-enabled'
 export const LIVE2D_PREF_EVENT = 'lk-live2d-pref-changed'
 
+/** 未写入 localStorage 时默认关闭；仅 `lk-live2d-enabled === '1'` 为开启。 */
 export function readLive2dPref() {
   if (typeof window === 'undefined') return false
   try {

@@ -8,13 +8,8 @@ export const HIDDEN_NAV_ITEMS_EVENT = 'lk:hidden-nav-items-change'
 
 export const navbarPageOptions = [
   {
-    id: 'home',
-    label: 'Home',
-    matches: (path) => normPath(path) === '/home',
-  },
-  {
     id: 'about',
-    label: 'About Me',
+    label: '关于我',
     matches: (path) => {
       const p = normPath(path)
       return p === '/about' || p.startsWith('/about/')
@@ -22,7 +17,7 @@ export const navbarPageOptions = [
   },
   {
     id: 'tech',
-    label: 'Projects',
+    label: '项目',
     matches: (path) => {
       const p = normPath(path)
       return p === '/tech' || p.startsWith('/tech/')
@@ -30,7 +25,7 @@ export const navbarPageOptions = [
   },
   {
     id: 'article',
-    label: 'Article',
+    label: '文章',
     matches: (path) => {
       const p = normPath(path)
       return p === '/article' || p.startsWith('/article/')
@@ -38,7 +33,7 @@ export const navbarPageOptions = [
   },
   {
     id: 'study',
-    label: 'Study Abroad',
+    label: '留学',
     matches: (path) => {
       const p = normPath(path)
       return p === '/study' || p.startsWith('/study/')
@@ -46,10 +41,18 @@ export const navbarPageOptions = [
   },
   {
     id: 'travel',
-    label: 'Album',
+    label: '相册',
     matches: (path) => {
       const p = normPath(path)
       return p === '/travel' || p.startsWith('/travel/')
+    },
+  },
+  {
+    id: 'stats',
+    label: '统计',
+    matches: (path) => {
+      const p = normPath(path)
+      return p === '/stats' || p.startsWith('/stats/')
     },
   },
 ]
@@ -93,7 +96,7 @@ export function toggleProtectedAccessItem(id) {
 }
 
 export function readHiddenNavItems() {
-  return readIdList(HIDDEN_NAV_ITEMS_PREF_KEY, [])
+  return readIdList(HIDDEN_NAV_ITEMS_PREF_KEY, ['study', 'travel'])
 }
 
 export function writeHiddenNavItems(ids) {

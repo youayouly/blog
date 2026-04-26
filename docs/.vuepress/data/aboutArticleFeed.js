@@ -10,6 +10,7 @@ export const recommendedArticles = [
     date: '2026-04-22',
     excerpt: '记录 PM 作品集前置、项目按岗位分页、文章分页，以及 SiliconFlow 星系背景本地化。',
     categories: ['PM', 'Projects'],
+    cover: '/gallery/home-rec-projects-pagination.png',
   },
   {
     title: '产品经理作品集改造 PRD：把博客变成求职入口',
@@ -17,6 +18,7 @@ export const recommendedArticles = [
     date: '2026-04-22',
     excerpt: '从招聘方视角重构个人站，把技术博客、案例文章和简历信息整理成产品经理作品集。',
     categories: ['PM', 'Portfolio'],
+    cover: '/gallery/home-rec-portfolio-prd.png',
   },
   {
     title: 'AI Key 路由：SiliconFlow、DeepSeek、Qwen、One API、ZCode 和 CCSwitch',
@@ -24,6 +26,7 @@ export const recommendedArticles = [
     date: '2026-04-22',
     excerpt: '把模型供应商 Key、One API 中转平台和 Claude Code 适配工具串成一套可维护的 AI 开发调用链。',
     categories: ['AI', 'Infra'],
+    cover: '/gallery/home-rec-ai-key-router.png',
   },
   {
     title: 'Git 发布流水线：从本地改动到 Vercel Release',
@@ -31,6 +34,7 @@ export const recommendedArticles = [
     date: '2026-04-21',
     excerpt: '把暂存、提交、同步、推送、部署和排错拆成稳定模块，方便以后回看每段时间到底在做什么。',
     categories: ['Git', 'Release'],
+    cover: '/gallery/home-rec-git-release.png',
   },
   {
     title: 'Edge AI 部署流水线的几笔记录',
@@ -38,6 +42,7 @@ export const recommendedArticles = [
     date: '2026-04-12',
     excerpt: '从模型导出、量化到设备端推理验证，整理一条最小可走的检查清单。',
     categories: ['Embedded', 'ML'],
+    cover: '/gallery/article-cover-edge-ai-silicon-landscape-1776832435287.png',
   },
 ]
 

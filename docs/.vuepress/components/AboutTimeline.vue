@@ -89,6 +89,14 @@ const rows = computed(() => {
   margin-left: 0;
 }
 
+.lk-about-timeline__item:nth-child(odd) .lk-about-timeline__body {
+  transform: translateX(0);
+}
+
+.lk-about-timeline__item:nth-child(even) .lk-about-timeline__body {
+  transform: translateX(18px);
+}
+
 .lk-about-timeline__item:first-child {
   padding-top: 0.15rem;
 }
@@ -100,6 +108,17 @@ const rows = computed(() => {
   text-align: left;
   gap: 0.22rem;
   min-width: 0;
+  padding: 0.55rem 0.7rem 0.62rem;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(6px);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lk-about-timeline__item:hover .lk-about-timeline__body {
+  border-color: rgba(37, 99, 235, 0.26);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
 }
 
 .lk-about-timeline__year {
@@ -129,6 +148,14 @@ const rows = computed(() => {
 
 .lk-about-timeline__title:hover {
   color: var(--lk-time-dot);
+  text-decoration: none;
+}
+
+.lk-about-timeline__title,
+.lk-about-timeline__title:hover,
+.lk-about-timeline__title:focus,
+.lk-about-timeline__title:active {
+  text-decoration: none !important;
 }
 
 .lk-about-timeline__title--plain {
@@ -175,11 +202,27 @@ const rows = computed(() => {
   color: rgba(248, 250, 252, 0.96);
 }
 
+[data-theme='dark'] .lk-about-timeline__body {
+  border-color: rgba(125, 211, 252, 0.2);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+[data-theme='dark'] .lk-about-timeline__item:hover .lk-about-timeline__body {
+  border-color: rgba(125, 211, 252, 0.36);
+  box-shadow: 0 12px 28px rgba(2, 132, 199, 0.18);
+}
+
 [data-theme='dark'] .lk-about-timeline__date {
   color: rgba(203, 213, 225, 0.82);
 }
 
 [data-theme='dark'] .lk-about-timeline__cat {
   color: rgba(147, 197, 253, 0.88);
+}
+
+@media (max-width: 959px) {
+  .lk-about-timeline__item:nth-child(even) .lk-about-timeline__body {
+    transform: translateX(0);
+  }
 }
 </style>
