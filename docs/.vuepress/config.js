@@ -127,7 +127,27 @@ export default defineUserConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/gallery/avatar-bread-light.svg' }],
-    ['meta', { name: 'theme-color', content: '#4a90d9' }],
+    ['meta', { name: 'theme-color', content: '#343a40' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href:
+          'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap',
+      },
+    ],
+    // Cloudflare Web Analytics — 免费国家级别访客来源统计
+    // Token: 请在 https://dash.cloudflare.com → Web Analytics 创建站点后替换为真实 token
+    [
+      'script',
+      {
+        defer: '',
+        src: 'https://static.cloudflareinsights.com/beacon.min.js',
+        'data-cf-beacon': '{"token": "REPLACE_WITH_YOUR_CF_TOKEN"}',
+      },
+    ],
   ],
 
   theme: hopeTheme({

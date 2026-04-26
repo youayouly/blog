@@ -498,8 +498,18 @@ function nudgeLive2dForCurrentRoute() {
   }
 }
 
-/* ── Scroll progress bar (global) ──────────────────────────────────────── */
+/* ── Scroll progress bar + scrolled class (global) ─────────────────────── */
 let progressBar = null
+
+/** Hero / 全局背景的「滚动后模糊」依赖 html.lk-scrolled。
+ *  阈值 80px 是 navbar 高度上下，scroll 一点就启动。 */
+const LK_SCROLL_BLUR_THRESHOLD = 80
+
+function syncScrolledClass() {
+  if (typeof document === 'undefined') return
+  const scrolled = (window.scrollY || document.documentElement.scrollTop || 0) > LK_SCROLL_BLUR_THRESHOLD
+  document.documentElement.classList.toggle('lk-scrolled', scrolled)
+}
 
 function initProgressBar() {
   if (document.getElementById('lk-progress')) return
@@ -508,10 +518,20 @@ function initProgressBar() {
   document.body.appendChild(bar)
   progressBar = bar
 
+  let ticking = false
   window.addEventListener('scroll', () => {
-    const h = document.documentElement.scrollHeight - window.innerHeight
-    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%'
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const h = document.documentElement.scrollHeight - window.innerHeight
+        bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%'
+        syncScrolledClass()
+        ticking = false
+      })
+      ticking = true
+    }
   }, { passive: true })
+
+  syncScrolledClass()
 }
 
 function rescueLive2dFromHomeGrid() {

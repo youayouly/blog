@@ -1,14 +1,21 @@
 <script setup>
 import { computed } from 'vue'
-import { useHomeBackgroundSrc } from '../utils/homeVisualPref.js'
+import {
+  DEFAULT_HERO,
+  DEFAULT_HOME_BG_DARK,
+  DEFAULT_HOME_BG_LIGHT,
+  useHomeBackgroundSrc,
+} from '../utils/homeVisualPref.js'
 import HomeTypewriterTagline from './HomeTypewriterTagline.vue'
 
 const currentBackground = useHomeBackgroundSrc()
 
 const pageStyle = computed(() => {
-  const background = currentBackground.value || '/gallery/home-bg-abstract-gradient.svg'
+  const background = currentBackground.value || DEFAULT_HERO
   return {
     '--lk-about-page-bg': `url("${background}")`,
+    '--lk-about-page-bg-light': `url("${DEFAULT_HOME_BG_LIGHT}")`,
+    '--lk-about-page-bg-dark': `url("${DEFAULT_HOME_BG_DARK}")`,
   }
 })
 
@@ -31,9 +38,33 @@ function scrollToIntro() {
               class="lk-about-v2-hero__btn lk-about-v2-hero__btn--primary"
               @click="scrollToIntro"
             >
-              了解我
+              <span class="lk-about-v2-hero__btn-label">了解我</span>
+              <span class="lk-about-v2-hero__btn-arrow" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
             </button>
-            <a class="lk-about-v2-hero__btn" href="/article/">查看文章</a>
+            <a class="lk-about-v2-hero__btn" href="/article/">
+              <span class="lk-about-v2-hero__btn-label">查看文章</span>
+              <span class="lk-about-v2-hero__btn-arrow" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </a>
           </div>
         </div>
       </div>

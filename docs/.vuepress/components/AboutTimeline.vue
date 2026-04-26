@@ -47,9 +47,9 @@ const rows = computed(() => {
   min-width: 0;
   margin-left: 0;
   margin-right: 0;
-  --lk-time-rail: rgba(37, 99, 235, 0.2);
-  --lk-time-dot: #2563eb;
-  --lk-time-year-bg: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+  --lk-time-rail: rgba(33, 37, 41, 0.18);
+  --lk-time-dot: var(--lk-accent, #343A40);
+  --lk-time-year-bg: linear-gradient(135deg, #495057 0%, #212529 100%);
 }
 
 .lk-about-timeline__heading {
@@ -110,15 +110,32 @@ const rows = computed(() => {
   min-width: 0;
   padding: 0.55rem 0.7rem 0.62rem;
   border-radius: 12px;
-  border: 1px solid rgba(37, 99, 235, 0.12);
-  background: rgba(255, 255, 255, 0.66);
-  backdrop-filter: blur(6px);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(33, 37, 41, 0.10);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  transition:
+    background 0.22s ease-out,
+    border-color 0.22s ease-out,
+    box-shadow 0.22s ease-out,
+    backdrop-filter 0.22s ease-out;
 }
 
+/* hover：磨砂背景变得更清晰 + 微阴影抬起，文字不变色（克制） */
 .lk-about-timeline__item:hover .lk-about-timeline__body {
-  border-color: rgba(37, 99, 235, 0.26);
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(33, 37, 41, 0.20);
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.08),
+    0 1px 3px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(2px) saturate(1.1);
+  -webkit-backdrop-filter: blur(2px) saturate(1.1);
+}
+
+/* hover 时圆点稍微变实心（额外的物理反馈） */
+.lk-about-timeline__item:hover .lk-about-timeline__dot {
+  background: var(--lk-time-dot);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-time-dot) 16%, transparent);
 }
 
 .lk-about-timeline__year {
@@ -130,7 +147,9 @@ const rows = computed(() => {
   font-weight: 800;
   color: #fff;
   background: var(--lk-time-year-bg);
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+  font-family: var(--lk-font-mono, monospace);
+  letter-spacing: 0.02em;
 }
 
 .lk-about-timeline__date {
@@ -144,10 +163,12 @@ const rows = computed(() => {
   color: var(--vp-c-text-1, #0f172a);
   text-decoration: none;
   line-height: 1.35;
+  transition: color 0.22s ease-out;
 }
 
+/* 克制感：标题 hover 仅微调字重 / 不变色（颜色反馈交给整张卡片的磨砂变化） */
 .lk-about-timeline__title:hover {
-  color: var(--lk-time-dot);
+  color: var(--lk-accent-strong, #212529);
   text-decoration: none;
 }
 
@@ -192,9 +213,9 @@ const rows = computed(() => {
 }
 
 [data-theme='dark'] .lk-about-timeline {
-  --lk-time-rail: rgba(125, 211, 252, 0.28);
-  --lk-time-dot: #7dd3fc;
-  --lk-time-year-bg: linear-gradient(135deg, #0e7490 0%, #38bdf8 100%);
+  --lk-time-rail: rgba(222, 226, 230, 0.18);
+  --lk-time-dot: #DEE2E6;
+  --lk-time-year-bg: linear-gradient(135deg, #495057 0%, #ADB5BD 100%);
 }
 
 [data-theme='dark'] .lk-about-timeline__heading,
@@ -203,13 +224,20 @@ const rows = computed(() => {
 }
 
 [data-theme='dark'] .lk-about-timeline__body {
-  border-color: rgba(125, 211, 252, 0.2);
-  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(222, 226, 230, 0.10);
+  background: rgba(15, 23, 42, 0.55);
 }
 
 [data-theme='dark'] .lk-about-timeline__item:hover .lk-about-timeline__body {
-  border-color: rgba(125, 211, 252, 0.36);
-  box-shadow: 0 12px 28px rgba(2, 132, 199, 0.18);
+  background: rgba(15, 23, 42, 0.88);
+  border-color: rgba(222, 226, 230, 0.20);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .lk-about-timeline__item:hover .lk-about-timeline__title {
+  color: #ffffff;
 }
 
 [data-theme='dark'] .lk-about-timeline__date {
@@ -217,7 +245,7 @@ const rows = computed(() => {
 }
 
 [data-theme='dark'] .lk-about-timeline__cat {
-  color: rgba(147, 197, 253, 0.88);
+  color: rgba(173, 181, 189, 0.86);
 }
 
 @media (max-width: 959px) {

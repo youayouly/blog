@@ -75,7 +75,11 @@
       "Bash(ping *)",
       "Bash(DIFY_API_KEY=app-bRWwDDptmKsM81q4mEkqYBG4 node *)",
       "Bash(env)",
-      "Bash(taskkill /F /IM node.exe)"
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(npm.cmd run *)",
+      "Bash(DOTENV_CONFIG_PATH=.env.local node *)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(uniq -w32 -D)"
     ]
   }
 }

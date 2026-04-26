@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, onScopeDispose, ref } from 'vue'
 
 export const HOME_BG_PREF_KEY = 'lk-home-bg-src'
 export const HOME_BG_HISTORY_KEY = 'lk-home-bg-history'
@@ -11,7 +11,7 @@ export const HOME_VISUAL_PREF_EVENT = 'lk-home-visual-changed'
  * 每个用户的浏览器首次加载到新版本就会把旧 localStorage 抹干净，回到默认态。
  */
 const VISUAL_RESET_KEY = 'lk-visual-reset-v'
-const VISUAL_RESET_VERSION = '2026-04-25'
+const VISUAL_RESET_VERSION = '2026-04-26-hangmoon'
 /** 需要在迁移时清掉的历史键（不会影响 authedRef / navPrefs 等其他功能） */
 const LEGACY_KEYS_TO_CLEAR = [
   HOME_BG_PREF_KEY,
@@ -38,20 +38,32 @@ function runVisualPrefMigrationOnce() {
 
 runVisualPrefMigrationOnce()
 
-export const DEFAULT_HOME_BG = '/gallery/home-bg-anime-landscape.png'
+/**
+ * 默认 Hero：「Five minutes of silence」by Hangmoon（pixiv 62506385，4K 原图）。
+ * 黄昏湖畔少女背影 + 大片云霞，暖色 + 深蓝双调，浅 / 深主题都 hold 得住。
+ *
+ * 备选：
+ * - 'auto'：星夜湖畔双图，跟随 <html data-theme> 在浅 / 深之间切。
+ * - DEFAULT_HOME_BG_LIGHT / DARK：分别锁定一张星夜湖畔。
+ */
+export const DEFAULT_HERO = '/gallery/hero-hangmoon-gaze.jpg'
+export const DEFAULT_HOME_BG_LIGHT = '/gallery/hero-starlake-light.png'
+export const DEFAULT_HOME_BG_DARK = '/gallery/hero-starlake-dark.png'
+export const DEFAULT_HOME_BG_AUTO = 'auto'
+export const DEFAULT_HOME_BG = DEFAULT_HERO
 export const DEFAULT_HOME_PORTRAIT = ''
 
 export const homeBackgroundChoices = [
-  { src: DEFAULT_HOME_BG, label: '动漫自然风景（默认）' },
+  { src: DEFAULT_HERO, label: 'Hangmoon · 黄昏湖畔（默认）' },
+  { src: DEFAULT_HOME_BG_AUTO, label: '星夜湖畔 · 跟随主题切换' },
+  { src: DEFAULT_HOME_BG_LIGHT, label: '星夜湖畔（浅色）' },
+  { src: DEFAULT_HOME_BG_DARK, label: '星夜湖畔（深色）' },
+  { src: '/gallery/home-bg-anime-landscape.png', label: '动漫自然风景（旧）' },
   { src: '/gallery/home-bg-abstract-gradient.svg', label: '淡色抽象底' },
   { src: '/gallery/about-bg-bright-starfield.svg', label: '亮星空' },
   {
     src: '/gallery/about-hero-sf.png',
     label: '硅基群像（本地 npm run gen:about-hero）',
-  },
-  {
-    src: 'https://cdn.jsdelivr.net/gh/Dreamer-Paul/Anime-Wallpaper@master/1.jpg',
-    label: 'Anime Wallpaper（外链）',
   },
 ]
 
@@ -213,8 +225,52 @@ export function syncHomeVisualsFromStorage() {
   homePortraitHistoryRef.value = readHomePortraitHistory()
 }
 
+/**
+ * 当前主题（'light' | 'dark'）。监听 `<html data-theme>` 变化，便于 Hero 图
+ * 在用户切换深浅色时实时跟随。SSR 环境下回退为 'light'。
+ */
+export const currentThemeRef = ref('light')
+let themeObserver = null
+
+function readCurrentTheme() {
+  if (typeof document === 'undefined') return 'light'
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+}
+
+function ensureThemeObserver() {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return
+  if (themeObserver) return
+  currentThemeRef.value = readCurrentTheme()
+  themeObserver = new MutationObserver(() => {
+    currentThemeRef.value = readCurrentTheme()
+  })
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  })
+}
+
+if (typeof window !== 'undefined') {
+  ensureThemeObserver()
+}
+
+/**
+ * 解析 sentinel 到具体图：
+ * - 'auto'：跟随主题选 starlake 浅 / 深图
+ * - 空 / 未设置：使用 DEFAULT_HERO（hangmoon）
+ * - 显式 URL：直接透传
+ */
+function resolveBackgroundForTheme(value, theme) {
+  if (!value) return DEFAULT_HERO
+  if (value === DEFAULT_HOME_BG_AUTO) {
+    return theme === 'dark' ? DEFAULT_HOME_BG_DARK : DEFAULT_HOME_BG_LIGHT
+  }
+  return value
+}
+
 export function useHomeBackgroundSrc() {
-  return computed(() => homeBackgroundRef.value)
+  ensureThemeObserver()
+  return computed(() => resolveBackgroundForTheme(homeBackgroundRef.value, currentThemeRef.value))
 }
 
 export function useHomePortraitSrc() {

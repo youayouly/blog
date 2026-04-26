@@ -1,8 +1,41 @@
-// ── 品牌色 CSS 变量定义 ───────────────────────────────────────────────────────
+// ── 灰阶 design tokens（站点强调色：深炭灰，hover 底色：淡灰） ─────────────────
 :root {
-  --lk-brand: #4a90d9;
-  --lk-brand-light: #6ba8e8;
-  --lk-brand-dark: #2d7bc7;
+  /* Light mode 灰阶 */
+  --lk-gray-50:  #FAFBFC;
+  --lk-gray-100: #F1F3F5;  /* hover 底色（淡灰） */
+  --lk-gray-200: #E9ECEF;
+  --lk-gray-300: #CED4DA;
+  --lk-gray-400: #ADB5BD;
+  --lk-gray-500: #868E96;
+  --lk-gray-700: #495057;
+  --lk-gray-900: #212529;
+
+  /* Accent — underline / active / 强调 / 链接 hover */
+  --lk-accent: #343A40;
+  --lk-accent-soft: rgba(52, 58, 64, 0.08);
+  --lk-accent-hover-bg: var(--lk-gray-100);
+  --lk-accent-strong: #212529;
+
+  /* 兼容旧变量（重定向到灰阶 accent，避免蓝色到处出现） */
+  --lk-brand: var(--lk-accent);
+  --lk-brand-light: var(--lk-gray-700);
+  --lk-brand-dark: var(--lk-accent-strong);
+}
+
+:root[data-theme='dark'] {
+  --lk-gray-50:  #0B0E12;
+  --lk-gray-100: #1A1F26;
+  --lk-gray-200: #232830;
+  --lk-gray-300: #3A4048;
+  --lk-gray-400: #6C757D;
+  --lk-gray-500: #8B9098;
+  --lk-gray-700: #C5C9CE;
+  --lk-gray-900: #F1F3F5;
+
+  --lk-accent: #DEE2E6;
+  --lk-accent-soft: rgba(222, 226, 230, 0.10);
+  --lk-accent-hover-bg: rgba(255, 255, 255, 0.06);
+  --lk-accent-strong: #FFFFFF;
 }
 
 // ── 通用布局系统 ───────────────────────────────────────────────────────────────
@@ -35,23 +68,23 @@
   }
 }
 
-// ── 品牌色 CSS 变量覆盖 ───────────────────────────────────────────────────────
+// ── 品牌色覆盖：全部走灰阶 accent，不出现蓝色强调 ────────────────────────────
 :root {
-  --vp-c-brand-1: var(--lk-brand);
-  --vp-c-brand-soft: rgba(74, 144, 217, 0.15);
-  --vp-c-brand-2: var(--lk-brand);
+  --vp-c-brand-1: var(--lk-accent);
+  --vp-c-brand-soft: var(--lk-accent-soft);
+  --vp-c-brand-2: var(--lk-accent-strong);
 }
 
 :root[data-theme='light'] {
-  --vp-c-brand-1: var(--lk-brand);
-  --vp-c-brand-soft: rgba(74, 144, 217, 0.15);
-  --vp-c-brand-2: var(--lk-brand);
+  --vp-c-brand-1: var(--lk-accent);
+  --vp-c-brand-soft: var(--lk-accent-soft);
+  --vp-c-brand-2: var(--lk-accent-strong);
 }
 
 :root[data-theme='dark'] {
-  --vp-c-brand-1: var(--lk-brand-light);
-  --vp-c-brand-soft: rgba(107, 168, 232, 0.2);
-  --vp-c-brand-2: var(--lk-brand-light);
+  --vp-c-brand-1: var(--lk-accent);
+  --vp-c-brand-soft: var(--lk-accent-soft);
+  --vp-c-brand-2: var(--lk-accent-strong);
 }
 
 // ── Hero fullscreen: dark overlay so text is readable over anime image ───────
@@ -1091,81 +1124,101 @@ body,
   overflow-anchor: none;
 }
 
-// ── Navbar ───────────────────────────────────────────────────────────────────
+// ── Navbar：磨砂玻璃 + 灰阶 underline 进度条 ─────────────────────────────────
 .vp-navbar {
-  background: rgba(74, 144, 217, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.04);
   z-index: 1000;
   /* Isolate compositing to avoid scroll-time backdrop-filter artifacts. */
   transform: translateZ(0);
   will-change: transform;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme='dark'] .vp-navbar {
+  background: rgba(11, 18, 34, 0.6) !important;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.24);
 }
 
 // Navbar text: larger & bold + more spacing
-.vp-navbar {
-  .vp-navbar-item a,
-  .vp-navbar-site-name {
-    font-size: 1.15rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.01em !important;
-    line-height: 1.25 !important;
-  }
+.vp-navbar .vp-navbar-item a,
+.vp-navbar .vp-navbar-site-name {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.25 !important;
+  color: var(--lk-gray-700) !important;
+  transition: color 0.22s ease-out;
+}
 
-  // Increase spacing between navigation items.
-  // (Hope theme uses flex layout; margin-inline creates visible gap without touching theme internals.)
-  .vp-navbar-item {
-    margin: 0 0.65rem !important;
-  }
+[data-theme='dark'] .vp-navbar .vp-navbar-item a,
+[data-theme='dark'] .vp-navbar .vp-navbar-site-name {
+  color: var(--lk-gray-700) !important;
+}
 
-// Active navbar item highlight (dark)
+.vp-navbar .vp-navbar-item {
+  margin: 0 0.7rem !important;
+}
+
+/* underline 进度条：active 常驻 + hover 从左到右快速注满（200ms）。
+   贴齐文字宽度：把 ::after 宽度限制在文字范围内（用 inline-block 包裹）。 */
+.vp-navbar .vp-navbar-item > a {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
+.vp-navbar .vp-navbar-item > a::after {
+  content: '' !important;
+  display: block !important;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  background: var(--lk-accent);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+  /* 覆盖更早的 display:none 规则（靠选择器特异度） */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.vp-navbar .vp-navbar-item > a:hover::after,
+.vp-navbar .vp-navbar-item > a:focus-visible::after,
+.vp-navbar .vp-navbar-item.vp-active > a::after,
+.vp-navbar .vp-navbar-item.active > a::after,
+.vp-navbar .vp-navbar-item > a.router-link-active::after,
+.vp-navbar .vp-navbar-item > a[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
 .vp-navbar .vp-navbar-item.vp-active > a,
 .vp-navbar .vp-navbar-item.active > a,
 .vp-navbar .vp-navbar-item > a.router-link-active,
 .vp-navbar .vp-navbar-item > a[aria-current='page'] {
-  color: #60a5fa !important;
-  text-shadow: 0 0 18px rgba(96, 165, 250, 0.45);
-  position: relative;
+  color: var(--lk-accent-strong) !important;
 }
 
-.vp-navbar .vp-navbar-item > a.router-link-active::after,
-.vp-navbar .vp-navbar-item.vp-active > a::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 15%;
-  width: 70%;
-  height: 2.5px;
-  background: linear-gradient(90deg, #38bdf8, #818cf8);
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+.vp-navbar .vp-navbar-item > a:hover {
+  color: var(--lk-accent-strong) !important;
 }
 
-[data-theme='light'] .vp-navbar .vp-navbar-item.vp-active > a,
-[data-theme='light'] .vp-navbar .vp-navbar-item.active > a,
-[data-theme='light'] .vp-navbar .vp-navbar-item > a.router-link-active,
-[data-theme='light'] .vp-navbar .vp-navbar-item > a[aria-current='page'] {
-  color: #2563eb !important;
-  text-shadow: none;
-}
-
-[data-theme='light'] .vp-navbar .vp-navbar-item > a.router-link-active::after,
-[data-theme='light'] .vp-navbar .vp-navbar-item.vp-active > a::after {
-  background: linear-gradient(90deg, #3b82f6, #6366f1);
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.35);
-}
-}
-
-[data-theme='light'] .vp-navbar {
-  background: rgba(255, 255, 255, 0.55) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-bottom: none;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-}
-
-[data-theme='light'] .vp-navbar .vp-navbar-item a,
-[data-theme='light'] .vp-navbar .vp-navbar-site-name {
-  color: #1f2933 !important;
+[data-theme='dark'] .vp-navbar .vp-navbar-item.vp-active > a,
+[data-theme='dark'] .vp-navbar .vp-navbar-item.active > a,
+[data-theme='dark'] .vp-navbar .vp-navbar-item > a.router-link-active,
+[data-theme='dark'] .vp-navbar .vp-navbar-item > a[aria-current='page'],
+[data-theme='dark'] .vp-navbar .vp-navbar-item > a:hover {
+  color: var(--lk-accent-strong) !important;
 }
 
 @media (max-width: 719px) {
@@ -1406,18 +1459,84 @@ body,
   transition: filter 0.3s ease;
 }
 
-// ── Per-page gradient backgrounds ────────────────────────────────────────────
-// Home — full-page character wallpaper
+// ── 各 page-class 容器透明：让全局 hangmoon body bg 透出来 ────────────────
 .page-home,
 .page-home main.vp-page,
-.page-home .theme-container {
-  background: none !important;
-}
-.page-home {
-  background:
-    url('/gallery/home-bg-abstract-gradient.svg') center center / cover no-repeat fixed,
-    #eef4ff;
+.page-home .theme-container,
+.page-projects,
+.page-study,
+.page-travel,
+.page-stats-hub,
+.page-article-index,
+.page-article-post {
+  background: transparent !important;
   min-height: 100vh;
+}
+
+// ── 全站背景：hangmoon 黄昏湖畔，固定全视口 ───────────────────────────────
+//
+// /about：Hero 区域显示原图；用户向下滚动时，通过 html.lk-scrolled 触发模糊蒙版
+// 其它路由：永远模糊（一致的"内容焦点"叙事）
+html,
+body {
+  background-image: url('/gallery/hero-hangmoon-gaze.jpg') !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+html {
+  background-color: #f3f5f8;
+}
+
+[data-theme='dark'] html {
+  background-color: #0b1222;
+}
+
+/* 主题容器：作为模糊蒙版的定位锚点 */
+.theme-container {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+/* 模糊蒙版：fixed 全视口，初始透明；条件下变模糊 */
+.theme-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: transparent;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  pointer-events: none;
+  transition:
+    background 0.5s ease,
+    backdrop-filter 0.5s ease,
+    -webkit-backdrop-filter 0.5s ease;
+}
+
+/* 非 About 页面：永远模糊（纯 blur，无色彩叠层） */
+.theme-container:not(.page-about)::before {
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+}
+
+/* About 页：滚动到 Hero 之外才启用模糊（纯 blur，无白色遮罩） */
+html.lk-scrolled .theme-container.page-about::before {
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+/* 主内容必须在模糊蒙版之上 */
+.theme-container > main,
+.theme-container > .vp-navbar,
+.theme-container > .vp-sidebar,
+.theme-container > footer,
+.theme-container > [class*='vp-'] {
+  position: relative;
+  z-index: 1;
 }
 
 /* 深色模式首页：同一套浅色底图 + 罩层压暗，避免与整站 Dark 割裂过重 */
@@ -1428,26 +1547,13 @@ body,
     #0f172a;
 }
 
-// About — blue-violet（v2 整页底图由 .lk-about-v2::before 提供，此处避免叠一层淡蓝）
-.page-about {
-  background: linear-gradient(150deg, #e0e7ff 0%, #dbeafe 50%, #f0f9ff 100%);
-  min-height: 100vh;
-}
-
+/* About / Projects / Study：背景统一来自 body 的 hangmoon fixed 底图，
+   各 page-class 容器透明即可。 */
+.page-about,
+.theme-container.page-about,
 .theme-container.page-about:has(.lk-about-v2),
 .page-about:has(.lk-about-v2) {
   background: transparent !important;
-}
-
-// Projects — warm beige
-.page-projects {
-  background: #fbf3e9;
-  min-height: 100vh;
-}
-
-// Study Abroad — ocean blue
-.page-study {
-  background: linear-gradient(150deg, #bfdbfe 0%, #ddd6fe 100%);
   min-height: 100vh;
 }
 
@@ -1501,9 +1607,9 @@ html.lk-live2d-route-hidden .vp-navbar .lk-live2d-toggle {
   }
 }
 
-// Album (travel) — warm amber
+/* Album (travel)：背景统一来自 body */
 .page-travel {
-  background: linear-gradient(150deg, #fef3c7 0%, #fed7aa 100%);
+  background: transparent !important;
   min-height: 100vh;
 }
 
@@ -2644,24 +2750,10 @@ main.vp-page:has(.lk-about-fullbleed),
   isolation: isolate;
 }
 
+/* About 页 fullbleed wrapper：背景统一由 <body> 的全局 fixed bg 承担，
+   不再单独画一层 ::before（避免和全局背景叠两份相同的图）。 */
 .lk-about-v2.lk-about-fullbleed::before {
-  content: '';
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  width: 100vw;
-  min-height: 100vh;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-  background-color: #faf7ff;
-  background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.06) 40%, rgba(250, 247, 255, 0.5) 100%),
-    var(--lk-about-page-bg, url('/gallery/home-bg-abstract-gradient.svg'));
-  background-size: cover, cover;
-  background-position: center, center top;
-  background-repeat: no-repeat, no-repeat;
+  content: none;
 }
 
 /* 避免主题容器 / 主栏默认白底挡住 fixed 底图，消除首屏左右「白条」 */
@@ -2684,9 +2776,9 @@ main.vp-page:has(.lk-about-v2) [vp-content] {
   background: transparent !important;
 }
 
-/* 长页面滚到底时，避免 html/body 默认白底露出 */
+/* 长页面滚到底时兜底色（hangmoon 已是 fixed bg，正常情况下不会露出底色） */
 body:has(.lk-about-v2.lk-about-fullbleed) {
-  background-color: #faf7ff;
+  background-color: transparent;
 }
 
 .lk-about-v2-hero,
@@ -2718,8 +2810,16 @@ body:has(.lk-about-v2.lk-about-fullbleed) {
   min-height: inherit;
   padding: clamp(1.4rem, 3.5vw, 2.6rem);
   padding-bottom: clamp(2rem, 4vh, 2.75rem);
-  color: rgba(15, 23, 42, 0.88);
+  color: rgba(255, 255, 255, 0.98);
   box-sizing: border-box;
+}
+
+/* Hero 不再加深色渐变蒙版——背景就是要清晰可见。
+   文字可读性由 text-shadow 和按钮玻璃边自己承担。 */
+.lk-about-v2-hero__stack,
+.lk-about-v2-hero__stack > * {
+  position: relative;
+  z-index: 1;
 }
 
 .lk-about-v2-hero__stack {
@@ -2735,8 +2835,8 @@ body:has(.lk-about-v2.lk-about-fullbleed) {
   font-size: clamp(2rem, 5.5vw, 3.25rem);
   font-weight: 820;
   letter-spacing: -0.02em;
-  color: rgba(15, 23, 42, 0.94);
-  text-shadow: 0 2px 18px rgba(255, 255, 255, 0.85);
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .lk-about-v2-hero__actions {
@@ -2751,31 +2851,58 @@ body:has(.lk-about-v2.lk-about-fullbleed) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.55rem;
-  padding: 0.35rem 1.25rem;
+  gap: 0.55rem;
+  min-height: 2.7rem;
+  padding: 0.5rem 1.45rem;
   border-radius: 999px;
   font-size: 0.98rem;
   font-weight: 650;
   text-decoration: none;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  color: rgba(15, 23, 42, 0.88);
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 6px 22px rgba(2, 6, 23, 0.08);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 22px rgba(2, 6, 23, 0.18);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.22s ease-out,
+    border-color 0.22s ease-out,
+    background 0.22s ease-out,
+    color 0.22s ease-out;
 }
 
 .lk-about-v2-hero__btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.1);
-  border-color: rgba(56, 189, 248, 0.45);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--lk-accent-strong, #212529);
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 14px 32px rgba(2, 6, 23, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+.lk-about-v2-hero__btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 3px;
 }
 
 .lk-about-v2-hero__btn--primary {
-  border-color: rgba(14, 165, 233, 0.45);
-  background: linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(255, 255, 255, 0.92));
-  color: rgba(15, 23, 42, 0.92);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--lk-accent-strong, #212529);
+  border-color: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 10px 28px rgba(2, 6, 23, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+}
+
+.lk-about-v2-hero__btn--primary:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 36px rgba(2, 6, 23, 0.38),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
 }
 
 button.lk-about-v2-hero__btn {
@@ -2784,17 +2911,46 @@ button.lk-about-v2-hero__btn {
   appearance: none;
 }
 
+.lk-about-v2-hero__btn-label {
+  display: inline-block;
+  line-height: 1;
+}
+
+.lk-about-v2-hero__btn-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  /* SVG 本身画的是 → 水平向右；通过 rotate(45deg) 转成 ↘ 右下 45°
+     —— 这里跟 article / project 卡片的 ↗ 方向相反，便于区分「下钻入口」
+     vs「跳转外链」 */
+  transform: rotate(45deg);
+  transition: transform 0.34s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.lk-about-v2-hero__btn-arrow svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* hover：箭头从 ↘ 旋转到 ↓ 垂直向下，暗示「点了之后页面会向下滚」 */
+.lk-about-v2-hero__btn:hover .lk-about-v2-hero__btn-arrow {
+  transform: rotate(90deg) translateX(1px);
+}
+
 .lk-about-v2-hero__typewriter.home-typewriter-tagline,
 .lk-about-v2-hero .home-typewriter-tagline {
   font-size: clamp(1.6rem, 4.9vw, 3.25rem);
   font-weight: 780;
   line-height: 1.45;
-  color: rgba(30, 41, 59, 0.92) !important;
-  text-shadow: 0 2px 14px rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.96) !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .lk-about-v2-hero .home-typewriter-tagline__cursor {
-  color: rgba(2, 132, 199, 0.9) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 .lk-about-v2-main {
@@ -2951,6 +3107,29 @@ main.vp-page:has(.lk-stats-hub--triple) [vp-content]:not(.custom),
 /* 统计页：隐藏主题重复页题（与 About / 文章列表一致） */
 main.vp-page:has(.lk-stats-hub) .vp-page-title {
   display: none !important;
+}
+
+/* 统计页 profile / roles 卡片：隐藏 Hope 主题为外链添加的小箭头 */
+.lk-stats-hub .lk-home-side-panel a::after,
+.lk-stats-hub .lk-home-side-panel a::before,
+.lk-stats-hub .lk-home-side-panel .external-link-icon,
+.lk-stats-hub .lk-proj-roles__row::after,
+.lk-stats-hub .lk-proj-roles__row::before,
+.lk-home-side-panel .lk-proj-roles__row .external-link-icon,
+.lk-home-side-panel a .external-link-icon {
+  display: none !important;
+  content: none !important;
+}
+
+/* 统计页 roles 行 hover：换灰阶颜色（匹配整站灰色系） */
+.lk-proj-roles__row:hover {
+  background: var(--lk-accent-hover-bg, rgba(33, 37, 41, 0.06)) !important;
+  color: var(--lk-accent-strong, #212529) !important;
+}
+
+[data-theme='dark'] .lk-proj-roles__row:hover {
+  background: rgba(222, 226, 230, 0.08) !important;
+  color: #f8fafc !important;
 }
 
 .about-page-layout__rail {
@@ -3767,48 +3946,32 @@ main.vp-page:has(.lk-stats-hub) .vp-page-title {
   color: rgba(226, 232, 240, 0.78) !important;
 }
 
-// Chromium / Edge: stale compositor tiles for backdrop-filter on non-home routes.
-// Under #app so specificity beats [data-theme] .vp-navbar and similar !important rules.
+/* Chromium / Edge：在非首页路由上禁用全站 backdrop-filter（compositor tile 工程修复），
+ * 但导航栏单独保留磨砂玻璃——这是用户明确要求的视觉效果。 */
 html.lk-site-non-home {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 html.lk-site-non-home #app,
-html.lk-site-non-home #app *,
+html.lk-site-non-home #app *:not(.vp-navbar):not(.vp-navbar *),
 html.lk-site-non-home #app *::before,
 html.lk-site-non-home #app *::after {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-// Non-home: navbar cannot use backdrop blur (disabled above); use opaque bar so nav text never blends with body.
-html.lk-site-non-home .vp-navbar {
-  background: rgba(15, 23, 42, 0.94) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+/* 导航栏：始终保持磨砂玻璃，不被 lk-site-non-home 覆盖 */
+html.lk-site-non-home #app .vp-navbar {
+  backdrop-filter: blur(18px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
 }
 
-html.lk-site-non-home .vp-navbar .vp-navbar-item a,
-html.lk-site-non-home .vp-navbar .vp-navbar-site-name {
-  color: rgba(241, 245, 249, 0.95) !important;
-}
-
-html.lk-site-non-home[data-theme='light'] .vp-navbar {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.1);
-}
-
-html.lk-site-non-home[data-theme='light'] .vp-navbar .vp-navbar-item a,
-html.lk-site-non-home[data-theme='light'] .vp-navbar .vp-navbar-site-name {
-  color: #1f2933 !important;
-}
-
-/* 2026-04-24: unified Chinese typography + navbar cleanup + custom theme switch */
+/* 2026-04-26: 思源黑体（Noto Sans SC）+ JetBrains Mono 数字 / 等宽 + 衬线展示 */
 :root {
-  --lk-font-sans: "MiSans", "HarmonyOS Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  --lk-font-sans: "Noto Sans SC", "Source Han Sans SC", "MiSans", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
   --lk-font-display: "Source Han Serif SC", "Noto Serif SC", "STSong", "Songti SC", serif;
+  --lk-font-mono: "JetBrains Mono", "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
 }
 
 html,
@@ -3817,6 +3980,65 @@ body,
 .vp-page,
 .vp-page * {
   font-family: var(--lk-font-sans);
+}
+
+/* 数字 / 序号 / 代码：等宽字体 */
+.lk-mono,
+.lk-num,
+code,
+kbd,
+samp,
+pre,
+.vp-feature-item .vp-badge,
+.theme-hope-content code:not(pre code) {
+  font-family: var(--lk-font-mono);
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+/* ── 全局滚动条：灰阶，细一点 ─────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(33, 37, 41, 0.32) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(33, 37, 41, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.18s ease-out;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(33, 37, 41, 0.55);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+[data-theme='dark'] * {
+  scrollbar-color: rgba(222, 226, 230, 0.32) transparent;
+}
+
+[data-theme='dark'] *::-webkit-scrollbar-thumb {
+  background: rgba(222, 226, 230, 0.28);
+  background-clip: padding-box;
+}
+
+[data-theme='dark'] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(222, 226, 230, 0.55);
+  background-clip: padding-box;
 }
 
 .vp-site-name,
@@ -3841,8 +4063,8 @@ body,
   box-shadow: none !important;
 }
 
+/* 关闭 Hope 主题给链接加的箭头/下划线装饰；不影响我们自定义的 underline 进度条（::after 在上方导航块单独定义） */
 .vp-navbar .vp-navbar-item > a::before,
-.vp-navbar .vp-navbar-item > a::after,
 .vp-navbar .vp-nav-item > a::before,
 .vp-navbar .vp-nav-item > a::after,
 .vp-navbar .vp-dropdown-title::before,
@@ -3868,103 +4090,162 @@ body,
   margin-left: 0.2rem;
 }
 
+/* ── 主题切换器（A 方案）重写 ──────────────────────────────────────────────
+ * 设计逻辑：
+ * - pill 容器，分左右两格，各放一个图标（太阳左 / 月亮右）
+ * - 左右两个图标永驻，以低透明度显示；active 档图标高亮
+ * - ::before = 滑动 thumb 圆（深/浅色交替），在 active 图标上方叠加
+ * - Hope 自带的 .icon 完全隐藏（它只渲染当前档图标，形状不可控）
+ * - 用容器的 background-image 直接画 sun（左）+ moon（右），两档颜色独立
+ *   - 浅色模式：sun 高亮（深色）+ moon 暗淡（低透明）
+ *   - 深色模式：moon 高亮（深色）+ sun 暗淡（低透明）
+ *   - thumb 在 active 图标上方，颜色和 pill 底色形成对比
+ */
+/* SVG 数据常量（CSS 变量仅用于 background-image，不能用 mask 动态引用 CSS 变量，
+   所以颜色直接写死在 URL 里，浅色/深色分别有两份）*/
+/* 浅色模式：sun 主色（深）、moon 淡色（灰）*/
+/* 深色模式：moon 主色（亮）、sun 淡色（灰白）*/
+
 .vp-navbar .lk-navbar-theme-slot #color-mode-switch {
+  --lk-tsw-w: 5.4rem;   /* 更宽，两图标间距更大 */
+  --lk-tsw-h: 2.3rem;
+  --lk-tsw-pad: 3px;
+  --lk-tsw-icon: 1.1rem;
+  /* thumb 宽 = 半宽 - 间距 */
+  --lk-tsw-thumb-w: calc(50% - var(--lk-tsw-pad));
+
   position: relative;
   display: inline-flex !important;
   align-items: center;
-  width: 5.8rem;
-  height: 2.5rem;
-  min-width: 5.8rem;
-  padding: 0.2rem !important;
-  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  justify-content: flex-start;
+  width: var(--lk-tsw-w);
+  min-width: var(--lk-tsw-w);
+  height: var(--lk-tsw-h);
+  padding: var(--lk-tsw-pad) !important;
+  border: 1px solid var(--lk-gray-300) !important;
   border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.72) !important;
-  color: rgba(15, 23, 42, 0.7) !important;
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
   overflow: hidden;
   transform: none !important;
+  cursor: pointer;
+
+  /* 浅色模式底色 */
+  background-color: var(--lk-gray-100) !important;
+
+  /* 容器背景永驻两个图标：
+     左格 = 太阳（浅色模式高亮深色，深色模式暗淡灰白）
+     右格 = 月亮（浅色模式暗淡灰，深色模式高亮亮白）
+     图标位置：左格中心 = 25%，右格中心 = 75% */
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23343A40'><circle cx='12' cy='12' r='4.2'/><rect x='11' y='2' width='2' height='3.5' rx='1'/><rect x='11' y='18.5' width='2' height='3.5' rx='1'/><rect x='2' y='11' width='3.5' height='2' rx='1'/><rect x='18.5' y='11' width='3.5' height='2' rx='1'/><rect x='4.2' y='4.2' width='2' height='3.5' rx='1' transform='rotate(-45 5.2 5.95)'/><rect x='17.8' y='4.2' width='2' height='3.5' rx='1' transform='rotate(45 18.8 5.95)'/><rect x='4.2' y='16.3' width='2' height='3.5' rx='1' transform='rotate(45 5.2 18.05)'/><rect x='17.8' y='16.3' width='2' height='3.5' rx='1' transform='rotate(-45 18.8 18.05)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ADB5BD'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") !important;
+  background-position:
+    calc(25%) center,
+    calc(75%) center !important;
+  background-size:
+    var(--lk-tsw-icon) var(--lk-tsw-icon),
+    var(--lk-tsw-icon) var(--lk-tsw-icon) !important;
+  background-repeat: no-repeat, no-repeat !important;
+
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition:
+    background-color 0.22s ease-out,
+    border-color 0.22s ease-out;
 }
 
+/* 深色模式：sun 变淡灰白，moon 变高亮白色 */
+[data-theme='dark'] .vp-navbar .lk-navbar-theme-slot #color-mode-switch {
+  background-color: var(--lk-gray-100) !important;
+  border-color: var(--lk-gray-300) !important;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236C757D'><circle cx='12' cy='12' r='4.2'/><rect x='11' y='2' width='2' height='3.5' rx='1'/><rect x='11' y='18.5' width='2' height='3.5' rx='1'/><rect x='2' y='11' width='3.5' height='2' rx='1'/><rect x='18.5' y='11' width='3.5' height='2' rx='1'/><rect x='4.2' y='4.2' width='2' height='3.5' rx='1' transform='rotate(-45 5.2 5.95)'/><rect x='17.8' y='4.2' width='2' height='3.5' rx='1' transform='rotate(45 18.8 5.95)'/><rect x='4.2' y='16.3' width='2' height='3.5' rx='1' transform='rotate(45 5.2 18.05)'/><rect x='17.8' y='16.3' width='2' height='3.5' rx='1' transform='rotate(-45 18.8 18.05)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23DEE2E6'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") !important;
+}
+
+/* Thumb：覆盖在当前 active 图标上 */
+.vp-navbar .lk-navbar-theme-slot #color-mode-switch::before {
+  content: '';
+  position: absolute;
+  top: var(--lk-tsw-pad);
+  left: var(--lk-tsw-pad);
+  width: var(--lk-tsw-thumb-w);
+  height: calc(100% - var(--lk-tsw-pad) * 2);
+  border-radius: 999px;
+  background: #343A40;  /* 浅色模式：深炭灰 thumb */
+  box-shadow:
+    0 4px 10px rgba(15, 23, 42, 0.25),
+    0 0 0 1px rgba(15, 23, 42, 0.08);
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1;
+}
+
+/* 深色模式：thumb 移到右边 + 变浅色 */
+[data-theme='dark'] .vp-navbar .lk-navbar-theme-slot #color-mode-switch::before {
+  transform: translateX(100%);
+  background: #F8FAFC;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+/* ::after = thumb 上叠加的当前态图标（形状正确，颜色对比清晰）
+   浅色：sun 图标白色（在深炭灰 thumb 上）
+   深色：moon 图标深炭（在浅白 thumb 上）*/
+.vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  width: var(--lk-tsw-icon);
+  height: var(--lk-tsw-icon);
+  top: 50%;
+  left: calc(25% - var(--lk-tsw-icon) / 2);
+  transform: translateY(-50%);
+  /* 白色太阳：圆体 + 8 射线 */
+  background: #ffffff;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><circle cx='12' cy='12' r='4.2'/><rect x='11' y='2' width='2' height='3.5' rx='1'/><rect x='11' y='18.5' width='2' height='3.5' rx='1'/><rect x='2' y='11' width='3.5' height='2' rx='1'/><rect x='18.5' y='11' width='3.5' height='2' rx='1'/><rect x='4.2' y='4.2' width='2' height='3.5' rx='1' transform='rotate(-45 5.2 5.95)'/><rect x='17.8' y='4.2' width='2' height='3.5' rx='1' transform='rotate(45 18.8 5.95)'/><rect x='4.2' y='16.3' width='2' height='3.5' rx='1' transform='rotate(45 5.2 18.05)'/><rect x='17.8' y='16.3' width='2' height='3.5' rx='1' transform='rotate(-45 18.8 18.05)'/></svg>") center/contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><circle cx='12' cy='12' r='4.2'/><rect x='11' y='2' width='2' height='3.5' rx='1'/><rect x='11' y='18.5' width='2' height='3.5' rx='1'/><rect x='2' y='11' width='3.5' height='2' rx='1'/><rect x='18.5' y='11' width='3.5' height='2' rx='1'/><rect x='4.2' y='4.2' width='2' height='3.5' rx='1' transform='rotate(-45 5.2 5.95)'/><rect x='17.8' y='4.2' width='2' height='3.5' rx='1' transform='rotate(45 18.8 5.95)'/><rect x='4.2' y='16.3' width='2' height='3.5' rx='1' transform='rotate(45 5.2 18.05)'/><rect x='17.8' y='16.3' width='2' height='3.5' rx='1' transform='rotate(-45 18.8 18.05)'/></svg>") center/contain no-repeat;
+  transition: left 0.34s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease-out;
+  pointer-events: none;
+}
+
+/* 深色模式：::after 移到右格，改成月牙形状，颜色为深炭（在浅白 thumb 上对比） */
+[data-theme='dark'] .vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
+  left: calc(75% - var(--lk-tsw-icon) / 2);
+  background: #212529;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") center/contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") center/contain no-repeat;
+}
+
+/* 隐藏 Hope 自带的 .icon（不可控，替换为上方 ::after 实现） */
 .vp-navbar .lk-navbar-theme-slot #color-mode-switch .icon {
   display: none !important;
 }
 
-.vp-navbar .lk-navbar-theme-slot #color-mode-switch::before,
-.vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
-  position: absolute;
-  top: 0.2rem;
-  bottom: 0.2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(50% - 0.2rem);
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  transition:
-    transform 0.28s ease,
-    color 0.28s ease,
-    background 0.28s ease,
-    box-shadow 0.28s ease;
-}
-
-.vp-navbar .lk-navbar-theme-slot #color-mode-switch::before {
-  left: 0.2rem;
-  content: "浅色";
-  background: #111827;
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
-}
-
-.vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
-  right: 0.2rem;
-  content: "深色";
-  color: rgba(15, 23, 42, 0.6);
-}
-
-[data-theme='dark'] .vp-navbar .lk-navbar-theme-slot #color-mode-switch {
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  background: rgba(17, 24, 39, 0.8) !important;
-  color: rgba(255, 255, 255, 0.72) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
-}
-
-[data-theme='dark'] .vp-navbar .lk-navbar-theme-slot #color-mode-switch::before {
-  left: auto;
-  right: 0.2rem;
-  content: "深色";
-  background: #f8fafc;
-  color: #111827;
-}
-
-[data-theme='dark'] .vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
-  left: 0.2rem;
-  right: auto;
-  content: "浅色";
-  color: rgba(255, 255, 255, 0.7);
+/* 过渡动画保护 */
+@keyframes lk-theme-icon-fade {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
 }
 
 @media (max-width: 719px) {
   .vp-navbar .lk-navbar-theme-slot #color-mode-switch {
-    width: 5.35rem;
-    min-width: 5.35rem;
-    height: 2.3rem;
-  }
-
-  .vp-navbar .lk-navbar-theme-slot #color-mode-switch::before,
-  .vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
-    font-size: 0.76rem;
+    --lk-tsw-w: 4.8rem;
+    --lk-tsw-h: 2.1rem;
+    --lk-tsw-icon: 1rem;
   }
 }
 
-/* 切页瞬间统一托底色，避免路由切换时白底 / 黑底骤闪。
- * 注意：不给 main.vp-page 加 animation / transform / will-change —— 任何
- * 这些都会创建新的 containing block，把内部 `position: fixed` 的整屏
- * 背景断掉（/about 上会整屏空白）。 */
+@media (prefers-reduced-motion: reduce) {
+  .vp-navbar .lk-navbar-theme-slot #color-mode-switch::before,
+  .vp-navbar .lk-navbar-theme-slot #color-mode-switch::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* 切页瞬间统一托底色（hangmoon 图片加载前的兜底） */
 html,
 body {
-  background-color: #faf7ff;
+  background-color: #f3f5f8;
 }
 
 html[data-theme='dark'],
