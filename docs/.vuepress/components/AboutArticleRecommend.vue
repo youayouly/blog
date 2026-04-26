@@ -28,9 +28,6 @@ function indexLabel(i) {
 <template>
   <div class="lk-about-articles">
     <h3 class="lk-about-articles__heading">短文推荐</h3>
-    <p class="lk-about-articles__lead">
-      来自 <strong>Articles</strong> 的近期随笔。卡片改成上图下文，留出更宽的阅读空间。
-    </p>
     <ul class="lk-about-articles__list">
       <li v-for="(post, i) in articles" :key="i" class="lk-about-articles__card">
         <a class="lk-about-articles__media" :href="post.href" tabindex="-1" aria-hidden="true">
@@ -67,21 +64,10 @@ function indexLabel(i) {
 }
 
 .lk-about-articles__heading {
-  margin: 0 0 0.35rem;
-  font-size: 1.08rem;
+  margin: 0 0 0.85rem;
+  font-size: 1.28rem;
   font-weight: 760;
-  color: var(--vp-c-text-1, #0f172a);
-}
-
-.lk-about-articles__lead {
-  margin: 0 0 1rem;
-  font-size: 0.84rem;
-  line-height: 1.6;
-  /* 区块叠在全局模糊背景上：避免 vp-c-text-2 灰度融进暖色底图 */
-  color: #1e293b;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.9),
-    0 1px 2px rgba(255, 255, 255, 0.75);
+  color: #000;
 }
 
 .lk-about-articles__list {
@@ -105,11 +91,11 @@ function indexLabel(i) {
   padding: 0;
   border-radius: 22px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(253, 252, 250, 0.96);
   border: 1px solid var(--lk-about-card-border);
   box-shadow: var(--lk-about-card-shadow);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px) saturate(1.05);
+  -webkit-backdrop-filter: blur(8px) saturate(1.05);
   transition:
     transform 0.18s ease,
     border-color 0.18s ease,
@@ -194,14 +180,14 @@ function indexLabel(i) {
   display: block;
   font-size: 1rem;
   font-weight: 780;
-  color: var(--vp-c-text-1, #0f172a);
+  color: #000;
   text-decoration: none;
   line-height: 1.4;
   transition: color 0.18s ease-out;
 }
 
 .lk-about-articles__title:hover {
-  color: var(--lk-accent-strong, #212529);
+  color: #000;
   text-decoration: none;
 }
 
@@ -209,7 +195,7 @@ function indexLabel(i) {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.55;
-  color: var(--vp-c-text-2, #475569);
+  color: #000;
 }
 
 .lk-about-articles__foot {
@@ -221,7 +207,7 @@ function indexLabel(i) {
   padding-top: 0.7rem;
   border-top: 1px solid rgba(148, 163, 184, 0.18);
   font-size: 0.76rem;
-  color: var(--vp-c-text-3, #64748b);
+  color: #000;
 }
 
 .lk-about-articles__foot-left {
@@ -238,14 +224,14 @@ function indexLabel(i) {
 .lk-about-articles__read {
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--lk-about-accent);
+  color: #000;
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.18s ease-out, transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .lk-about-articles__read:hover {
-  color: var(--lk-accent-strong, #212529);
+  color: #000;
   transform: translateX(2px);
   text-decoration: none;
 }
@@ -271,8 +257,8 @@ function indexLabel(i) {
 }
 
 [data-theme='dark'] .lk-about-articles__card {
-  background: rgba(15, 23, 42, 0.64);
-  border-color: rgba(222, 226, 230, 0.10);
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(222, 226, 230, 0.12);
   --lk-about-card-shadow: 0 18px 44px rgba(0, 0, 0, 0.3);
   --lk-about-accent: var(--lk-accent, #DEE2E6);
 }
@@ -281,35 +267,31 @@ function indexLabel(i) {
   border-color: rgba(222, 226, 230, 0.22);
 }
 
-[data-theme='dark'] .lk-about-articles__title {
-  color: rgba(248, 250, 252, 0.96);
-}
-
+[data-theme='dark'] .lk-about-articles__title,
 [data-theme='dark'] .lk-about-articles__title:hover {
-  color: #ffffff;
+  color: #fff;
 }
 
 [data-theme='dark'] .lk-about-articles__body {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.76) 36%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.92) 36%);
 }
 
 [data-theme='dark'] .lk-about-articles__heading {
-  color: #f1f5f9;
-}
-
-[data-theme='dark'] .lk-about-articles__lead {
-  color: #e2e8f0;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.85),
-    0 0 10px rgba(0, 0, 0, 0.4);
+  color: #fff;
 }
 
 [data-theme='dark'] .lk-about-articles__excerpt {
-  color: #cbd5e1;
+  color: #fff;
 }
 
 [data-theme='dark'] .lk-about-articles__foot {
+  color: #fff;
   border-top-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme='dark'] .lk-about-articles__read,
+[data-theme='dark'] .lk-about-articles__read:hover {
+  color: #fff;
 }
 
 [data-theme='dark'] .lk-about-articles__tag {

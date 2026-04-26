@@ -1124,8 +1124,12 @@ body,
   overflow-anchor: none;
 }
 
-// ── Navbar：磨砂玻璃 + 灰阶 underline 进度条 ─────────────────────────────────
+// ── Navbar：磨砂玻璃 + 主导航琥珀胶囊（hover / active）────────────────────
 .vp-navbar {
+  --lk-nav-pill: #f3b03e;
+  --lk-nav-pill-shadow: 0 4px 16px rgba(243, 176, 62, 0.38);
+  --lk-nav-pill-shadow-soft: 0 3px 14px rgba(243, 176, 62, 0.32);
+
   background: rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
@@ -1163,91 +1167,69 @@ body,
 }
 
 .vp-navbar .vp-navbar-item {
-  margin: 0 0.7rem !important;
+  margin: 0 0.2rem !important;
 }
 
-/* underline 进度条：active 常驻 + hover 从左到右快速注满（200ms）。
-   贴齐文字宽度：把 ::after 宽度限制在文字范围内（用 inline-block 包裹）。 */
-.vp-navbar .vp-navbar-item > a {
-  position: relative;
-  display: inline-block;
-  padding-bottom: 2px;
-}
-
-/* ── Navbar underline 进度条 ──────────────────────────────────────────────
- * 实现方式：a::after 作为绝对定位的 2.5px 线条，从 scaleX(0) 到 scaleX(1)。
- * 注意：overflow: hidden 的父级会裁掉 bottom:-6px 的线，所以 a 要有 pb 补偿。
- */
+/* 主导航：胶囊悬停 / 当前页（琥珀底 + 白字），浅/深色顶栏通用 */
 .vp-navbar .vp-navbar-item > a {
   position: relative !important;
   display: inline-block !important;
-  padding-bottom: 4px !important;
+  padding: 0.4rem 0.95rem !important;
+  margin: 0 !important;
+  border-radius: 999px !important;
   overflow: visible !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.22s ease !important;
 }
 
 .vp-navbar .vp-navbar-item > a::after {
-  content: '' !important;
-  display: block !important;
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 3px !important;
-  border-radius: 3px !important;
-  background: #343A40 !important;
-  transform: scaleX(0) !important;
-  transform-origin: left center !important;
-  transition: transform 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) !important;
-  pointer-events: none !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 99 !important;
-  /* 确保不被 backdrop-filter:none 规则误伤 */
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-[data-theme='dark'] .vp-navbar .vp-navbar-item > a::after {
-  background: #DEE2E6 !important;
-}
-
-/* hover：快速注满 */
-.vp-navbar .vp-navbar-item > a:hover::after,
-.vp-navbar .vp-navbar-item > a:focus-visible::after {
-  transform: scaleX(1) !important;
-}
-
-/* active 态：满状态 + fill 动画 */
-.vp-navbar .vp-navbar-item.vp-active > a::after,
-.vp-navbar .vp-navbar-item.active > a::after,
-.vp-navbar .vp-navbar-item > a.router-link-active::after,
-.vp-navbar .vp-navbar-item > a[aria-current='page']::after {
-  transform: scaleX(1) !important;
-  animation: lk-nav-underline-fill 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both !important;
-}
-
-@keyframes lk-nav-underline-fill {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+  display: none !important;
 }
 
 .vp-navbar .vp-navbar-item.vp-active > a,
 .vp-navbar .vp-navbar-item.active > a,
 .vp-navbar .vp-navbar-item > a.router-link-active,
 .vp-navbar .vp-navbar-item > a[aria-current='page'] {
-  color: var(--lk-accent-strong) !important;
+  background: var(--lk-nav-pill) !important;
+  color: #ffffff !important;
+  box-shadow: var(--lk-nav-pill-shadow-soft) !important;
 }
 
-.vp-navbar .vp-navbar-item > a:hover {
-  color: var(--lk-accent-strong) !important;
+.vp-navbar .vp-navbar-item > a:hover,
+.vp-navbar .vp-navbar-item > a:focus-visible {
+  background: var(--lk-nav-pill) !important;
+  color: #ffffff !important;
+  box-shadow: var(--lk-nav-pill-shadow) !important;
 }
 
 [data-theme='dark'] .vp-navbar .vp-navbar-item.vp-active > a,
 [data-theme='dark'] .vp-navbar .vp-navbar-item.active > a,
 [data-theme='dark'] .vp-navbar .vp-navbar-item > a.router-link-active,
 [data-theme='dark'] .vp-navbar .vp-navbar-item > a[aria-current='page'],
-[data-theme='dark'] .vp-navbar .vp-navbar-item > a:hover {
-  color: var(--lk-accent-strong) !important;
+[data-theme='dark'] .vp-navbar .vp-navbar-item > a:hover,
+[data-theme='dark'] .vp-navbar .vp-navbar-item > a:focus-visible {
+  background: var(--lk-nav-pill) !important;
+  color: #ffffff !important;
+  box-shadow: var(--lk-nav-pill-shadow) !important;
+}
+
+/* 下拉入口（如「更多」）：与主导航同一胶囊交互 */
+.vp-navbar .vp-dropdown-title {
+  padding: 0.4rem 0.85rem !important;
+  border-radius: 999px !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.22s ease !important;
+}
+
+.vp-navbar .vp-dropdown-title:hover,
+.vp-navbar .vp-dropdown-title:focus-visible {
+  background: var(--lk-nav-pill) !important;
+  color: #ffffff !important;
+  box-shadow: var(--lk-nav-pill-shadow) !important;
 }
 
 @media (max-width: 719px) {
@@ -1907,20 +1889,6 @@ html.lk-header-split:has(.lk-proj-hub-fullbleed) .vp-page-title hr {
   }
 }
 
-main.vp-page:has(.lk-proj-hub-fullbleed)
-  #markdown-content
-  .lk-proj-hub-layout__main
-  > h2:first-of-type {
-  margin-left: calc(-1 * var(--lk-proj-md-pad-x));
-  margin-right: calc(-1 * var(--lk-proj-md-pad-x));
-  padding-left: var(--lk-proj-md-pad-x);
-  padding-right: var(--lk-proj-md-pad-x);
-  width: calc(100% + 2 * var(--lk-proj-md-pad-x));
-  max-width: none;
-  box-sizing: border-box;
-  border-top: none !important;
-}
-
 // 设置 Projects 页面容器为视口高度减去导航栏
 .page-projects .theme-hope-content,
 main.vp-page:has(.lk-proj-hub-fullbleed) .theme-hope-content {
@@ -1933,6 +1901,9 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .theme-hope-content {
 .lk-proj-hub-fullbleed {
   --lk-proj-portfolio-w: 400px;
   --lk-proj-col-gap: 24px;
+  /* ribbon 吸顶高度（含 padding + 两侧文字行高）；左栏 sticky top 用它做偏移 */
+  --lk-proj-ribbon-h: 3.6rem;
+  --lk-proj-sticky-gap: 0.5rem;
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
@@ -1958,56 +1929,87 @@ main.vp-page:has(.lk-proj-hub-fullbleed) [vp-content]:not(.custom):has(.lk-proj-
   max-width: 100%;
 }
 
-// Projects 页面标题：移到左上角，固定在顶部
-.lk-proj-hub-title {
-  margin-bottom: 1.5rem;
-  padding: 0 0 0.75rem;
-  border-bottom: 1px solid var(--vp-c-divider);
-  flex-shrink: 0;
-}
-
-.lk-proj-hub-title h1 {
-  margin: 0;
-  font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--vp-c-text-1);
-}
-
 // 隐藏 VuePress 默认的页面标题
 main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   display: none !important;
 }
 
-// Light mode for Projects page
-[data-theme='light'] .lk-proj-hub-title h1 {
-  color: #0f172a;
+/* Projects hub 顶栏横幅：与下方侧栏 / 主列同宽对齐 */
+[data-theme='light'] main.vp-page:has(.lk-proj-hub-fullbleed) .lk-proj-hub-layout__ribbon-title {
+  color: #fff !important;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
 }
 
-[data-theme='light'] .portfolio-eyebrow {
-  color: #0d9488;
-}
-
-[data-theme='light'] .portfolio-header h2 {
-  color: #0f172a;
-  text-shadow: none;
-}
-
-[data-theme='light'] .portfolio-header p:last-child {
-  color: #475569;
-  text-shadow: none;
+[data-theme='dark'] main.vp-page:has(.lk-proj-hub-fullbleed) .lk-proj-hub-layout__ribbon-title {
+  color: #fff !important;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.72);
 }
 
 .lk-proj-hub-layout {
   display: grid;
   grid-template-columns: var(--lk-proj-portfolio-w) minmax(0, 1fr);
-  gap: var(--lk-proj-col-gap);
+  row-gap: 14px;
+  column-gap: var(--lk-proj-col-gap);
   align-items: start;
   width: 100%;
   margin: 0 auto;
   flex: none;
   overflow: visible;
   box-sizing: border-box;
+  padding-top: 0.35rem;
+}
+
+.lk-proj-hub-layout__ribbon {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: var(--lk-proj-portfolio-w) minmax(0, 1fr);
+  column-gap: var(--lk-proj-col-gap);
+  align-items: center;
+  align-self: start;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(
+    102deg,
+    rgba(251, 146, 60, 0.5) 0%,
+    rgba(14, 165, 233, 0.38) 34%,
+    rgba(99, 102, 241, 0.42) 68%,
+    rgba(45, 212, 191, 0.28) 100%
+  );
+  box-shadow: 0 10px 32px rgba(2, 6, 23, 0.22);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  /* 整页向下滚动时固定在视口顶部（导航下方） */
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + var(--lk-proj-sticky-gap, 0.5rem));
+  z-index: 6;
+}
+
+[data-theme='light'] .lk-proj-hub-layout__ribbon {
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.12);
+}
+
+.lk-proj-hub-layout__ribbon-title {
+  margin: 0;
+  font-size: 1.5rem !important;
+  line-height: 1.2 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+.lk-proj-hub-layout__ribbon-title--right {
+  justify-self: start;
+}
+
+.lk-proj-hub-layout__ribbon-title::before,
+.lk-proj-hub-layout__ribbon-title::after {
+  content: none !important;
+  display: none !important;
 }
 
 .lk-proj-hub-layout__portfolio {
@@ -2018,23 +2020,28 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   flex-shrink: 0;
   overflow: visible;
   padding-right: 8px;
-  position: sticky;
-  top: calc(var(--navbar-height, 3.5rem) + 0.9rem);
+  position: relative;
+  /* 关键：覆盖 grid 容器的 align-items: start，让左列拉伸到 row 高度，
+     这样 .lk-proj-side__sticky 才有足够的「可吸空间」来真正粘附在视口顶部。 */
+  align-self: stretch;
 }
 
 // 产品作品集头部
 .portfolio-header {
   flex: 0 0 auto;
-  padding: 0 0 1rem;
-  margin-bottom: 0.5rem;
+  padding: 0 0 0.65rem;
+  margin-bottom: 0.35rem;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 .portfolio-eyebrow {
   margin: 0 0 0.35rem;
-  color: #14b8a6;
+  color: #93c5fd;
   font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
+  line-height: 1.35;
+  font-weight: 900;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -2043,9 +2050,12 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   color: #f8fafc;
   font-size: 1.5rem;
   line-height: 1.22;
-  font-weight: 820;
+  font-weight: 900;
   letter-spacing: 0;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.78);
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  box-shadow: none !important;
 }
 
 .portfolio-header p:last-child {
@@ -2056,31 +2066,17 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.64);
 }
 
-[data-theme='light'] .portfolio-header h2 {
-  color: #0f172a;
-  text-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
-}
-
-[data-theme='light'] .portfolio-header p:last-child {
-  color: #4b5563;
-  text-shadow: none;
-}
-
-// 产品作品集卡片网格
-.lk-proj-hub-layout__portfolio .lk-pm-grid__grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.lk-proj-hub-layout__portfolio .lk-pm-grid {
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: min(68vh, 860px);
+// 左侧若再挂载 .lk-pm-nav（ProductManagerCases）时的版式兜底
+.lk-proj-hub-layout__portfolio .lk-pm-nav {
+  overflow: visible;
+  max-height: none;
+  border-top: none !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 959px) {
-  .lk-proj-hub-layout__portfolio .lk-pm-grid__grid {
-    grid-template-columns: 1fr;
+  .lk-proj-hub-fullbleed {
+    --lk-proj-portfolio-w: min(100%, 480px);
   }
 }
 
@@ -2121,13 +2117,6 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   overflow: visible;
 }
 
-.lk-proj-hub-layout__main > h2:first-of-type {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  line-height: 1.22;
-}
-
-.lk-proj-hub-layout__main > h2:not(:first-of-type),
 .lk-proj-hub-layout__main > p,
 .lk-proj-hub-layout__main > hr {
   flex: 0 0 auto;
@@ -2155,6 +2144,17 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
     gap: 22px;
     overflow: visible;
     flex: none;
+  }
+
+  .lk-proj-hub-layout__ribbon {
+    grid-template-columns: 1fr 1fr;
+    padding: 0.65rem 0.85rem;
+    /* 单列布局下不要吸顶，避免遮挡卡片 */
+    position: static;
+  }
+
+  .lk-proj-hub-layout__ribbon-title {
+    font-size: 1.22rem !important;
   }
 
   .lk-proj-hub-layout__portfolio {
@@ -2186,6 +2186,15 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
 
   .lk-proj-hub-layout__portfolio {
     order: 2;
+  }
+
+  /* 单列布局：portfolio 不需要拉伸，sticky 卡片也改 static 避免「空悬」 */
+  .lk-proj-hub-layout__portfolio {
+    align-self: auto;
+  }
+  .lk-proj-hub-layout__portfolio .lk-proj-side__sticky {
+    position: static;
+    max-height: none;
   }
 
   .lk-proj-hub-layout__roles {
@@ -2649,12 +2658,113 @@ main.vp-page:has(.lk-blog-fullbleed),
   }
 }
 
-// Article detail pages — readable measure
+// Article detail pages — readable measure + 纸面底（叠 hangmoon 时仍可读）
 .page-article-post .vp-page,
 .page-article-post .theme-hope-content {
   max-width: 42rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* 文章详情：方案 B「实色卡片」——
+ * Light 接近纯白、Dark 接近 slate-900；暖墨 / 暖白字色（非纯黑白），并直接写死正文色，避免 Hope 子元素仍用灰字叠在视觉上像「糊」。 */
+.page-article-post .theme-hope-content {
+  padding: 1.15rem 1.35rem 1.5rem;
+  border-radius: 18px;
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  background: #fdfcfa;
+  box-shadow: 0 12px 40px rgba(2, 6, 23, 0.12);
+  color: #292524;
+  -webkit-font-smoothing: antialiased;
+  --vp-c-text-1: #171412;
+  --vp-c-text-2: #292524;
+  --vp-c-text-3: #57534e;
+
+  p,
+  li,
+  td,
+  th,
+  dd,
+  dt,
+  blockquote,
+  summary {
+    color: #292524;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #171412;
+  }
+
+  strong {
+    color: #171412;
+  }
+}
+
+[data-theme='dark'] .page-article-post .theme-hope-content {
+  background: rgba(7, 11, 22, 0.985);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
+  color: #f5f5f4;
+  -webkit-font-smoothing: antialiased;
+  --vp-c-text-1: #fafaf9;
+  --vp-c-text-2: #f5f5f4;
+  --vp-c-text-3: #d6d3d1;
+
+  p,
+  li,
+  td,
+  th,
+  dd,
+  dt,
+  blockquote,
+  summary {
+    color: #f5f5f4;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #fafaf9;
+  }
+
+  strong {
+    color: #fafaf9;
+  }
+}
+
+/* 带侧栏的窄栏文章：白/暗底铺在整列 [vp-content]，与左右栏留缝；内层不再叠第二张卡 */
+.theme-container.page-article-post:has(aside.vp-sidebar) [vp-content]:not(.custom) {
+  margin-inline: clamp(0.65rem, 1.85vw, 1.35rem);
+  margin-block: 0.2rem 0.65rem;
+  padding: clamp(0.65rem, 1.1vw, 0.95rem) clamp(0.75rem, 1.35vw, 1.15rem);
+  border-radius: 16px;
+  background: #fdfcfa;
+  border: 1px solid rgba(28, 25, 23, 0.1);
+  box-shadow: 0 10px 32px rgba(2, 6, 23, 0.1);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.theme-container.page-article-post:has(aside.vp-sidebar) [vp-content] .theme-hope-content {
+  padding: 0.55rem 0.2rem 0.95rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme='dark'] .theme-container.page-article-post:has(aside.vp-sidebar) [vp-content]:not(.custom) {
+  background: rgba(7, 11, 22, 0.985);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42);
 }
 
 /* 文章详情页：彻底关闭右侧目录与分类卡 */
@@ -2663,6 +2773,131 @@ main.vp-page:has(.lk-blog-fullbleed),
 .page-article-post .vp-toc-wrapper,
 .page-article-post .lk-article-categories {
   display: none !important;
+}
+
+/* ── /article/ 等：有 Hope 侧栏的 Markdown 页；不要求右侧 TOC（toc:false 时也有实色卡）──
+ * 排除已知全幅/无侧栏页，避免误伤 About、统计、留学、相册、Projects 聚合等。 */
+.theme-container:not(.page-article-post):not(.page-article-index):not(.page-about):not(.page-home):not(.page-stats-hub):not(.page-study):not(.page-travel):not(.page-projects):not(.page-tech):has(aside.vp-sidebar) {
+  /* 中间正文列整段铺实色（类似侧栏条目下的淡底），与左右栏 margin 分开、不贴边 */
+  [vp-content]:not(.custom) {
+    margin-inline: clamp(0.65rem, 1.85vw, 1.35rem);
+    margin-block: 0.15rem 0.55rem;
+    padding: clamp(0.55rem, 1vw, 0.85rem) clamp(0.7rem, 1.25vw, 1.05rem);
+    border-radius: 16px;
+    background: #fdfcfa;
+    border: 1px solid rgba(28, 25, 23, 0.1);
+    box-shadow: 0 10px 32px rgba(2, 6, 23, 0.09);
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  [vp-content] .theme-hope-content {
+    padding: 0.65rem 0.25rem 1.1rem;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    color: #292524;
+    -webkit-font-smoothing: antialiased;
+    --vp-c-text-1: #171412;
+    --vp-c-text-2: #292524;
+    --vp-c-text-3: #57534e;
+
+    p,
+    li,
+    td,
+    th,
+    dd,
+    dt,
+    blockquote,
+    summary {
+      color: #292524;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: #171412;
+    }
+
+    strong {
+      color: #171412;
+    }
+  }
+
+  [vp-toc],
+  .vp-toc-wrapper {
+    margin-inline-start: clamp(0.4rem, 1.1vw, 0.85rem);
+    border-radius: 14px;
+    border: 1px solid rgba(28, 25, 23, 0.12);
+    background: #fdfcfa;
+    box-shadow: 0 10px 32px rgba(2, 6, 23, 0.1);
+    color: #292524;
+    -webkit-font-smoothing: antialiased;
+    --vp-c-text-1: #171412;
+    --vp-c-text-2: #292524;
+    --vp-c-text-3: #57534e;
+  }
+}
+
+[data-theme='dark']
+  .theme-container:not(.page-article-post):not(.page-article-index):not(.page-about):not(.page-home):not(.page-stats-hub):not(.page-study):not(.page-travel):not(.page-projects):not(.page-tech):has(aside.vp-sidebar) {
+  [vp-content]:not(.custom) {
+    background: rgba(7, 11, 22, 0.985);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42);
+  }
+
+  [vp-content] .theme-hope-content {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #f5f5f4;
+    -webkit-font-smoothing: antialiased;
+    --vp-c-text-1: #fafaf9;
+    --vp-c-text-2: #f5f5f4;
+    --vp-c-text-3: #d6d3d1;
+
+    p,
+    li,
+    td,
+    th,
+    dd,
+    dt,
+    blockquote,
+    summary {
+      color: #f5f5f4;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: #fafaf9;
+    }
+
+    strong {
+      color: #fafaf9;
+    }
+  }
+
+  [vp-toc],
+  .vp-toc-wrapper {
+    margin-inline-start: clamp(0.4rem, 1.1vw, 0.85rem);
+    background: rgba(7, 11, 22, 0.985);
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42);
+    color: #f5f5f4;
+    -webkit-font-smoothing: antialiased;
+    --vp-c-text-1: #fafaf9;
+    --vp-c-text-2: #f5f5f4;
+    --vp-c-text-3: #d6d3d1;
+  }
 }
 
 // ── About Page — no theme sidebar (图2); 三栏：时间线 | 主内容 | 分类 ───────
@@ -2752,11 +2987,8 @@ main.vp-page:has(.lk-about-fullbleed),
   margin: 1.75rem 0 0;
   padding: 0 0 0 1rem;
   border: none;
-  /* 叠在 hangmoon 模糊底图上：用偏深字色 + 轻量亮描边，避免灰字融进背景 */
-  color: #1e293b;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.9),
-    0 1px 2px rgba(255, 255, 255, 0.75);
+  color: #000;
+  text-shadow: none;
 
   p {
     margin: 0;
@@ -2770,10 +3002,8 @@ main.vp-page:has(.lk-about-fullbleed),
 }
 
 [data-theme='dark'] .about-outro {
-  color: #f1f5f9;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.85),
-    0 0 12px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  text-shadow: none;
 }
 
 /* ── About v2：整页背景（随内容增高，含页面底部）+ 首屏 Hero + 左下滚动 ─ */
@@ -2942,6 +3172,40 @@ body:has(.lk-about-v2.lk-about-fullbleed) {
   box-shadow:
     0 16px 36px rgba(2, 6, 23, 0.38),
     0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+/* 次 CTA：仍玻璃感，但浅色磨砂 + 深色字，避免白字压在亮云区对比度崩掉 */
+.lk-about-v2-hero__btn--secondary {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  box-shadow:
+    0 8px 26px rgba(2, 6, 23, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.52) inset;
+}
+
+.lk-about-v2-hero__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: #020617;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.lk-about-v2-hero__btn--secondary:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.55);
+  outline-offset: 3px;
+}
+
+/* 次 CTA 为 <a>：UA / 主题里 a:any-link 常带下划线，需压过 .lk-about-v2-hero__btn 单类选择器 */
+a.lk-about-v2-hero__btn:any-link {
+  text-decoration: none;
+  text-decoration-line: none;
+}
+
+a.lk-about-v2-hero__btn:any-link:hover,
+a.lk-about-v2-hero__btn:any-link:active {
+  text-decoration: none;
 }
 
 button.lk-about-v2-hero__btn {
@@ -3441,18 +3705,19 @@ main.vp-page:has(.lk-stats-hub) .vp-page-title {
   max-width: none;
   padding: clamp(1.2rem, 2.2vw, 1.55rem) clamp(1.35rem, 2.8vw, 1.85rem);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* 提高不透明度：避免 hangmoon 深色块透上来发灰 */
+  background: rgba(253, 252, 250, 0.94);
+  border: 1px solid rgba(28, 25, 23, 0.09);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.05),
-    0 16px 44px -18px rgba(30, 41, 59, 0.22);
+    0 16px 44px -18px rgba(30, 41, 59, 0.18);
 }
 
 [data-theme='dark'] .about-card--intro {
-  background: rgba(15, 23, 42, 0.52);
-  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(148, 163, 184, 0.22);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.2),
     0 18px 48px -14px rgba(0, 0, 0, 0.45);
@@ -4066,18 +4331,20 @@ pre,
   background: transparent;
 }
 
-[data-theme='dark'] * {
-  scrollbar-color: rgba(222, 226, 230, 0.32) transparent;
-}
-
 [data-theme='dark'] *::-webkit-scrollbar-thumb {
-  background: rgba(222, 226, 230, 0.28);
+  background: rgba(226, 232, 240, 0.55);
   background-clip: padding-box;
+  border: 2px solid rgba(15, 23, 42, 0.45);
 }
 
 [data-theme='dark'] *::-webkit-scrollbar-thumb:hover {
-  background: rgba(222, 226, 230, 0.55);
+  background: rgba(241, 245, 249, 0.85);
   background-clip: padding-box;
+  border-color: rgba(15, 23, 42, 0.6);
+}
+
+[data-theme='dark'] * {
+  scrollbar-color: rgba(226, 232, 240, 0.55) transparent;
 }
 
 .vp-site-name,
@@ -4091,7 +4358,7 @@ pre,
   font-family: var(--lk-font-display);
 }
 
-.vp-navbar .vp-navbar-item > a,
+/* 不写 .vp-navbar-item > a 的 box-shadow: none，避免盖住主导航琥珀胶囊 hover 阴影 */
 .vp-navbar .vp-nav-item > a,
 .vp-navbar .vp-dropdown-title,
 .vp-navbar .vp-dropdown-item > a,
@@ -4102,7 +4369,7 @@ pre,
   box-shadow: none !important;
 }
 
-/* 关闭 Hope 主题给链接加的箭头/下划线装饰；不影响我们自定义的 underline 进度条（::after 在上方导航块单独定义） */
+/* 关闭 Hope 主题给链接加的箭头/下划线装饰；主导航 hover 为琥珀胶囊（见上方 .vp-navbar-item > a） */
 .vp-navbar .vp-navbar-item > a::before,
 .vp-navbar .vp-nav-item > a::before,
 .vp-navbar .vp-nav-item > a::after,

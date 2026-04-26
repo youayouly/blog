@@ -1,0 +1,43 @@
+---
+description: Luke 任务编排：按类型选用 Skill/子代理、声明角色、可交付输出与失败兜底
+alwaysApply: true
+---
+
+# Luke AI Orchestrator Rules
+
+## Task classification（先分类再动手）
+
+| 类型 | 触发示例 | 选用 |
+|------|----------|------|
+| 写文章 / 总结 | 新文章、改写、`docs/**/*.md` 正文 | 读并遵循 `.cursor/skills/luke-blog-writer/SKILL.md` + `.cursor/rules/luke-blog-system.mdc` |
+| UI / 布局 | 错位、overflow、间距、`lk-*`、Hope 覆盖 | 读 `.cursor/skills/vue-layout-fixer/SKILL.md`、`.cursor/skills/frontend-engineer/SKILL.md` 与 `.cursor/rules/vuepress-hope-site.mdc` |
+| 工程（C/C++ / STM32 / CMake） | 固件、工具链、构建脚本 | **角色：Dev Engineer**；读 `.cursor/skills/dev-engineer/SKILL.md`；对齐本仓库 `scripts/`、`docs/`、`api/` |
+| 产品设计 / PRD | 需求结构、用户故事、验收标准 | **角色：Product Planner**；若存在 `.cursor/skills/product-planner/SKILL.md` 则优先读 |
+| 检查 / Debug | 报错、行为异常、回归验证 | **角色：Inspector**（见下） |
+
+## Execution strategy
+
+1. **第一步**：用一句话写明任务类型（可多标签，如「布局 + 构建」）。
+2. **第二步**：加载上表对应 **Skill / 规则**；写作类必叠 `luke-blog-system.mdc`。
+3. **第三步**：凡 **分析、对照、找根因、布局 QA** → 必须走 **Subagent**（见下）；主对话只整合结论与落地改动。
+4. **第四步**：若输出违反已加载规则（如 Blog 段落结构、布局 `100vw`）→ **整段重写或整文件重改**，再检一次，不得糊弄通过。
+
+## Subagent policy
+
+| 场景 | 子代理 |
+|------|--------|
+| 正确性 / 完整性 / 质量总检（非纯布局） | `inspector`（`.cursor/agents/inspector.md`） |
+| Layout / 对齐 / 栅格 | `layout-inspector`（`.cursor/agents/layout-inspector.md`） |
+| Bug / 复现 / 栈与日志 | `debug-inspector`（`.cursor/agents/debug-inspector.md`）；**若文件不存在**：仍用 **Inspector** 角色做系统化复现 + 最小修复，并注明「未配置专用子代理」 |
+| 模块边界 / 依赖 / 大重构方案 | `architecture-reviewer`（`.cursor/agents/architecture-reviewer.md`）；**若不存在**：Inspector + Dev Engineer 联合输出架构建议 |
+
+委派时用 Cursor 子代理/Task 机制调用上述 **name**（与 `.md` 文件名一致）。
+
+## Output requirement
+
+- 文首或小结处 **必须** 写一行：**当前角色：** …（例：`Blog Writer`、`Frontend Engineer`、`Dev Engineer`、`Product Planner`、`Inspector`）。
+- **必须** 给出可执行交付：`diff` 级修改点、文件路径、或分步命令；禁止只有泛泛建议。
+
+## Fail-safe
+
+若类型不清或多域交织 → **默认：Dev Engineer + Inspector 双模式**：一人负责实现/排查路径，一人负责对照规则与边界条件；仍声明两行角色或合并为「当前角色：Dev Engineer（主）+ Inspector（校验）」。

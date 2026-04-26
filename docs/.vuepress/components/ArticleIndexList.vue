@@ -1,9 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const pageSize = 5
 const currentPage = ref(1)
+/** null = 全部文章 */
 const selectedTag = ref(null)
+const searchQuery = ref('')
+
+function articleTime(article) {
+  const t = new Date(article.date).getTime()
+  return Number.isNaN(t) ? 0 : t
+}
 
 const articles = [
   {
@@ -103,22 +110,70 @@ const articles = [
 const sortedArticles = computed(() =>
   [...articles].sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
-    return new Date(b.date).getTime() - new Date(a.date).getTime()
+    return articleTime(b) - articleTime(a)
   }),
+)
+
+/** 文章可检索文本（标题 + 摘要 + 标签），小写 */
+function articleHaystack(article) {
+  return `${article.title}\n${article.excerpt}\n${article.tags.join(' ')}`.toLowerCase()
+}
+
+/** 关键字模糊：不区分大小写；多空格视为多个词，须同时命中（各自 substring） */
+function articleMatchesKeyword(article, rawQuery) {
+  const q = rawQuery.trim().toLowerCase()
+  if (!q) return true
+  const tokens = q.split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return true
+  const hay = articleHaystack(article)
+  return tokens.every((t) => hay.includes(t))
+}
+
+/** 仅按搜索框过滤后的列表（供「全部」数量与标签统计） */
+const listMatchingKeyword = computed(() =>
+  sortedArticles.value.filter((a) => articleMatchesKeyword(a, searchQuery.value)),
 )
 
 const tagCounts = computed(() => {
   const counts = {}
-  for (const article of articles) {
+  for (const article of listMatchingKeyword.value) {
     for (const tag of article.tags) counts[tag] = (counts[tag] || 0) + 1
   }
   return Object.entries(counts).sort((a, b) => b[1] - a[1])
 })
 
-const totalPages = computed(() => Math.ceil(sortedArticles.value.length / pageSize))
+const totalArticleCount = computed(() => listMatchingKeyword.value.length)
+
+const filteredArticles = computed(() => {
+  let list = listMatchingKeyword.value
+  if (selectedTag.value != null) {
+    list = list.filter((a) => a.tags.includes(selectedTag.value))
+  }
+  return list
+})
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredArticles.value.length / pageSize)))
+
 const visibleArticles = computed(() => {
   const start = (currentPage.value - 1) * pageSize
-  return sortedArticles.value.slice(start, start + pageSize)
+  return filteredArticles.value.slice(start, start + pageSize)
+})
+
+function setSelectedTag(tag) {
+  selectedTag.value = tag
+  currentPage.value = 1
+}
+
+watch(searchQuery, () => {
+  currentPage.value = 1
+  if (selectedTag.value != null) {
+    const still = listMatchingKeyword.value.some((a) => a.tags.includes(selectedTag.value))
+    if (!still) selectedTag.value = null
+  }
+})
+
+watch(totalPages, (tp) => {
+  if (currentPage.value > tp) currentPage.value = tp
 })
 
 function formatDate(value) {
@@ -135,19 +190,37 @@ function formatDate(value) {
       <aside class="lk-article-three__left">
         <div class="lk-article-three__panel">
           <div class="lk-article-three__panel-head">
-            <h3>标签分类</h3>
-            <p>按主题分类</p>
+            <h3>搜索文章</h3>
           </div>
 
+          <input
+            v-model="searchQuery"
+            type="search"
+            class="lk-article-three__search-input"
+            placeholder="标题、摘要、标签…"
+            autocomplete="off"
+            aria-label="按关键字模糊搜索文章"
+          />
+
           <div class="lk-article-three__tag-cloud">
-            <a
+            <button
+              type="button"
+              class="lk-article-three__tag-pill"
+              :class="{ 'is-active': selectedTag === null }"
+              @click="setSelectedTag(null)"
+            >
+              全部 <span class="lk-article-three__tag-count">{{ totalArticleCount }}</span>
+            </button>
+            <button
               v-for="[tag, count] in tagCounts"
               :key="tag"
-              href="#"
+              type="button"
               class="lk-article-three__tag-pill"
+              :class="{ 'is-active': selectedTag === tag }"
+              @click="setSelectedTag(tag)"
             >
               {{ tag }} <span class="lk-article-three__tag-count">{{ count }}</span>
-            </a>
+            </button>
           </div>
         </div>
       </aside>
@@ -217,6 +290,9 @@ function formatDate(value) {
 .lk-article-three {
   --lk-article-side-w: 260px;
   --lk-article-gap: 2.5rem;
+  /* 顶距减为原先 (navbar+0.9rem) 的约 1/3；sticky 单独用安全值避免吸顶时压导航 */
+  --lk-article-content-pad-top: calc((var(--navbar-height, 3.6rem) + 0.9rem) / 3);
+  --lk-article-sticky-top: calc(var(--navbar-height, 3.6rem) + 0.35rem);
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
@@ -238,11 +314,13 @@ function formatDate(value) {
   gap: var(--lk-article-gap);
   align-items: start;
   justify-content: center;
+  /* 左右两列共用顶距；与导航留白约为原先的 1/3 */
+  padding-top: var(--lk-article-content-pad-top);
 }
 
 .lk-article-three__left {
   position: sticky;
-  top: 84px;
+  top: var(--lk-article-sticky-top);
 }
 
 .lk-article-three__middle {
@@ -260,7 +338,7 @@ function formatDate(value) {
 }
 
 .lk-article-three__panel-head {
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.75rem;
 }
 
 .lk-article-three__panel-head h3 {
@@ -288,6 +366,10 @@ function formatDate(value) {
 }
 
 .lk-article-three__card {
+  /* 斜率 = diagonal-frac × 封面列宽；文字区右缘用 --lk-seam-shift 与封面 clip-path 共线 */
+  --lk-diagonal-frac: 0.16;
+  --lk-cover-w: 240px;
+  --lk-seam-shift: calc(var(--lk-diagonal-frac) * var(--lk-cover-w));
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 240px;
@@ -312,7 +394,7 @@ function formatDate(value) {
   position: absolute;
   top: 0.85rem;
   right: 0.85rem;
-  z-index: 2;
+  z-index: 3;
   width: 1.45rem;
   height: 1.45rem;
   color: #67e8f9;
@@ -353,11 +435,17 @@ function formatDate(value) {
 }
 
 .lk-article-three__text {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 0.72rem;
   padding: 1.2rem 1.25rem 1.15rem;
   min-width: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(12, 20, 36, 0.98));
+  /* 与封面共用一条直斜边（避免「竖 + 斜」两段接缝） */
+  -webkit-clip-path: polygon(0 0, 100% 0, calc(100% + var(--lk-seam-shift)) 100%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% + var(--lk-seam-shift)) 100%, 0 100%);
 }
 
 .lk-article-three__date {
@@ -393,26 +481,31 @@ function formatDate(value) {
   padding: 0.28rem 0.7rem;
   border-radius: 999px;
   font-size: 0.76rem;
-  color: #dbeafe;
-  background: rgba(37, 99, 235, 0.12);
-  border: 1px solid rgba(96, 165, 250, 0.22);
+  color: rgba(248, 250, 252, 0.92);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .lk-article-three__cover-wrap {
   position: relative;
+  z-index: 1;
   min-width: 0;
   height: 100%;
+  width: 100%;
   background: rgba(9, 14, 26, 0.94);
   isolation: isolate;
+  -webkit-clip-path: polygon(calc(var(--lk-diagonal-frac) * 100%) 0, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(calc(var(--lk-diagonal-frac) * 100%) 0, 100% 0, 100% 100%, 0 100%);
 }
 
+/* 仅用上下方向的弱压暗，避免斜向 gradient 在斜切边上像「第二段斜线」 */
 .lk-article-three__cover-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(105deg, rgba(15, 23, 42, 0.22) 0%, transparent 42%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.18) 0%, transparent 42%);
   mix-blend-mode: multiply;
 }
 
@@ -422,6 +515,28 @@ function formatDate(value) {
   height: 100%;
   object-fit: cover;
   filter: saturate(1.08) contrast(1.03);
+}
+
+.lk-article-three__search-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 0.65rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.4);
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.lk-article-three__search-input::placeholder {
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.lk-article-three__search-input:focus {
+  outline: none;
+  border-color: rgba(125, 211, 252, 0.45);
 }
 
 .lk-article-three__tag-cloud {
@@ -436,6 +551,9 @@ function formatDate(value) {
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   font-size: 0.8rem;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
   text-decoration: none;
   color: rgba(226, 232, 240, 0.92);
   background: rgba(15, 23, 42, 0.8);
@@ -447,6 +565,22 @@ function formatDate(value) {
   background: rgba(103, 232, 249, 0.15);
   border-color: rgba(103, 232, 249, 0.38);
   color: #67e8f9;
+}
+
+.lk-article-three__tag-pill.is-active {
+  background: #f3b03e;
+  border-color: rgba(180, 120, 40, 0.55);
+  color: #0f172a;
+}
+
+.lk-article-three__tag-pill.is-active:hover {
+  background: #f5bd52;
+  border-color: rgba(160, 100, 30, 0.55);
+  color: #0f172a;
+}
+
+.lk-article-three__tag-pill.is-active .lk-article-three__tag-count {
+  color: rgba(15, 23, 42, 0.65);
 }
 
 .lk-article-three__tag-count {
@@ -468,17 +602,23 @@ function formatDate(value) {
   height: 2.2rem;
   padding: 0 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(15, 23, 42, 0.92);
-  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(0, 0, 0, 0.22);
+  color: #f1f5f9;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.lk-article-three__pager-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.55);
 }
 
 .lk-article-three__pager-button.is-active {
-  background: #67e8f9;
-  color: #082032;
-  border-color: transparent;
+  background: #ffffff;
+  color: #0a0a0a;
+  border-color: #ffffff;
 }
 
 @media (max-width: 1400px) {
@@ -492,6 +632,7 @@ function formatDate(value) {
 
   .lk-article-three__card {
     grid-template-columns: minmax(0, 1fr) 220px;
+    --lk-cover-w: 220px;
   }
 }
 
@@ -520,8 +661,16 @@ function formatDate(value) {
     grid-template-columns: 1fr;
   }
 
+  .lk-article-three__text {
+    -webkit-clip-path: none;
+    clip-path: none;
+  }
+
   .lk-article-three__cover-wrap {
     height: 200px;
+    width: 100%;
+    -webkit-clip-path: none;
+    clip-path: none;
   }
 }
 
@@ -552,6 +701,31 @@ function formatDate(value) {
   color: #0d9488;
 }
 
+[data-theme='light'] .lk-article-three__tag-pill.is-active {
+  background: #f3b03e;
+  border-color: rgba(180, 120, 40, 0.45);
+  color: #0f172a;
+}
+
+[data-theme='light'] .lk-article-three__tag-pill.is-active:hover {
+  background: #f5bd52;
+  color: #0f172a;
+}
+
+[data-theme='light'] .lk-article-three__tag-pill.is-active .lk-article-three__tag-count {
+  color: rgba(15, 23, 42, 0.62);
+}
+
+[data-theme='light'] .lk-article-three__search-input {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+[data-theme='light'] .lk-article-three__search-input::placeholder {
+  color: #94a3b8;
+}
+
 [data-theme='light'] .lk-article-three__tag-count {
   color: #94a3b8;
 }
@@ -567,6 +741,10 @@ function formatDate(value) {
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
 }
 
+[data-theme='light'] .lk-article-three__text {
+  background: rgba(255, 255, 255, 0.98);
+}
+
 [data-theme='light'] .lk-article-three__date {
   color: #94a3b8;
 }
@@ -580,9 +758,26 @@ function formatDate(value) {
 }
 
 [data-theme='light'] .lk-article-three__tag {
-  color: #1e40af;
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.15);
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme='light'] .lk-article-three__pager-button {
+  border-color: rgba(15, 23, 42, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+}
+
+[data-theme='light'] .lk-article-three__pager-button:hover {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.28);
+}
+
+[data-theme='light'] .lk-article-three__pager-button.is-active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
 }
 
 [data-theme='light'] .lk-article-three__corner-arrow {
@@ -604,11 +799,7 @@ function formatDate(value) {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0) 40%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 45%);
   mix-blend-mode: normal;
   display: block;
 }

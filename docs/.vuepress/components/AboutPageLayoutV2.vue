@@ -51,7 +51,10 @@ function scrollToIntro() {
                 </svg>
               </span>
             </button>
-            <a class="lk-about-v2-hero__btn" href="/article/">
+            <a
+              class="lk-about-v2-hero__btn lk-about-v2-hero__btn--secondary"
+              href="/article/"
+            >
               <span class="lk-about-v2-hero__btn-label">查看文章</span>
               <span class="lk-about-v2-hero__btn-arrow" aria-hidden="true">
                 <svg viewBox="0 0 16 16" fill="none">

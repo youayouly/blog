@@ -56,7 +56,7 @@ const rows = computed(() => {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
   font-weight: 800;
-  color: var(--vp-c-text-1, #0f172a);
+  color: #000;
   letter-spacing: 0.05em;
   text-align: left;
 }
@@ -111,9 +111,9 @@ const rows = computed(() => {
   padding: 0.55rem 0.7rem 0.62rem;
   border-radius: 12px;
   border: 1px solid rgba(33, 37, 41, 0.10);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(10px) saturate(1.2);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  background: rgba(253, 252, 250, 0.9);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
   transition:
     background 0.22s ease-out,
     border-color 0.22s ease-out,
@@ -123,7 +123,7 @@ const rows = computed(() => {
 
 /* hover：磨砂背景变得更清晰 + 微阴影抬起，文字不变色（克制） */
 .lk-about-timeline__item:hover .lk-about-timeline__body {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.98);
   border-color: rgba(33, 37, 41, 0.20);
   box-shadow:
     0 6px 18px rgba(15, 23, 42, 0.08),
@@ -154,21 +154,21 @@ const rows = computed(() => {
 
 .lk-about-timeline__date {
   font-size: 0.68rem;
-  color: var(--vp-c-text-3, #64748b);
+  color: #000;
 }
 
 .lk-about-timeline__title {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--vp-c-text-1, #0f172a);
+  color: #000;
   text-decoration: none;
   line-height: 1.35;
   transition: color 0.22s ease-out;
 }
 
-/* 克制感：标题 hover 仅微调字重 / 不变色（颜色反馈交给整张卡片的磨砂变化） */
+/* Light：与卡片浅色底对齐，纯黑字更干净 */
 .lk-about-timeline__title:hover {
-  color: var(--lk-accent-strong, #212529);
+  color: #000;
   text-decoration: none;
 }
 
@@ -188,7 +188,7 @@ const rows = computed(() => {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--vp-c-text-2, #475569);
+  color: #000;
 }
 
 .lk-about-timeline__rail {
@@ -219,17 +219,20 @@ const rows = computed(() => {
 }
 
 [data-theme='dark'] .lk-about-timeline__heading,
-[data-theme='dark'] .lk-about-timeline__title {
-  color: rgba(248, 250, 252, 0.96);
+[data-theme='dark'] .lk-about-timeline__title,
+[data-theme='dark'] .lk-about-timeline__title:hover,
+[data-theme='dark'] .lk-about-timeline__date,
+[data-theme='dark'] .lk-about-timeline__cat {
+  color: #fff;
 }
 
 [data-theme='dark'] .lk-about-timeline__body {
   border-color: rgba(222, 226, 230, 0.10);
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.86);
 }
 
 [data-theme='dark'] .lk-about-timeline__item:hover .lk-about-timeline__body {
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.94);
   border-color: rgba(222, 226, 230, 0.20);
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.35),
@@ -237,15 +240,7 @@ const rows = computed(() => {
 }
 
 [data-theme='dark'] .lk-about-timeline__item:hover .lk-about-timeline__title {
-  color: #ffffff;
-}
-
-[data-theme='dark'] .lk-about-timeline__date {
-  color: rgba(203, 213, 225, 0.82);
-}
-
-[data-theme='dark'] .lk-about-timeline__cat {
-  color: rgba(173, 181, 189, 0.86);
+  color: #fff;
 }
 
 @media (max-width: 959px) {

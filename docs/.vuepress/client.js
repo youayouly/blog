@@ -17,6 +17,7 @@ import StatsBigBoard from './components/StatsBigBoard.vue'
 import ArticleIndexList from './components/ArticleIndexList.vue'
 import ProjectPortfolio from './components/ProjectPortfolio.vue'
 import ProductManagerCases from './components/ProductManagerCases.vue'
+import ProjectsSidebarFilters from './components/ProjectsSidebarFilters.vue'
 import ProjectsRolesCard from './components/ProjectsRolesCard.vue'
 import SiteAvatar from './components/SiteAvatar.vue'
 import CursorEffect from './components/CursorEffect.vue'
@@ -472,6 +473,33 @@ function nudgeLive2dForCurrentRoute() {
 let blurLayer = null
 const LK_SCROLL_BLUR_THRESHOLD = 100  // 滚过 Hero 的安全高度
 
+/** Theme Hope / VuePress 常把滚动放在 .theme-container 内，window.scrollY 恒为 0，导致 About 模糊层永远不切换。 */
+function getEffectiveScrollY() {
+  if (typeof window === 'undefined') return 0
+  const root = document.scrollingElement || document.documentElement
+  const fromDocument =
+    window.scrollY ||
+    window.pageYOffset ||
+    root?.scrollTop ||
+    document.documentElement.scrollTop ||
+    document.body.scrollTop ||
+    0
+  let inner = 0
+  for (const sel of ['.theme-container', '#app', 'main.vp-page', '.vp-page-content', '[vp-content]']) {
+    const el = document.querySelector(sel)
+    if (el && el.scrollTop > inner) inner = el.scrollTop
+  }
+  return Math.max(fromDocument, inner)
+}
+
+function getScrollRangeForProgress() {
+  const winH = window.innerHeight
+  const docMax = Math.max(0, document.documentElement.scrollHeight - winH)
+  const tc = document.querySelector('.theme-container')
+  const innerMax = tc ? Math.max(0, tc.scrollHeight - tc.clientHeight) : 0
+  return Math.max(docMax, innerMax, 1)
+}
+
 function ensureBlurLayer() {
   if (typeof document === 'undefined') return
   if (blurLayer) return
@@ -490,7 +518,7 @@ function isAboutRoute(path) {
 
 function updateBlurLayer(path) {
   if (!blurLayer) return
-  const scrollY = window.scrollY || 0
+  const scrollY = getEffectiveScrollY()
   const aboutHit = isAboutRoute(path)
   blurLayer.classList.remove('lk-blur--clear', 'lk-blur--soft', 'lk-blur--static')
   let appliedClass
@@ -513,17 +541,21 @@ function initProgressBar() {
   progressBar = bar
 
   let ticking = false
-  window.addEventListener('scroll', () => {
+  const onScroll = () => {
     if (!ticking) {
+      ticking = true
       requestAnimationFrame(() => {
-        const h = document.documentElement.scrollHeight - window.innerHeight
-        bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%'
+        const y = getEffectiveScrollY()
+        const max = getScrollRangeForProgress()
+        bar.style.width = max > 0 ? `${(y / max) * 100}%` : '0%'
         updateBlurLayer(window.location.pathname)
         ticking = false
       })
-      ticking = true
     }
-  }, { passive: true })
+  }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  /* 内部滚动容器不冒泡到 window；捕获阶段仍能收到 scroll */
+  document.addEventListener('scroll', onScroll, { passive: true, capture: true })
 }
 
 function rescueLive2dFromHomeGrid() {
@@ -562,6 +594,7 @@ export default defineClientConfig({
     app.component('ArticleIndexList', ArticleIndexList)
     app.component('ProjectPortfolio', ProjectPortfolio)
     app.component('ProductManagerCases', ProductManagerCases)
+    app.component('ProjectsSidebarFilters', ProjectsSidebarFilters)
     app.component('ProjectsRolesCard', ProjectsRolesCard)
     app.component('SiteAvatar', SiteAvatar)
     router.beforeEach((to) => {
@@ -587,6 +620,35 @@ export default defineClientConfig({
       if (!canAccessPath(route.path)) {
         window.location.replace('/about.html')
       }
+    }
+
+    /** 首屏客户端初始化：模糊层、路由类、导航/侧栏观察器、进度条、Live2D、存储事件。 */
+    function initClientShell() {
+      if (typeof window === 'undefined') return
+      ensureBlurLayer()
+      updateBlurLayer(route.path)
+      syncSiteNonHomeClass(route.path)
+      applyLive2dRouteClass(route.path)
+      syncLive2dPref()
+      syncSplitPageHeader(route.path)
+      ensureNavbarHideObserver()
+      applyHiddenNavbarItems()
+      nextTick(() => {
+        nudgeNavbarSidebarRepaint()
+        applyHiddenNavbarItems()
+        applyHiddenHomeEntries()
+      })
+      initProgressBar()
+      initLive2DScript()
+      nextTick(() => {
+        tryMountLive2dModel()
+      })
+      window.addEventListener('storage', onLive2dPrefStorage)
+      window.addEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
+      window.addEventListener('storage', syncHiddenNav)
+      window.addEventListener(HIDDEN_NAV_ITEMS_EVENT, syncHiddenNav)
+      window.addEventListener('storage', syncProtectedAccess)
+      window.addEventListener(PROTECTED_ACCESS_EVENT, syncProtectedAccess)
     }
 
     watch(
@@ -626,30 +688,7 @@ export default defineClientConfig({
     )
 
     onMounted(() => {
-      ensureBlurLayer()
-      updateBlurLayer(route.path)
-      syncSiteNonHomeClass(route.path)
-      applyLive2dRouteClass(route.path)
-      syncLive2dPref()
-      syncSplitPageHeader(route.path)
-      ensureNavbarHideObserver()
-      applyHiddenNavbarItems()
-      nextTick(() => {
-        nudgeNavbarSidebarRepaint()
-        applyHiddenNavbarItems()
-        applyHiddenHomeEntries()
-      })
-      initProgressBar()
-      initLive2DScript()
-      nextTick(() => {
-        tryMountLive2dModel()
-      })
-      window.addEventListener('storage', onLive2dPrefStorage)
-      window.addEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
-      window.addEventListener('storage', syncHiddenNav)
-      window.addEventListener(HIDDEN_NAV_ITEMS_EVENT, syncHiddenNav)
-      window.addEventListener('storage', syncProtectedAccess)
-      window.addEventListener(PROTECTED_ACCESS_EVENT, syncProtectedAccess)
+      initClientShell()
     })
 
     onUnmounted(() => {
