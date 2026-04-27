@@ -238,7 +238,8 @@ function mountGlobe() {
   ;(async () => {
     THREE = await import('three')
     const ocMod = await import('three/addons/controls/OrbitControls.js')
-    const OrbitControls = ocMod.OrbitControls
+    const OrbitControls = ocMod.OrbitControls ?? ocMod.default
+    if (!OrbitControls) throw new Error('OrbitControls 未加载')
     Raycaster = THREE.Raycaster
     Vector2 = THREE.Vector2
 
@@ -254,11 +255,20 @@ function mountGlobe() {
     renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
-      powerPreference: 'high-performance',
+      powerPreference: 'default',
+      failIfMajorPerformanceCaveat: false,
+      preserveDrawingBuffer: false,
     })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-    renderer.outputColorSpace = THREE.SRGBColorSpace
+    try {
+      if (THREE.SRGBColorSpace != null) {
+        renderer.outputColorSpace = THREE.SRGBColorSpace
+      }
+    } catch {
+      /* 部分浏览器不支持 gl.drawingBufferColorSpace，忽略 */
+    }
     renderer.setClearColor(0x000000, 0)
+    if (!renderer.getContext()) throw new Error('WebGL 上下文为 null')
     containerRef.value.appendChild(renderer.domElement)
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
@@ -381,7 +391,7 @@ function mountGlobe() {
     }
     loop()
   })().catch((err) => {
-    console.error('[EarthVisitedGlobe] WebGL / three init failed:', err)
+    console.error('[EarthVisitedGlobe] WebGL / three init failed:', err?.message || err)
     globeError.value = true
     globeReady.value = false
   })
@@ -430,20 +440,20 @@ function mountGlobe() {
         </button>
       </aside>
 
-      <div
-        ref="containerRef"
-        class="lk-globe__viewport"
-        role="img"
-        aria-label="3D 地球：到访城市标点"
-      >
-        <div
-          v-if="!globeReady && !globeError"
-          class="lk-globe__state lk-globe__state--loading"
-        >
-          地球加载中…
-        </div>
-        <div v-if="globeError" class="lk-globe__state lk-globe__state--error">
-          3D 未能启动（WebGL 被禁用或显卡驱动受限）
+      <div class="lk-globe__viewport" role="img" aria-label="3D 地球：到访城市标点">
+        <!-- 毛玻璃只放在画布背后的层，避免作为 WebGL 祖先触发 Chromium 合成失败 -->
+        <div class="lk-globe__glass" aria-hidden="true" />
+        <div ref="containerRef" class="lk-globe__canvas-host">
+          <div
+            v-if="!globeReady && !globeError"
+            class="lk-globe__state lk-globe__state--loading"
+          >
+            地球加载中…
+          </div>
+          <div v-if="globeError" class="lk-globe__state lk-globe__state--error">
+            <span class="lk-globe__err-title">3D 未能启动</span>
+            <span class="lk-globe__err-hint">常见原因：浏览器关闭硬件加速、显卡驱动过旧，或页面叠加了毛玻璃滤镜导致 WebGL 无法合成。可尝试换 Chrome / Edge、在设置里开启「使用硬件加速」，并刷新本页。</span>
+          </div>
         </div>
       </div>
     </div>
@@ -569,8 +579,6 @@ function mountGlobe() {
 
 .lk-globe__viewport {
   position: relative;
-  isolation: isolate;
-  transform: translateZ(0);
   width: 100%;
   aspect-ratio: 5 / 4;
   min-height: min(360px, 52vh);
@@ -578,10 +586,8 @@ function mountGlobe() {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(125, 211, 252, 0.45);
-  background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.72) 0%, rgba(219, 234, 254, 0.55) 45%, rgba(224, 242, 254, 0.5) 100%);
-  backdrop-filter: blur(14px) saturate(1.15);
-  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  /* 外层不用 backdrop-filter；毛玻璃只在 .lk-globe__glass，且与 canvas 为兄弟关系 */
+  background: rgba(248, 250, 252, 0.45);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.75),
     0 10px 36px -18px rgba(15, 23, 42, 0.18);
@@ -589,11 +595,35 @@ function mountGlobe() {
 
 [data-theme='dark'] .lk-globe__viewport {
   border-color: rgba(148, 163, 184, 0.28);
-  background:
-    linear-gradient(165deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 41, 59, 0.62) 50%, rgba(15, 23, 42, 0.55) 100%);
+  background: rgba(15, 23, 42, 0.35);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 12px 40px -16px rgba(0, 0, 0, 0.45);
+}
+
+.lk-globe__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.72) 0%, rgba(219, 234, 254, 0.55) 45%, rgba(224, 242, 254, 0.5) 100%);
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+}
+
+[data-theme='dark'] .lk-globe__glass {
+  background:
+    linear-gradient(165deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 41, 59, 0.62) 50%, rgba(15, 23, 42, 0.55) 100%);
+}
+
+.lk-globe__canvas-host {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
 }
 
 .lk-globe__state {
@@ -622,6 +652,10 @@ function mountGlobe() {
 }
 
 .lk-globe__state--error {
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
   color: #b45309;
   background: rgba(254, 243, 199, 0.85);
   pointer-events: auto;
@@ -630,6 +664,19 @@ function mountGlobe() {
 [data-theme='dark'] .lk-globe__state--error {
   color: #fcd34d;
   background: rgba(120, 53, 15, 0.55);
+}
+
+.lk-globe__err-title {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.lk-globe__err-hint {
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.5;
+  max-width: 22rem;
+  opacity: 0.95;
 }
 
 .lk-globe__legend {

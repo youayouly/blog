@@ -73,11 +73,6 @@ function openWechatPopup() {
           </section>
 
           <section class="lk-aboutme__section">
-            <h2 class="lk-aboutme__h2">去过的地方</h2>
-            <EarthVisitedGlobe />
-          </section>
-
-          <section class="lk-aboutme__section">
             <h2 class="lk-aboutme__h2">正在做与正在学</h2>
             <ul class="lk-aboutme__bullets">
               <li>
@@ -210,6 +205,13 @@ function openWechatPopup() {
             </ul>
           </section>
         </article>
+
+        <div class="lk-aboutme__globe-panel">
+          <section class="lk-aboutme__section">
+            <h2 class="lk-aboutme__h2">去过的地方</h2>
+            <EarthVisitedGlobe />
+          </section>
+        </div>
       </main>
     </div>
   </div>
