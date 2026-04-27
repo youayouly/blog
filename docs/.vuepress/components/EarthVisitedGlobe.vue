@@ -4,7 +4,7 @@
  * - 标点：到访城市经纬度
  * - 交互：拖拽旋转、滚轮缩放、点标点或左侧卡片互相同步
  */
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const cityList = [
   { id: 'beijing', name: '北京', lat: 39.9042, lng: 116.4074, tz: 'Asia/Shanghai', wttr: 'Beijing' },
@@ -32,6 +32,9 @@ const cities = ref(
 const activeId = ref(cityList[0].id)
 
 const containerRef = ref(null)
+/** 首帧 WebGL 完成前显示占位，避免误以为「空白」 */
+const globeReady = ref(false)
+const globeError = ref(false)
 
 let timer = null
 let disposeGlobe = () => {}
@@ -80,20 +83,51 @@ function pickEmoji(text) {
   return '⛅'
 }
 
+function applyWeather(idx, line, emojiSource) {
+  if (idx < 0) return
+  cities.value[idx].weather = line
+  cities.value[idx].weatherEmoji = pickEmoji(emojiSource || line)
+}
+
+/** wttr.in：优先 JSON（避免返回整页 HTML 污染 UI） */
 async function fetchWeather(city) {
+  const idx = cities.value.findIndex((c) => c.id === city.id)
   try {
-    const url = `https://wttr.in/${encodeURIComponent(city.wttr)}?format=%c+%C+%t&lang=zh`
-    const res = await fetch(url, { mode: 'cors' })
+    const url = `https://wttr.in/${encodeURIComponent(city.wttr)}?format=j1&lang=zh`
+    const res = await fetch(url, {
+      mode: 'cors',
+      headers: { Accept: 'application/json' },
+    })
     if (!res.ok) throw new Error('weather http ' + res.status)
-    const text = (await res.text()).trim()
-    const idx = cities.value.findIndex((c) => c.id === city.id)
-    if (idx >= 0) {
-      cities.value[idx].weather = text || '—'
-      cities.value[idx].weatherEmoji = pickEmoji(text)
+    const raw = (await res.text()).trim()
+    if (!raw || raw.startsWith('<') || raw.toLowerCase().includes('<!doctype')) {
+      throw new Error('weather html body')
     }
+    const data = JSON.parse(raw)
+    const cur = data.current_condition?.[0]
+    if (!cur) throw new Error('weather empty')
+    const desc =
+      cur.lang_zh?.[0]?.value || cur.weatherDesc?.[0]?.value || '—'
+    const temp = cur.temp_C != null ? `${cur.temp_C}°C` : ''
+    const feel = cur.FeelsLikeC != null ? `体感 ${cur.FeelsLikeC}°C` : ''
+    const line = [desc, temp, feel].filter(Boolean).join(' · ')
+    applyWeather(idx, line || '—', desc)
   } catch {
-    const idx = cities.value.findIndex((c) => c.id === city.id)
-    if (idx >= 0) cities.value[idx].weather = '获取失败'
+    try {
+      const url = `https://wttr.in/${encodeURIComponent(city.wttr)}?format=%c+%C+%t&lang=zh`
+      const res = await fetch(url, {
+        mode: 'cors',
+        headers: { Accept: 'text/plain' },
+      })
+      if (!res.ok) throw new Error('fallback http')
+      const text = (await res.text()).trim()
+      if (!text || text.startsWith('<') || text.toLowerCase().includes('<!doctype')) {
+        throw new Error('weather html body')
+      }
+      applyWeather(idx, text, text)
+    } catch {
+      applyWeather(idx, '天气暂不可用', '')
+    }
   }
 }
 
@@ -109,7 +143,11 @@ onMounted(() => {
     Promise.resolve(),
   )
 
-  disposeGlobe = mountGlobe()
+  void nextTick().then(() => {
+    requestAnimationFrame(() => {
+      disposeGlobe = mountGlobe()
+    })
+  })
 })
 
 onUnmounted(() => {
@@ -165,9 +203,11 @@ function mountGlobe() {
 
   const resize = () => {
     if (!containerRef.value || !renderer || !camera) return
-    const w = containerRef.value.clientWidth
-    const h = containerRef.value.clientHeight
-    if (w < 2 || h < 2) return
+    const rect = containerRef.value.getBoundingClientRect()
+    let w = Math.round(rect.width) || containerRef.value.clientWidth
+    let h = Math.round(rect.height) || containerRef.value.clientHeight
+    if (w < 2) w = 320
+    if (h < 2) h = Math.max(260, Math.round(w * 0.8))
     camera.aspect = w / h
     camera.updateProjectionMatrix()
     renderer.setSize(w, h, false)
@@ -206,18 +246,26 @@ function mountGlobe() {
 
     scene = new THREE.Scene()
     const dark = document.documentElement.getAttribute('data-theme') === 'dark'
-    scene.background = new THREE.Color(dark ? 0x0b1220 : 0xe8eef7)
+    scene.background = null
 
     camera = new THREE.PerspectiveCamera(50, 1, 0.1, 50)
     camera.position.set(0, 0, CAM_DIST)
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.setClearColor(0x000000, 0)
     containerRef.value.appendChild(renderer.domElement)
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
     renderer.domElement.style.touchAction = 'none'
+    renderer.domElement.style.position = 'relative'
+    renderer.domElement.style.zIndex = '1'
     resize()
 
     controls = new OrbitControls(camera, renderer.domElement)
@@ -241,11 +289,11 @@ function mountGlobe() {
 
     const sphereGeo = new THREE.SphereGeometry(1, 64, 48)
     const sphereMat = new THREE.MeshPhongMaterial({
-      color: dark ? 0x1a2f4a : 0x2563ab,
-      emissive: dark ? 0x020617 : 0x0c4a6e,
-      emissiveIntensity: dark ? 0.35 : 0.25,
-      shininess: 28,
-      specular: 0x93c5fd,
+      color: dark ? 0x1e3a5f : 0x38bdf8,
+      emissive: dark ? 0x0f172a : 0xbae6fd,
+      emissiveIntensity: dark ? 0.42 : 0.38,
+      shininess: dark ? 24 : 42,
+      specular: dark ? 0x93c5fd : 0xffffff,
     })
     const earth = new THREE.Mesh(sphereGeo, sphereMat)
     globeGroup.add(earth)
@@ -253,10 +301,10 @@ function mountGlobe() {
     const wire = new THREE.Mesh(
       new THREE.SphereGeometry(1.012, 36, 24),
       new THREE.MeshBasicMaterial({
-        color: 0x7dd3fc,
+        color: dark ? 0x7dd3fc : 0x0ea5e9,
         wireframe: true,
         transparent: true,
-        opacity: dark ? 0.14 : 0.1,
+        opacity: dark ? 0.14 : 0.07,
       }),
     )
     globeGroup.add(wire)
@@ -277,7 +325,13 @@ function mountGlobe() {
     starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     const stars = new THREE.Points(
       starGeo,
-      new THREE.PointsMaterial({ color: 0xffffff, size: 0.035, transparent: true, opacity: dark ? 0.5 : 0.35 }),
+      new THREE.PointsMaterial({
+        color: dark ? 0xffffff : 0x38bdf8,
+        size: 0.032,
+        transparent: true,
+        opacity: dark ? 0.45 : 0.12,
+        sizeAttenuation: true,
+      }),
     )
     scene.add(stars)
 
@@ -309,6 +363,9 @@ function mountGlobe() {
     const clock = new THREE.Clock()
     const ease = (t) => 1 - (1 - t) ** 3
 
+    globeReady.value = true
+    globeError.value = false
+
     const loop = () => {
       if (!alive) return
       raf = requestAnimationFrame(loop)
@@ -323,7 +380,11 @@ function mountGlobe() {
       renderer.render(scene, camera)
     }
     loop()
-  })().catch(() => {})
+  })().catch((err) => {
+    console.error('[EarthVisitedGlobe] WebGL / three init failed:', err)
+    globeError.value = true
+    globeReady.value = false
+  })
 
   return () => {
     alive = false
@@ -374,7 +435,17 @@ function mountGlobe() {
         class="lk-globe__viewport"
         role="img"
         aria-label="3D 地球：到访城市标点"
-      />
+      >
+        <div
+          v-if="!globeReady && !globeError"
+          class="lk-globe__state lk-globe__state--loading"
+        >
+          地球加载中…
+        </div>
+        <div v-if="globeError" class="lk-globe__state lk-globe__state--error">
+          3D 未能启动（WebGL 被禁用或显卡驱动受限）
+        </div>
+      </div>
     </div>
 
     <div class="lk-globe__legend" aria-label="说明">
@@ -498,19 +569,67 @@ function mountGlobe() {
 
 .lk-globe__viewport {
   position: relative;
+  isolation: isolate;
+  transform: translateZ(0);
   width: 100%;
   aspect-ratio: 5 / 4;
-  min-height: 280px;
+  min-height: min(360px, 52vh);
   min-width: 0;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.72) 0%, rgba(219, 234, 254, 0.55) 45%, rgba(224, 242, 254, 0.5) 100%);
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 10px 36px -18px rgba(15, 23, 42, 0.18);
 }
 
 [data-theme='dark'] .lk-globe__viewport {
-  border-color: rgba(148, 163, 184, 0.18);
+  border-color: rgba(148, 163, 184, 0.28);
+  background:
+    linear-gradient(165deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 41, 59, 0.62) 50%, rgba(15, 23, 42, 0.55) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 40px -16px rgba(0, 0, 0, 0.45);
+}
+
+.lk-globe__state {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.lk-globe__state--loading {
+  color: rgba(15, 23, 42, 0.55);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme='dark'] .lk-globe__state--loading {
+  color: rgba(226, 232, 240, 0.55);
   background: rgba(15, 23, 42, 0.35);
+}
+
+.lk-globe__state--error {
+  color: #b45309;
+  background: rgba(254, 243, 199, 0.85);
+  pointer-events: auto;
+}
+
+[data-theme='dark'] .lk-globe__state--error {
+  color: #fcd34d;
+  background: rgba(120, 53, 15, 0.55);
 }
 
 .lk-globe__legend {
