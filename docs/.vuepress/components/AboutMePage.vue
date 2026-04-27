@@ -74,7 +74,7 @@ function openWechatPopup() {
 
           <section class="lk-aboutme__section">
             <h2 class="lk-aboutme__h2">去过的地方</h2>
-            <ChinaVisitedMap />
+            <EarthVisitedGlobe />
           </section>
 
           <section class="lk-aboutme__section">
