@@ -3,8 +3,12 @@
  * 3D 地球（three.js）+ 左侧城市卡（时间 + wttr.in 天气）
  * - 标点：到访城市经纬度
  * - 交互：拖拽旋转、滚轮缩放、点标点或左侧卡片互相同步
+ *
+ * 使用静态 import（勿用 import('three')）：Vite 预构建缓存 URL 在 dev 下易出现 504 Outdated Optimize Dep。
  */
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import * as T from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 const cityList = [
   { id: 'beijing', name: '北京', lat: 39.9042, lng: 116.4074, tz: 'Asia/Shanghai', wttr: 'Beijing' },
@@ -156,13 +160,13 @@ onUnmounted(() => {
 })
 
 /** Y 轴朝上：北极为 +Y，东经为正 */
-function latLonToVec3(lat, lng, r, THREE) {
+function latLonToVec3(lat, lng, r) {
   const latR = (lat * Math.PI) / 180
   const lonR = (lng * Math.PI) / 180
   const x = r * Math.cos(latR) * Math.cos(lonR)
   const y = r * Math.sin(latR)
   const z = r * Math.cos(latR) * Math.sin(lonR)
-  return new THREE.Vector3(x, y, z)
+  return new T.Vector3(x, y, z)
 }
 
 function mountGlobe() {
@@ -176,9 +180,6 @@ function mountGlobe() {
   let renderer
   let controls
   let globeGroup
-  let THREE
-  let Raycaster
-  let Vector2
   let focusFrom
   let focusTo
   let focusT = 1
@@ -189,12 +190,12 @@ function mountGlobe() {
   }
 
   const onClick = (ev) => {
-    if (!containerRef.value || !camera || !Raycaster || !Vector2) return
+    if (!containerRef.value || !camera) return
     const rect = renderer.domElement.getBoundingClientRect()
     const x = ((ev.clientX - rect.left) / rect.width) * 2 - 1
     const y = -((ev.clientY - rect.top) / rect.height) * 2 + 1
-    const raycaster = new Raycaster()
-    raycaster.setFromCamera(new Vector2(x, y), camera)
+    const raycaster = new T.Raycaster()
+    raycaster.setFromCamera(new T.Vector2(x, y), camera)
     const hits = raycaster.intersectObjects([...markerById.values()], false)
     if (hits.length && hits[0].object?.userData?.cityId) {
       activeId.value = hits[0].object.userData.cityId
@@ -216,10 +217,10 @@ function mountGlobe() {
 
   let ro
   const startFocusForActive = () => {
-    if (!THREE || !camera) return
+    if (!camera) return
     const mesh = markerById.get(activeId.value)
     if (!mesh) return
-    const wp = mesh.getWorldPosition(new THREE.Vector3())
+    const wp = mesh.getWorldPosition(new T.Vector3())
     const dir = wp.clone().normalize()
     focusFrom = camera.position.clone()
     focusTo = dir.multiplyScalar(CAM_DIST)
@@ -235,24 +236,17 @@ function mountGlobe() {
     }
   })
 
-  ;(async () => {
-    THREE = await import('three')
-    const ocMod = await import('three/addons/controls/OrbitControls.js')
-    const OrbitControls = ocMod.OrbitControls ?? ocMod.default
-    if (!OrbitControls) throw new Error('OrbitControls 未加载')
-    Raycaster = THREE.Raycaster
-    Vector2 = THREE.Vector2
+  try {
+    if (!containerRef.value) throw new Error('地球容器未就绪')
 
-    if (!alive || !containerRef.value) return
-
-    scene = new THREE.Scene()
+    scene = new T.Scene()
     const dark = document.documentElement.getAttribute('data-theme') === 'dark'
     scene.background = null
 
-    camera = new THREE.PerspectiveCamera(50, 1, 0.1, 50)
+    camera = new T.PerspectiveCamera(50, 1, 0.1, 50)
     camera.position.set(0, 0, CAM_DIST)
 
-    renderer = new THREE.WebGLRenderer({
+    renderer = new T.WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: 'default',
@@ -261,8 +255,8 @@ function mountGlobe() {
     })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     try {
-      if (THREE.SRGBColorSpace != null) {
-        renderer.outputColorSpace = THREE.SRGBColorSpace
+      if (T.SRGBColorSpace != null) {
+        renderer.outputColorSpace = T.SRGBColorSpace
       }
     } catch {
       /* 部分浏览器不支持 gl.drawingBufferColorSpace，忽略 */
@@ -288,29 +282,29 @@ function mountGlobe() {
     controls.autoRotateSpeed = 0.35
     controls.target.set(0, 0, 0)
 
-    globeGroup = new THREE.Group()
+    globeGroup = new T.Group()
     scene.add(globeGroup)
 
-    const amb = new THREE.AmbientLight(0xffffff, 0.55)
+    const amb = new T.AmbientLight(0xffffff, 0.55)
     scene.add(amb)
-    const sun = new THREE.DirectionalLight(0xffffff, 1.1)
+    const sun = new T.DirectionalLight(0xffffff, 1.1)
     sun.position.set(4, 2.5, 5)
     scene.add(sun)
 
-    const sphereGeo = new THREE.SphereGeometry(1, 64, 48)
-    const sphereMat = new THREE.MeshPhongMaterial({
+    const sphereGeo = new T.SphereGeometry(1, 64, 48)
+    const sphereMat = new T.MeshPhongMaterial({
       color: dark ? 0x1e3a5f : 0x38bdf8,
       emissive: dark ? 0x0f172a : 0xbae6fd,
       emissiveIntensity: dark ? 0.42 : 0.38,
       shininess: dark ? 24 : 42,
       specular: dark ? 0x93c5fd : 0xffffff,
     })
-    const earth = new THREE.Mesh(sphereGeo, sphereMat)
+    const earth = new T.Mesh(sphereGeo, sphereMat)
     globeGroup.add(earth)
 
-    const wire = new THREE.Mesh(
-      new THREE.SphereGeometry(1.012, 36, 24),
-      new THREE.MeshBasicMaterial({
+    const wire = new T.Mesh(
+      new T.SphereGeometry(1.012, 36, 24),
+      new T.MeshBasicMaterial({
         color: dark ? 0x7dd3fc : 0x0ea5e9,
         wireframe: true,
         transparent: true,
@@ -319,7 +313,7 @@ function mountGlobe() {
     )
     globeGroup.add(wire)
 
-    const starGeo = new THREE.BufferGeometry()
+    const starGeo = new T.BufferGeometry()
     const starCount = 900
     const positions = new Float32Array(starCount * 3)
     for (let i = 0; i < starCount; i++) {
@@ -332,10 +326,10 @@ function mountGlobe() {
       positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
       positions[i * 3 + 2] = r * Math.cos(phi)
     }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const stars = new THREE.Points(
+    starGeo.setAttribute('position', new T.BufferAttribute(positions, 3))
+    const stars = new T.Points(
       starGeo,
-      new THREE.PointsMaterial({
+      new T.PointsMaterial({
         color: dark ? 0xffffff : 0x38bdf8,
         size: 0.032,
         transparent: true,
@@ -345,17 +339,17 @@ function mountGlobe() {
     )
     scene.add(stars)
 
-    const markGeo = new THREE.SphereGeometry(0.038, 16, 12)
+    const markGeo = new T.SphereGeometry(0.038, 16, 12)
     for (const c of cityList) {
-      const mat = new THREE.MeshStandardMaterial({
+      const mat = new T.MeshStandardMaterial({
         color: c.id === activeId.value ? 0xfbbf24 : 0x6366f1,
         emissive: c.id === activeId.value ? 0x78350f : 0x312e81,
         emissiveIntensity: 0.65,
         metalness: 0.2,
         roughness: 0.45,
       })
-      const mesh = new THREE.Mesh(markGeo, mat)
-      const p = latLonToVec3(c.lat, c.lng, 1.045, THREE)
+      const mesh = new T.Mesh(markGeo, mat)
+      const p = latLonToVec3(c.lat, c.lng, 1.045)
       mesh.position.copy(p)
       mesh.userData.cityId = c.id
       globeGroup.add(mesh)
@@ -370,7 +364,7 @@ function mountGlobe() {
 
     startFocusForActive()
 
-    const clock = new THREE.Clock()
+    const clock = new T.Clock()
     const ease = (t) => 1 - (1 - t) ** 3
 
     globeReady.value = true
@@ -390,11 +384,11 @@ function mountGlobe() {
       renderer.render(scene, camera)
     }
     loop()
-  })().catch((err) => {
+  } catch (err) {
     console.error('[EarthVisitedGlobe] WebGL / three init failed:', err?.message || err)
     globeError.value = true
     globeReady.value = false
-  })
+  }
 
   return () => {
     alive = false
