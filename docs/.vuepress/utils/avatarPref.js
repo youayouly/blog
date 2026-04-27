@@ -3,10 +3,11 @@ import { computed, ref } from 'vue'
 export const AVATAR_PREF_KEY = 'lk-avatar-src'
 export const AVATAR_PREF_EVENT = 'lk-avatar-changed'
 export const AVATAR_HISTORY_KEY = 'lk-avatar-history'
-export const DEFAULT_AVATAR = '/gallery/avatar-luke-2026.png'
+export const DEFAULT_AVATAR = '/gallery/avatar-luke-capybara.png'
 
 export const avatarChoices = [
-  { src: '/gallery/avatar-luke-2026.png', label: '当前头像（默认）' },
+  { src: '/gallery/avatar-luke-capybara.png', label: '卡皮巴拉切纸（默认）' },
+  { src: '/gallery/avatar-luke-2026.png', label: '动漫女孩 2026' },
   { src: '/gallery/avatar-bread-light.svg', label: '浅色三角形' },
   { src: '/gallery/avatar-bread.svg', label: '深色三角形' },
   { src: '/gallery/avatar-bread-backup.svg', label: '动漫面包(备份)' },

@@ -182,12 +182,12 @@ function openWechatPopup() {
               </li>
               <li>
                 <span class="lk-aboutme__icon" aria-hidden="true">🎨</span>
-                <span class="lk-aboutme__text">个人介绍头像：<a
-                  href="https://www.pixiv.net/"
+                <span class="lk-aboutme__text">个人介绍头像：像素卡皮巴拉切纸，来自 <a
+                  href="https://www.pixiv.net/artworks/102538289"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="no-external-link-icon"
-                >pixiv 不知名</a></span>
+                >Pixiv 102538289</a>，已把原图鲜黄底调淡作为站点头像</span>
               </li>
               <li>
                 <span class="lk-aboutme__icon" aria-hidden="true">🅰</span>

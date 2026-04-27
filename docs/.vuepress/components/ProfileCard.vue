@@ -189,8 +189,7 @@ defineProps({
   mini: { type: Boolean, default: false },
 })
 
-// Put your WeChat QR image at docs/.vuepress/public/wechat-qr.jpg
-const qrSrc = ref('/wechat-qr.jpg')
+const qrSrc = ref('/wechat-qr.png')
 const qrFailed = ref(false)
 const avatarSrc = useAvatarSrc()
 
@@ -859,9 +858,10 @@ onMounted(() => {
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%) translateY(6px);
-  width: 160px;
-  min-width: 160px;
-  padding: 10px;
+  width: 168px;
+  height: 168px;
+  padding: 8px;
+  box-sizing: content-box;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
@@ -869,9 +869,7 @@ onMounted(() => {
   pointer-events: none;
   transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
 }
 
 .lk-card--mini__wechat-wrap:hover .lk-card--mini__wechat-pop,
@@ -883,13 +881,10 @@ onMounted(() => {
 
 .lk-card--mini__wechat-qr {
   display: block;
-  width: 140px;
-  height: 140px;
-  min-width: 140px;
-  min-height: 140px;
-  max-width: 140px;
-  max-height: 140px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
   background: #fff;
   border-radius: 6px;
 }
