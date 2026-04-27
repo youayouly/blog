@@ -122,9 +122,6 @@ export default defineUserConfig({
   plugins: [lkBuildTracePlugin()],
   bundler: viteBundler({
     viteOptions: {
-      optimizeDeps: {
-        include: ['three', 'three/addons/controls/OrbitControls.js'],
-      },
       define: {
         __LK_ARTICLE_COUNT__: JSON.stringify(lkArticleCount),
         __LK_TECH_COUNT__: JSON.stringify(lkTechCount),

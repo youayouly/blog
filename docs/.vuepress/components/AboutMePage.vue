@@ -1,6 +1,7 @@
 <script setup>
 import NoticeCard from './NoticeCard.vue'
 import SiteStatsCard from './SiteStatsCard.vue'
+import VisitedChinaFootprints from './VisitedChinaFootprints.vue'
 
 const wechatQrSrc = '/wechat-qr.png'
 const wechatId = 'youayouly1'
@@ -55,11 +56,11 @@ function openWechatPopup() {
             <ul class="lk-aboutme__bullets">
               <li>
                 <span class="lk-aboutme__icon" aria-hidden="true">👋</span>
-                <span class="lk-aboutme__text">你好，我是 <strong>Lu Yi · Luke</strong>，一名来自浙江台州的 <strong>02 后</strong></span>
+                <span class="lk-aboutme__text">我是 <strong>Luke</strong></span>
               </li>
               <li>
                 <span class="lk-aboutme__icon" aria-hidden="true">🎓</span>
-                <span class="lk-aboutme__text">本科是 <strong>计算机科学</strong>，即将入读 <strong>香港大学</strong></span>
+                <span class="lk-aboutme__text">本科是 <strong>计算机科学</strong></span>
               </li>
               <li>
                 <span class="lk-aboutme__icon" aria-hidden="true">🛠</span>
@@ -68,6 +69,10 @@ function openWechatPopup() {
               <li>
                 <span class="lk-aboutme__icon" aria-hidden="true">📦</span>
                 <span class="lk-aboutme__text">喜欢把复杂信息整理成更清晰的结构，做项目偏好「能用 + 好看 + 自洽」</span>
+              </li>
+              <li>
+                <span class="lk-aboutme__icon" aria-hidden="true">💬</span>
+                <span class="lk-aboutme__text">欢迎联系我，不论是聊产品、技术、留学规划，还是香港生活都可以。</span>
               </li>
             </ul>
           </section>
@@ -209,7 +214,7 @@ function openWechatPopup() {
         <div class="lk-aboutme__globe-panel">
           <section class="lk-aboutme__section">
             <h2 class="lk-aboutme__h2">去过的地方</h2>
-            <EarthVisitedGlobe />
+            <VisitedChinaFootprints />
           </section>
         </div>
       </main>

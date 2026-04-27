@@ -92,16 +92,14 @@ watch(() => route.hash, scrollToIntroIfHash)
         <div class="lk-about-v2-main__col lk-about-v2-main__col--main">
           <div class="about-profile about-profile--vstack">
             <div class="about-left">
-              <!-- 图 1 / 图 4 同款小卡片：方角头像 + Lu Yi • Luke + 3 个社交圆钮 -->
+              <!-- 图 1 / 图 4 同款小卡片：方角头像 + Luke + 3 个社交圆钮 -->
               <ProfileCard mini />
             </div>
 
             <div class="about-right">
               <div class="about-card about-card--intro">
                 <h2>简介</h2>
-                <p class="about-role-line">
-                  即将入读 <strong>香港大学</strong>，关注产品、技术和跨文化体验。
-                </p>
+                <p class="about-role-line">关注产品、技术和跨文化体验。</p>
                 <p class="about-bio">
                   我喜欢把复杂信息整理成更清晰的结构，也持续在嵌入式、前端和 AI 工具方向做项目实践。
                 </p>
@@ -121,10 +119,6 @@ watch(() => route.hash, scrollToIntroIfHash)
 
           <div class="lk-about-v2-main__projects">
             <AboutArticleRecommend />
-
-            <blockquote class="about-outro">
-              <p>欢迎联系我，不论是聊产品、技术、留学规划，还是香港生活都可以。</p>
-            </blockquote>
           </div>
         </div>
 

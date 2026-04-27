@@ -15,7 +15,7 @@ import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
 import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
 import AboutPageLayoutV2 from './components/AboutPageLayoutV2.vue'
 import AboutMePage from './components/AboutMePage.vue'
-import EarthVisitedGlobe from './components/EarthVisitedGlobe.vue'
+import VisitedChinaFootprints from './components/VisitedChinaFootprints.vue'
 import StatsEntryGrid from './components/StatsEntryGrid.vue'
 import StatsBigBoard from './components/StatsBigBoard.vue'
 import ArticleIndexList from './components/ArticleIndexList.vue'
@@ -747,7 +747,7 @@ export default defineClientConfig({
     app.component('AboutCategoriesCard', AboutCategoriesCard)
     app.component('AboutPageLayoutV2', AboutPageLayoutV2)
     app.component('AboutMePage', AboutMePage)
-    app.component('EarthVisitedGlobe', EarthVisitedGlobe)
+    app.component('VisitedChinaFootprints', VisitedChinaFootprints)
     app.component('StatsEntryGrid', StatsEntryGrid)
     app.component('StatsBigBoard', StatsBigBoard)
     app.component('HomeSidePanel', HomeSidePanel)

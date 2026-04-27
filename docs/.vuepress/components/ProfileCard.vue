@@ -1,5 +1,5 @@
 <template>
-  <!-- 图 1：首页小卡片 — 浅底、方角头像、Lu Yi • Luke、三枚社交圆钮 -->
+  <!-- 图 1：首页小卡片 — 浅底、方角头像、Luke、三枚社交圆钮 -->
   <aside
     v-if="mini"
     class="lk-card lk-card--mini"
@@ -8,7 +8,7 @@
     <div class="lk-card--mini__avatar">
       <img class="lk-card--mini__avatar-img" :src="avatarSrc" alt="Luke" />
     </div>
-    <div class="lk-card--mini__name">Lu Yi <span class="lk-card--mini__dot" aria-hidden="true">•</span> Luke</div>
+    <div class="lk-card--mini__name">Luke</div>
     <nav class="lk-card--mini__dock" aria-label="社交与联系">
       <a
         class="lk-card--mini__btn lk-card--mini__btn--email"
@@ -110,7 +110,7 @@
           <div class="lk-card__gh-avatar-row">
             <img class="lk-card__gh-avatar" :src="avatarSrc" alt="Luke" />
             <div>
-              <div class="lk-card__gh-name">Lu Yi · Luke</div>
+              <div class="lk-card__gh-name">Luke</div>
               <div class="lk-card__gh-handle">@youayouly</div>
             </div>
           </div>
@@ -185,7 +185,7 @@ import { syncAvatarFromStorage, useAvatarSrc } from '../utils/avatarPref.js'
 defineProps({
   /** 嵌入侧栏控制面板时：去大阴影与 min-height，占满所在列 */
   embedded: { type: Boolean, default: false },
-  /** 图 1 首页小卡片：浅底、方头像、「Lu Yi • Luke」、三社交 */
+  /** 图 1 首页小卡片：浅底、方头像、Luke、三社交 */
   mini: { type: Boolean, default: false },
 })
 
@@ -766,14 +766,6 @@ onMounted(() => {
   margin-bottom: 0.85rem;
   text-align: center;
   line-height: 1.35;
-}
-
-.lk-card--mini__dot {
-  display: inline-block;
-  margin: 0 0.2em;
-  font-weight: 800;
-  color: #1e3a5f;
-  opacity: 0.7;
 }
 
 .lk-card--mini__dock {

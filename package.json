@@ -9,6 +9,7 @@
     "build:trace": "node scripts/copy-api.mjs && node scripts/build-with-page-trace.mjs",
     "test:siliconflow-cover": "node scripts/test-siliconflow-cover.mjs",
     "gen:about-hero": "node scripts/gen-about-hero.mjs",
+    "gen:china-map": "node scripts/gen-china-outline.mjs",
     "push": "node scripts/push.mjs",
     "sync:article-readme": "node scripts/sync-article-readme-to-github.mjs",
     "check": "node scripts/check-publish.mjs",
@@ -34,7 +35,6 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2",
-    "three": "^0.184.0",
     "undici": "^7.25.0",
     "vite": "^8.0.3"
   }

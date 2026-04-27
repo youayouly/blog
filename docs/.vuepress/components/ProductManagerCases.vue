@@ -2,7 +2,7 @@
   <nav class="lk-pm-nav" aria-label="作品集与内容入口">
     <div class="lk-pm-nav__card">
       <div class="lk-pm-nav__meta">
-        <p class="lk-pm-nav__name">Lu Yi · Luke</p>
+        <p class="lk-pm-nav__name">Luke</p>
         <p class="lk-pm-nav__tagline">AI + Embedded PM</p>
       </div>
       <ul class="lk-pm-nav__list" role="list">
