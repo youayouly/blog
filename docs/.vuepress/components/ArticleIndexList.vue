@@ -184,9 +184,8 @@ function formatDate(value) {
 </script>
 
 <template>
-  <div class="lk-blog lk-blog-fullbleed lk-article-three">
-
-    <div class="lk-article-three__content">
+  <!-- 根级 lk-blog / lk-article-three 在 article/README 等页里用静态 <div> 包一层，避免子组件未挂载时 :has() 不成立、出现左对齐后闪到居中 -->
+  <div class="lk-article-three__content">
       <aside class="lk-article-three__left">
         <div class="lk-article-three__panel">
           <div class="lk-article-three__panel-head">
@@ -247,7 +246,13 @@ function formatDate(value) {
                 </svg>
               </span>
               <div class="lk-article-three__text">
-                <time class="lk-article-three__date" :datetime="article.date">{{ formatDate(article.date) }}</time>
+                <!-- 元信息行：仅日期，避免与下方 tags 重复 -->
+                <div class="lk-article-three__meta-row">
+                  <time class="lk-article-three__meta-date" :datetime="article.date">
+                    <span class="lk-article-three__meta-icon" aria-hidden="true">📅</span>
+                    {{ formatDate(article.date) }}
+                  </time>
+                </div>
                 <h3 class="lk-article-three__title">{{ article.title }}</h3>
                 <p class="lk-article-three__excerpt">{{ article.excerpt }}</p>
                 <div class="lk-article-three__meta">
@@ -283,20 +288,21 @@ function formatDate(value) {
         </nav>
       </main>
     </div>
-  </div>
 </template>
 
 <style>
 .lk-article-three {
-  --lk-article-side-w: 260px;
-  --lk-article-gap: 2.5rem;
+  --lk-article-side-w: 240px;
+  --lk-article-gap: 2rem;
   /* 顶距减为原先 (navbar+0.9rem) 的约 1/3；sticky 单独用安全值避免吸顶时压导航 */
   --lk-article-content-pad-top: calc((var(--navbar-height, 3.6rem) + 0.9rem) / 3);
   --lk-article-sticky-top: calc(var(--navbar-height, 3.6rem) + 0.35rem);
-  width: 100%;
-  max-width: 1180px;
+  /* 与 Projects hub 对齐：max-width 1200；父级为 flex+align-items:center 时勿用 width:100% 撑满整行 */
+  width: min(100%, 1200px);
+  max-width: 1200px;
+  flex: 0 1 auto;
   margin: 0 auto;
-  padding: 0 0.5rem 2rem;
+  padding: 0 1rem 2rem;
   box-sizing: border-box;
 }
 
@@ -310,11 +316,14 @@ function formatDate(value) {
 
 .lk-article-three__content {
   display: grid;
-  grid-template-columns: var(--lk-article-side-w) minmax(0, 860px);
+  grid-template-columns: var(--lk-article-side-w) minmax(0, 1fr);
   gap: var(--lk-article-gap);
   align-items: start;
+  /* 整组（搜索栏 + 文章列表）作为一块在容器中居中 */
   justify-content: center;
-  /* 左右两列共用顶距；与导航留白约为原先的 1/3 */
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
   padding-top: var(--lk-article-content-pad-top);
 }
 
@@ -326,7 +335,8 @@ function formatDate(value) {
 .lk-article-three__middle {
   min-width: 0;
   width: 100%;
-  max-width: 860px;
+  /* 不再硬卡 860，让中列吃 grid 1fr 平均分布，整块在容器内居中 */
+  max-width: none;
 }
 
 .lk-article-three__panel {
@@ -448,10 +458,44 @@ function formatDate(value) {
   clip-path: polygon(0 0, 100% 0, calc(100% + var(--lk-seam-shift)) 100%, 0 100%);
 }
 
+/* 元信息行：日期 + 分类，单行不换行 */
+.lk-article-three__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.lk-article-three__meta-date,
+.lk-article-three__meta-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.78);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lk-article-three__meta-icon {
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.lk-article-three__meta-sep {
+  color: rgba(148, 163, 184, 0.45);
+  font-size: 0.76rem;
+}
+
+/* 隐藏旧的独立 date（已整合进 meta-row） */
 .lk-article-three__date {
   color: rgba(148, 163, 184, 0.95);
   font-size: 0.82rem;
   font-weight: 600;
+  display: none;
 }
 
 .lk-article-three__title {
@@ -623,11 +667,12 @@ function formatDate(value) {
 
 @media (max-width: 1400px) {
   .lk-article-three {
-    --lk-article-side-w: 240px;
+    --lk-article-side-w: 220px;
   }
 
   .lk-article-three__content {
-    grid-template-columns: 240px minmax(0, 760px);
+    /* 跟外层一起收缩，整块仍居中 */
+    grid-template-columns: 220px minmax(0, 1fr);
   }
 
   .lk-article-three__card {
@@ -747,6 +792,15 @@ function formatDate(value) {
 
 [data-theme='light'] .lk-article-three__date {
   color: #94a3b8;
+}
+
+[data-theme='light'] .lk-article-three__meta-date,
+[data-theme='light'] .lk-article-three__meta-cat {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .lk-article-three__meta-sep {
+  color: #cbd5e1;
 }
 
 [data-theme='light'] .lk-article-three__title {

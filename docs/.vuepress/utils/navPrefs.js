@@ -9,10 +9,10 @@ export const HIDDEN_NAV_ITEMS_EVENT = 'lk:hidden-nav-items-change'
 export const navbarPageOptions = [
   {
     id: 'about',
-    label: '关于我',
+    label: '首页',
     matches: (path) => {
       const p = normPath(path)
-      return p === '/about' || p.startsWith('/about/')
+      return p === '/' || p === '/index' || p === '/about' || p.startsWith('/about/')
     },
   },
   {

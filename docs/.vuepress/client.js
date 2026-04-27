@@ -1,7 +1,9 @@
 import { ClientOnly, defineClientConfig } from 'vuepress/client'
-import { defineComponent, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { createApp, defineComponent, h, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import HomeSidePanel from './components/HomeSidePanel.vue'
+import HomeTypewriterTagline from './components/HomeTypewriterTagline.vue'
+import ProfileCard from './components/ProfileCard.vue'
 import ProjectNineGrid from './components/ProjectNineGrid.vue'
 import ProjectCardsGrid from './components/ProjectCardsGrid.vue'
 import SiteFooter from './components/SiteFooter.vue'
@@ -12,6 +14,8 @@ import AboutTimeline from './components/AboutTimeline.vue'
 import AboutArticleRecommend from './components/AboutArticleRecommend.vue'
 import AboutCategoriesCard from './components/AboutCategoriesCard.vue'
 import AboutPageLayoutV2 from './components/AboutPageLayoutV2.vue'
+import AboutMePage from './components/AboutMePage.vue'
+import ChinaVisitedMap from './components/ChinaVisitedMap.vue'
 import StatsEntryGrid from './components/StatsEntryGrid.vue'
 import StatsBigBoard from './components/StatsBigBoard.vue'
 import ArticleIndexList from './components/ArticleIndexList.vue'
@@ -84,15 +88,42 @@ const ArticleBatchOpsClient = defineComponent({
   },
 })
 
-/** 原 `/home` 已移除；保留函数供路由样式判断（恒为 false）。 */
-function isSiteHomePath() {
-  return false
+/** 客户端导航到带 hash 的地址（如 `/about#about-intro`）时，确保滚到对应锚点，避免「关于我」与首屏同页却停在顶栏像又点了首页。 */
+function scrollToRouteHash(to) {
+  if (typeof document === 'undefined' || !to?.hash) return
+  const raw = to.hash
+  const id = raw.startsWith('#') ? decodeURIComponent(raw.slice(1)) : decodeURIComponent(raw)
+  if (!id) return
+  const tryOnce = () => {
+    let el = document.getElementById(id)
+    if (!el && raw) {
+      try {
+        el = document.querySelector(raw)
+      } catch {
+        /* 非法 selector 时忽略 */
+      }
+    }
+    if (el) {
+      el.scrollIntoView({ block: 'start', behavior: 'auto' })
+      return true
+    }
+    return false
+  }
+  const run = (attempt) => {
+    if (tryOnce() || attempt > 40) return
+    requestAnimationFrame(() => run(attempt + 1))
+  }
+  nextTick(() => run(0))
 }
 
-/** Open site root → About Me (navbar Home still uses `/`, so it lands here too). */
-function isRootPathForAboutRedirect(path) {
-  const normalized = (path || '/').replace(/\/+$/, '') || '/'
-  return normalized === '/' || /^\/index\.html$/i.test(normalized)
+/** 站点根路径 `/`（README）= Hope 首页，用于 `lk-site-non-home` 等 */
+function isSiteHomePath(path) {
+  if (path === undefined) {
+    if (typeof window === 'undefined') return false
+    path = window.location?.pathname
+  }
+  const p = normPath(path)
+  return p === '/' || p === '/index'
 }
 
 function canAccessPath(path) {
@@ -262,12 +293,23 @@ function onLive2dPrefStorage(e) {
   if (e.key === LIVE2D_PREF_KEY || e.key === null) syncLive2dPref()
 }
 
+/**
+ * 与当前目标路由同步到 <html data-lk-route>（normPath），供 index.scss 在「过渡帧」隐藏未卸载的旧页 DOM。
+ * 比 theme-container 的 pageClass 更早，可避免 /tech ↔ /article 同帧内 :has() 仍命中旧结构而闪一帧 Projects 左栏。
+ */
+function syncRouteDataAttr(path) {
+  if (typeof document === 'undefined') return
+  document.documentElement.setAttribute('data-lk-route', normPath(path))
+}
+
 /** About / Projects / Article：无面包屑，标题与 meta 同一行底对齐 + 下划线（见 index.scss `.lk-header-split`） */
 function syncSplitPageHeader(path) {
   if (typeof document === 'undefined') return
   const p = normPath(path)
   const use =
-    p === '/about' ||
+    p === '/' ||
+      p === '/index' ||
+      p === '/about' ||
       p.startsWith('/about/') ||
       p === '/stats' ||
       p.startsWith('/stats/') ||
@@ -566,6 +608,122 @@ function rescueLive2dFromHomeGrid() {
   }
 }
 
+/** 首页 Hero 进栏前暂隐主区，减少 DOM 重排显式跳动（与 index.scss `lk-home-enhance-suspended` 配套） */
+function setHomeEnhanceSuspended(flag) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle('lk-home-enhance-suspended', !!flag)
+}
+
+let homeTypewriterApp = null
+
+function mountHomeTypewriter() {
+  if (typeof document === 'undefined' || homeTypewriterApp) return
+  const el = document.getElementById('main-description')
+  if (!el || el.dataset.lkTw) return
+  el.dataset.lkTw = '1'
+  const tagline = el.textContent?.trim() || 'Welcome to my blog'
+  el.innerHTML = ''
+  const text = tagline || 'Welcome to my blog'
+  homeTypewriterApp = createApp({ render: () => h(HomeTypewriterTagline, { text }) })
+  homeTypewriterApp.mount(el)
+}
+
+function unmountHomeTypewriter() {
+  if (homeTypewriterApp) {
+    homeTypewriterApp.unmount()
+    homeTypewriterApp = null
+  }
+  const el = document.getElementById('main-description')
+  if (el) delete el.dataset.lkTw
+}
+
+/**
+ * 将 Hope 首屏 Hero（及主题生成的 features）移入 Markdown 中的 `.lk-home-main-col`，
+ * 与左侧小卡片同排；逻辑源自旧版 `mountHomeBodyGrid`（见 git 1b02bbe）。
+ * @returns {boolean} 是否已放好（或已处于放好状态）
+ */
+function placeHomeHeroInGrid() {
+  if (typeof document === 'undefined') return false
+  const main = document.querySelector('main.vp-page.vp-project-home') || document.querySelector('main.vp-project-home')
+  if (!main) return false
+  if (main.dataset.lkHomeHeroPlaced === '1') return true
+
+  const grid = main.querySelector('.lk-home-body-grid')
+  const mainCol = grid?.querySelector?.('.lk-home-main-col') ?? null
+  if (!grid || !mainCol) return false
+
+  const hero =
+    main.querySelector(':scope > .vp-hero-info-wrapper') || main.querySelector(':scope > header.vp-hero-info-wrapper')
+  if (!hero) return false
+
+  setHomeEnhanceSuspended(true)
+  try {
+    main.classList.add('lk-home-dual')
+    mainCol.appendChild(hero)
+
+    // Hope `home: true` 渲染：hero 与 feature-wrapper 都是 main 的直接子节点
+    for (const el of main.querySelectorAll(':scope > .vp-feature-wrapper, :scope > .vp-features')) {
+      if (grid.contains(el)) continue
+      mainCol.appendChild(el)
+    }
+
+    main.dataset.lkHomeHeroPlaced = '1'
+  } finally {
+    setHomeEnhanceSuspended(false)
+  }
+  rescueLive2dFromHomeGrid()
+  return true
+}
+
+function unplaceHomeHeroFromGrid() {
+  if (typeof document === 'undefined') return
+  const main = document.querySelector('main.vp-page.vp-project-home') || document.querySelector('main.vp-project-home')
+  if (!main || main.dataset.lkHomeHeroPlaced !== '1') return
+  const grid = main.querySelector('.lk-home-body-grid')
+  const mainCol = grid?.querySelector?.('.lk-home-main-col') ?? null
+  const hero = mainCol?.querySelector?.('.vp-hero-info-wrapper')
+  if (hero) {
+    main.prepend(hero)
+  }
+  // 把 features 也送回 main（hero 之后），保持原 Hope DOM 结构
+  if (mainCol) {
+    for (const el of mainCol.querySelectorAll(':scope > .vp-feature-wrapper, :scope > .vp-features')) {
+      hero ? hero.insertAdjacentElement('afterend', el) : main.prepend(el)
+    }
+  }
+  main.classList.remove('lk-home-dual')
+  delete main.dataset.lkHomeHeroPlaced
+}
+
+/**
+ * 主题异步出水合后再移动 Hero；从非首页切回 `/` 时同样重试。
+ */
+function scheduleHomePageLayout(p, attempt = 0) {
+  if (typeof document === 'undefined') return
+  const path = p != null ? normPath(p) : normPath(window.location?.pathname)
+  if (path !== '/' && path !== '/index') {
+    unplaceHomeHeroFromGrid()
+    unmountHomeTypewriter()
+    return
+  }
+  if (placeHomeHeroInGrid()) {
+    mountHomeTypewriter()
+    return
+  }
+  if (attempt < 40) {
+    setTimeout(
+      () => {
+        if (placeHomeHeroInGrid()) {
+          mountHomeTypewriter()
+        } else {
+          scheduleHomePageLayout(path, attempt + 1)
+        }
+      },
+      32,
+    )
+  }
+}
+
 /* ── Entry ──────────────────────────────────────────────────────────────── */
 export default defineClientConfig({
   rootComponents: [
@@ -588,9 +746,12 @@ export default defineClientConfig({
     app.component('AboutArticleRecommend', AboutArticleRecommend)
     app.component('AboutCategoriesCard', AboutCategoriesCard)
     app.component('AboutPageLayoutV2', AboutPageLayoutV2)
+    app.component('AboutMePage', AboutMePage)
+    app.component('ChinaVisitedMap', ChinaVisitedMap)
     app.component('StatsEntryGrid', StatsEntryGrid)
     app.component('StatsBigBoard', StatsBigBoard)
     app.component('HomeSidePanel', HomeSidePanel)
+    app.component('ProfileCard', ProfileCard)
     app.component('ArticleIndexList', ArticleIndexList)
     app.component('ProjectPortfolio', ProjectPortfolio)
     app.component('ProductManagerCases', ProductManagerCases)
@@ -598,12 +759,15 @@ export default defineClientConfig({
     app.component('ProjectsRolesCard', ProjectsRolesCard)
     app.component('SiteAvatar', SiteAvatar)
     router.beforeEach((to) => {
-      if (isRootPathForAboutRedirect(to.path)) {
-        return { path: '/about', replace: true }
-      }
       if (!canAccessPath(to.path)) {
         return { path: '/about', replace: true }
       }
+      // 在首帧 paint 前挂上 lk-header-split，减少切到 About/Projects/文章 时主题布局「晚一拍」
+      syncSplitPageHeader(to.path)
+      syncRouteDataAttr(to.path)
+    })
+    router.afterEach((to) => {
+      scrollToRouteHash(to)
     })
   },
 
@@ -631,6 +795,7 @@ export default defineClientConfig({
       applyLive2dRouteClass(route.path)
       syncLive2dPref()
       syncSplitPageHeader(route.path)
+      syncRouteDataAttr(route.path)
       ensureNavbarHideObserver()
       applyHiddenNavbarItems()
       nextTick(() => {
@@ -642,6 +807,9 @@ export default defineClientConfig({
       initLive2DScript()
       nextTick(() => {
         tryMountLive2dModel()
+      })
+      void nextTick(() => {
+        scheduleHomePageLayout(route.path)
       })
       window.addEventListener('storage', onLive2dPrefStorage)
       window.addEventListener(LIVE2D_PREF_EVENT, syncLive2dPref)
@@ -656,6 +824,16 @@ export default defineClientConfig({
       (path) => {
         syncSiteNonHomeClass(path)
         updateBlurLayer(path)
+      },
+      { flush: 'post' },
+    )
+
+    watch(
+      () => route.path,
+      (path) => {
+        void nextTick(() => {
+          scheduleHomePageLayout(path)
+        })
       },
       { flush: 'post' },
     )
@@ -678,6 +856,14 @@ export default defineClientConfig({
 
     watch(
       () => route.path,
+      (path) => {
+        syncRouteDataAttr(path)
+      },
+      { flush: 'sync', immediate: true },
+    )
+
+    watch(
+      () => route.path,
       () => {
         nudgeNavbarSidebarRepaint()
         nextTick(() => {
@@ -692,6 +878,8 @@ export default defineClientConfig({
     })
 
     onUnmounted(() => {
+      unplaceHomeHeroFromGrid()
+      unmountHomeTypewriter()
       detachLive2dViewportListeners()
       if (typeof window !== 'undefined') {
         window.removeEventListener('storage', onLive2dPrefStorage)
@@ -707,6 +895,7 @@ export default defineClientConfig({
         document.documentElement.classList.remove('lk-live2d-user-off')
         document.documentElement.classList.remove('lk-live2d-route-hidden')
         document.documentElement.classList.remove('lk-header-split')
+        document.documentElement.removeAttribute('data-lk-route')
       }
       navbarHideObserver?.disconnect()
       navbarHideObserver = null

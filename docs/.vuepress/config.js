@@ -60,6 +60,16 @@ const lkArticleCount = countArticleMarkdown(docsRoot)
 const lkBuildTimeIso = new Date().toISOString()
 const lkSiteYear = new Date().getFullYear()
 
+/**
+ * 页脚「已运行 X 年 X 天…」的起算时刻（**请改成你本人建站/首次上线**的本地时间）。
+ * - 在下方改 `lkSiteOnlineSinceIso` 的默认值，或
+ * - 构建/部署时设环境变量 `LK_SITE_ONLINE_SINCE=2024-03-20T00:00:00+08:00`（覆盖默认值）
+ * 时区用 `+08:00` 与内地一致；不要用裸 `Z` 除非你真的按 UTC 记。
+ * 未设 `LK_SITE_ONLINE_SINCE` 时默认用本仓库**最早一次提交**的日期（00:00 +08:00）——可改成你实际上线日。
+ */
+const lkSiteOnlineSinceIso =
+  process.env.LK_SITE_ONLINE_SINCE || '2026-03-27T00:00:00+08:00'
+
 /** `docs/tech/` 下技术/项目文档页（不含 README 索引） */
 function countTechMarkdown(techDir) {
   const readme = normPath(join(techDir, 'README.md'))
@@ -117,6 +127,7 @@ export default defineUserConfig({
         __LK_TECH_COUNT__: JSON.stringify(lkTechCount),
         __LK_BUILD_TIME_ISO__: JSON.stringify(lkBuildTimeIso),
         __LK_SITE_YEAR__: JSON.stringify(lkSiteYear),
+        __LK_SITE_ONLINE_SINCE_ISO__: JSON.stringify(lkSiteOnlineSinceIso),
         __LK_PUBLISH_API_URL__: JSON.stringify(process.env.LK_PUBLISH_API_URL || ''),
       },
     },
@@ -156,7 +167,7 @@ export default defineUserConfig({
     pure: false,
     appearance: 'light',
     navbar: [
-      { text: '关于我', link: '/about' },
+      { text: '首页', link: '/' },
       { text: '项目', link: '/tech/' },
       { text: '文章', link: '/article/' },
       {
@@ -164,9 +175,10 @@ export default defineUserConfig({
         children: [
           { text: '留学', link: '/study/' },
           { text: '相册', link: '/travel/' },
+          { text: '统计', link: '/stats/' },
         ],
       },
-      { text: '统计', link: '/stats/' },
+      { text: '关于我', link: '/about#about-intro' },
     ],
 
     sidebar: {
@@ -209,8 +221,8 @@ export default defineUserConfig({
           '/article.html': '/article/',
           '/stats': '/stats/',
           '/stats.html': '/stats/',
-          '/home': '/about',
-          '/home.html': '/about',
+          '/home': '/',
+          '/home.html': '/',
           '/comments/': '/article/',
           '/comments': '/article/',
         },

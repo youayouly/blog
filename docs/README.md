@@ -1,5 +1,9 @@
 ---
 title: Luke 的空间
-home: false
+pageClass: page-home page-home-hub
 comment: false
+toc: false
+sidebar: false
 ---
+
+<AboutPageLayoutV2 />

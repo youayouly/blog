@@ -1,5 +1,74 @@
 <template>
-  <aside class="lk-card" :class="{ 'lk-card--embedded': embedded }">
+  <!-- 图 1：首页小卡片 — 浅底、方角头像、Lu Yi • Luke、三枚社交圆钮 -->
+  <aside
+    v-if="mini"
+    class="lk-card lk-card--mini"
+    :class="{ 'lk-card--mini-embedded': embedded }"
+  >
+    <div class="lk-card--mini__avatar">
+      <img class="lk-card--mini__avatar-img" :src="avatarSrc" alt="Luke" />
+    </div>
+    <div class="lk-card--mini__name">Lu Yi <span class="lk-card--mini__dot" aria-hidden="true">•</span> Luke</div>
+    <nav class="lk-card--mini__dock" aria-label="社交与联系">
+      <a
+        class="lk-card--mini__btn lk-card--mini__btn--email"
+        href="mailto:youayouly@gmail.com"
+        title="Email"
+        aria-label="Email"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+          <path
+            d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+          />
+        </svg>
+      </a>
+      <a
+        class="lk-card--mini__btn lk-card--mini__btn--github no-external-link-icon"
+        href="https://github.com/youayouly"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="GitHub"
+        aria-label="GitHub"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+          <path
+            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.757-1.333-1.757-1.089-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+          />
+        </svg>
+      </a>
+      <div class="lk-card--mini__wechat-wrap">
+        <button
+          type="button"
+          class="lk-card--mini__btn lk-card--mini__btn--wechat"
+          title="微信"
+          aria-label="微信"
+        >
+          <!-- 单一封闭路径的微信 logo（避免 fill-rule 留出白色镂空） -->
+          <svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M11.6 4C5.7 4 1 8 1 13c0 2.7 1.4 5.1 3.7 6.7l-.9 2.7 3.2-1.6c1.5.4 3.1.6 4.6.6.4 0 .8 0 1.2-.1-.3-.9-.4-1.8-.4-2.7 0-4.7 4.4-8.4 9.7-8.4.5 0 1 0 1.4.1C22.8 7 17.7 4 11.6 4zm-3.9 4.6c.7 0 1.2.5 1.2 1.2s-.5 1.2-1.2 1.2-1.2-.5-1.2-1.2.5-1.2 1.2-1.2zm7.7 0c.7 0 1.2.5 1.2 1.2s-.5 1.2-1.2 1.2-1.2-.5-1.2-1.2.5-1.2 1.2-1.2z"
+            />
+            <path
+              fill="currentColor"
+              d="M30 18.9c0-4.1-3.9-7.4-8.6-7.4s-8.6 3.3-8.6 7.4 3.9 7.4 8.6 7.4c1 0 2-.2 3-.5l2.7 1.5-.8-2.4c2.3-1.4 3.7-3.5 3.7-6zm-11.4-1.6c-.6 0-1-.4-1-1s.5-1 1-1 1 .5 1 1-.4 1-1 1zm5.8 0c-.6 0-1-.4-1-1s.5-1 1-1 1 .5 1 1-.4 1-1 1z"
+            />
+          </svg>
+        </button>
+        <div class="lk-card--mini__wechat-pop">
+          <img
+            v-show="!qrFailed"
+            class="lk-card--mini__wechat-qr"
+            :src="qrSrc"
+            alt="微信二维码"
+            @error="onQrError"
+          />
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <aside v-else class="lk-card" :class="{ 'lk-card--embedded': embedded }">
     <!-- Avatar — click/hover rotates clockwise; release reverses counter-clockwise -->
     <div class="lk-card__avatar-wrap">
       <img class="lk-card__avatar" :src="avatarSrc" alt="Luke" />
@@ -116,6 +185,8 @@ import { syncAvatarFromStorage, useAvatarSrc } from '../utils/avatarPref.js'
 defineProps({
   /** 嵌入侧栏控制面板时：去大阴影与 min-height，占满所在列 */
   embedded: { type: Boolean, default: false },
+  /** 图 1 首页小卡片：浅底、方头像、「Lu Yi • Luke」、三社交 */
+  mini: { type: Boolean, default: false },
 })
 
 // Put your WeChat QR image at docs/.vuepress/public/wechat-qr.jpg
@@ -642,5 +713,200 @@ onMounted(() => {
 [data-theme='dark'] .lk-card__gh-cta {
   background: #f8fafc;
   color: #0f172a;
+}
+
+/* ── 图 1 迷你卡 ───────────────────────────────────────────── */
+.lk-card--mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+  padding: 1rem 1.1rem 1.1rem;
+  box-sizing: border-box;
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #e3f0fb 0%, #dbeafe 100%);
+  border: 1px solid rgba(125, 211, 252, 0.65);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+.lk-card--mini-embedded {
+  max-width: 100%;
+}
+
+.lk-card--mini__avatar {
+  width: 108px;
+  height: 108px;
+  border-radius: 1.05rem;
+  padding: 0;
+  border: 2px solid rgba(125, 211, 252, 0.95);
+  background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.lk-card--mini__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 24%;
+  display: block;
+}
+
+.lk-card--mini__name {
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #0b1222;
+  margin-bottom: 0.85rem;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.lk-card--mini__dot {
+  display: inline-block;
+  margin: 0 0.2em;
+  font-weight: 800;
+  color: #1e3a5f;
+  opacity: 0.7;
+}
+
+.lk-card--mini__dock {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.lk-card--mini__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #334155;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.1);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.lk-card--mini__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18);
+}
+
+/* 三个圆钮配品牌色（和 hover 反白） */
+.lk-card--mini__btn--email {
+  background: #fb7185; /* 柔和的玫瑰红，比纯 Gmail 红温和很多 */
+  color: #ffffff;
+}
+.lk-card--mini__btn--email:hover {
+  background: #f43f5e;
+  color: #ffffff;
+}
+
+.lk-card--mini__btn--github {
+  background: #181717;
+  color: #ffffff;
+}
+.lk-card--mini__btn--github:hover {
+  background: #0f0f0f;
+  color: #ffffff;
+}
+
+.lk-card--mini__btn--wechat {
+  background: #07c160; /* 微信绿 */
+  color: #ffffff;
+}
+.lk-card--mini__btn--wechat:hover {
+  background: #069d50;
+  color: #ffffff;
+}
+
+/* Hope 主题给外链 a 加的 ↗ 小箭头：mini 圆钮里一律隐藏 */
+.lk-card--mini__btn::after,
+.lk-card--mini__btn::before,
+.lk-card--mini__btn .external-link-icon,
+.lk-card--mini__btn > .icon {
+  display: none !important;
+  content: none !important;
+}
+
+.lk-card--mini__wechat-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lk-card--mini__wechat-pop {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  width: 160px;
+  min-width: 160px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lk-card--mini__wechat-wrap:hover .lk-card--mini__wechat-pop,
+.lk-card--mini__wechat-wrap:focus-within .lk-card--mini__wechat-pop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.lk-card--mini__wechat-qr {
+  display: block;
+  width: 140px;
+  height: 140px;
+  min-width: 140px;
+  min-height: 140px;
+  max-width: 140px;
+  max-height: 140px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+}
+
+[data-theme='dark'] .lk-card--mini {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.92) 100%);
+  border-color: rgba(125, 211, 252, 0.35);
+  color: #e2e8f0;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] .lk-card--mini__name {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .lk-card--mini__btn {
+  background: rgba(30, 41, 59, 0.9);
+  color: #e2e8f0;
 }
 </style>

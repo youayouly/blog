@@ -169,7 +169,9 @@
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
-    .vp-navbar-item a,
+    .vp-nav-item a,
+    .vp-nav-item .route-link,
+    .vp-nav-item .auto-link,
     .vp-navbar-site-name {
       color: rgba(255, 255, 255, 0.9) !important;
     }
@@ -180,7 +182,9 @@
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
 
-    .vp-navbar-item a,
+    .vp-nav-item a,
+    .vp-nav-item .route-link,
+    .vp-nav-item .auto-link,
     .vp-navbar-site-name {
       color: #1f2933 !important;
     }
@@ -782,6 +786,17 @@ body,
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
+/* 首页 mini 小卡片场景：外层不再叠一层深色玻璃，让小卡自身的浅色样式直接显示 */
+.page-home .lk-home-profile-col:has(.lk-card--mini),
+[data-theme='light'] .page-home .lk-home-profile-col:has(.lk-card--mini) {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
 /* 首页功能卡：纵向一列，贴齐主列左缘，顶对齐左侧栏第一张卡 */
 .page-home .lk-home-main-col .vp-feature {
   width: 100% !important;
@@ -1151,7 +1166,9 @@ body,
 }
 
 // Navbar text: larger & bold + more spacing
-.vp-navbar .vp-navbar-item a,
+.vp-navbar .vp-nav-item a,
+.vp-navbar .vp-nav-item .route-link,
+.vp-navbar .vp-nav-item .auto-link,
 .vp-navbar .vp-navbar-site-name {
   font-size: 1.1rem !important;
   font-weight: 700 !important;
@@ -1161,86 +1178,164 @@ body,
   transition: color 0.22s ease-out;
 }
 
-[data-theme='dark'] .vp-navbar .vp-navbar-item a,
+[data-theme='dark'] .vp-navbar .vp-nav-item a,
+[data-theme='dark'] .vp-navbar .vp-nav-item .route-link,
+[data-theme='dark'] .vp-navbar .vp-nav-item .auto-link,
 [data-theme='dark'] .vp-navbar .vp-navbar-site-name {
   color: var(--lk-gray-700) !important;
 }
 
-.vp-navbar .vp-navbar-item {
+.vp-navbar .vp-nav-item {
   margin: 0 0.2rem !important;
 }
 
-/* 主导航：胶囊悬停 / 当前页（琥珀底 + 白字），浅/深色顶栏通用 */
-.vp-navbar .vp-navbar-item > a {
+/* ── 主导航：Apple / Linear 风格底部进度条 ─────────────────────────────
+ * Hope 真实结构：<li class="vp-nav-item"><a class="route-link auto-link">…</a></li>
+ * 当前页 active 类是 .route-link-active（不是 Vue Router 默认的 .router-link-active）。 */
+
+/* 链接容器：相对定位，去掉旧胶囊背景 / 阴影 */
+.vp-navbar .vp-nav-item > a,
+.vp-navbar .vp-nav-item > .route-link,
+.vp-navbar .vp-nav-item > .auto-link {
   position: relative !important;
   display: inline-block !important;
-  padding: 0.4rem 0.95rem !important;
+  padding: 0.4rem 0.8rem !important;
   margin: 0 !important;
-  border-radius: 999px !important;
+  border-radius: 6px !important;
   overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
   transition:
-    background-color 0.2s ease,
     color 0.2s ease,
-    box-shadow 0.22s ease !important;
+    background 0.2s ease !important;
 }
 
-.vp-navbar .vp-navbar-item > a::after {
-  display: none !important;
-}
-
-.vp-navbar .vp-navbar-item.vp-active > a,
-.vp-navbar .vp-navbar-item.active > a,
-.vp-navbar .vp-navbar-item > a.router-link-active,
-.vp-navbar .vp-navbar-item > a[aria-current='page'] {
-  background: var(--lk-nav-pill) !important;
-  color: #ffffff !important;
-  box-shadow: var(--lk-nav-pill-shadow-soft) !important;
-}
-
-.vp-navbar .vp-navbar-item > a:hover,
-.vp-navbar .vp-navbar-item > a:focus-visible {
-  background: var(--lk-nav-pill) !important;
-  color: #ffffff !important;
-  box-shadow: var(--lk-nav-pill-shadow) !important;
-}
-
-[data-theme='dark'] .vp-navbar .vp-navbar-item.vp-active > a,
-[data-theme='dark'] .vp-navbar .vp-navbar-item.active > a,
-[data-theme='dark'] .vp-navbar .vp-navbar-item > a.router-link-active,
-[data-theme='dark'] .vp-navbar .vp-navbar-item > a[aria-current='page'],
-[data-theme='dark'] .vp-navbar .vp-navbar-item > a:hover,
-[data-theme='dark'] .vp-navbar .vp-navbar-item > a:focus-visible {
-  background: var(--lk-nav-pill) !important;
-  color: #ffffff !important;
-  box-shadow: var(--lk-nav-pill-shadow) !important;
-}
-
-/* 下拉入口（如「更多」）：与主导航同一胶囊交互 */
-.vp-navbar .vp-dropdown-title {
-  padding: 0.4rem 0.85rem !important;
+/* 底部进度条：默认 width: 0，从中心 left: 50% + translateX 展开 */
+.vp-navbar .vp-nav-item > a::after,
+.vp-navbar .vp-nav-item > .route-link::after,
+.vp-navbar .vp-nav-item > .auto-link::after {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  width: 0 !important;
+  height: 2px !important;
   border-radius: 999px !important;
+  background: var(--lk-gray-400) !important;
+  transform: translateX(-50%) !important;
+  transition: width 0.3s ease, background 0.3s ease !important;
+  pointer-events: none !important;
+}
+
+/* hover：宽度 40%，浅灰 */
+.vp-navbar .vp-nav-item > a:hover::after,
+.vp-navbar .vp-nav-item > a:focus-visible::after,
+.vp-navbar .vp-nav-item > .route-link:hover::after,
+.vp-navbar .vp-nav-item > .route-link:focus-visible::after,
+.vp-navbar .vp-nav-item > .auto-link:hover::after,
+.vp-navbar .vp-nav-item > .auto-link:focus-visible::after {
+  width: 40% !important;
+  background: var(--lk-gray-500) !important;
+}
+
+/* hover：文字深色，无胶囊底色 */
+.vp-navbar .vp-nav-item > a:hover,
+.vp-navbar .vp-nav-item > a:focus-visible,
+.vp-navbar .vp-nav-item > .route-link:hover,
+.vp-navbar .vp-nav-item > .route-link:focus-visible,
+.vp-navbar .vp-nav-item > .auto-link:hover,
+.vp-navbar .vp-nav-item > .auto-link:focus-visible {
+  background: transparent !important;
+  color: var(--lk-accent-strong) !important;
+  box-shadow: none !important;
+}
+
+/* active（当前页）：宽度 70%，深灰 —— 同时覆盖 Hope 的 .route-link-active 与 Vue Router 默认 .router-link-active */
+.vp-navbar .vp-nav-item.vp-active > a::after,
+.vp-navbar .vp-nav-item.active > a::after,
+.vp-navbar .vp-nav-item > a.route-link-active::after,
+.vp-navbar .vp-nav-item > a.router-link-active::after,
+.vp-navbar .vp-nav-item > a[aria-current='page']::after,
+.vp-navbar .vp-nav-item > .route-link.route-link-active::after,
+.vp-navbar .vp-nav-item > .route-link.router-link-active::after,
+.vp-navbar .vp-nav-item > .route-link[aria-current='page']::after,
+.vp-navbar .vp-nav-item > .auto-link.route-link-active::after,
+.vp-navbar .vp-nav-item > .auto-link.router-link-active::after,
+.vp-navbar .vp-nav-item > .auto-link[aria-current='page']::after {
+  width: 70% !important;
+  background: var(--lk-gray-700) !important;
+}
+
+/* active：文字深 + 加粗 */
+.vp-navbar .vp-nav-item.vp-active > a,
+.vp-navbar .vp-nav-item.active > a,
+.vp-navbar .vp-nav-item > a.route-link-active,
+.vp-navbar .vp-nav-item > a.router-link-active,
+.vp-navbar .vp-nav-item > a[aria-current='page'],
+.vp-navbar .vp-nav-item > .route-link.route-link-active,
+.vp-navbar .vp-nav-item > .route-link.router-link-active,
+.vp-navbar .vp-nav-item > .auto-link.route-link-active,
+.vp-navbar .vp-nav-item > .auto-link.router-link-active {
+  background: transparent !important;
+  color: var(--lk-accent-strong) !important;
+  box-shadow: none !important;
+  font-weight: 800 !important;
+}
+
+/* Dark mode：进度条用更亮的灰阶 */
+[data-theme='dark'] .vp-navbar .vp-nav-item > a::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .route-link::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .auto-link::after {
+  background: var(--lk-gray-500) !important;
+}
+
+[data-theme='dark'] .vp-navbar .vp-nav-item > a:hover::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .route-link:hover::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .auto-link:hover::after {
+  background: var(--lk-gray-400) !important;
+}
+
+[data-theme='dark'] .vp-navbar .vp-nav-item.vp-active > a::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item.active > a::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > a.route-link-active::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > a.router-link-active::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .route-link.route-link-active::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .route-link.router-link-active::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .auto-link.route-link-active::after,
+[data-theme='dark'] .vp-navbar .vp-nav-item > .auto-link.router-link-active::after {
+  background: var(--lk-gray-700) !important;
+}
+
+/* 下拉入口：同一底部进度条交互 */
+.vp-navbar .vp-dropdown-title {
+  position: relative !important;
+  padding: 0.4rem 0.8rem !important;
+  border-radius: 6px !important;
+  background: transparent !important;
   transition:
-    background-color 0.2s ease,
     color 0.2s ease,
-    box-shadow 0.22s ease !important;
+    background 0.2s ease !important;
 }
 
 .vp-navbar .vp-dropdown-title:hover,
 .vp-navbar .vp-dropdown-title:focus-visible {
-  background: var(--lk-nav-pill) !important;
-  color: #ffffff !important;
-  box-shadow: var(--lk-nav-pill-shadow) !important;
+  background: var(--lk-accent-hover-bg) !important;
+  color: var(--lk-accent-strong) !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 719px) {
   .vp-navbar {
-    .vp-navbar-item a,
+    .vp-nav-item a,
+    .vp-nav-item .route-link,
+    .vp-nav-item .auto-link,
     .vp-navbar-site-name {
       font-size: 1.05rem !important;
       font-weight: 800 !important;
     }
 
-    .vp-navbar-item {
+    .vp-nav-item {
       margin: 0 0.5rem !important;
     }
   }
@@ -1504,6 +1599,14 @@ body {
 
 html {
   background-color: #f3f5f8;
+  /* 全站 100vw breakout（如页脚）在经典滚动条下可能略超视口内容宽，根级禁止横向滚动避免底条 */
+  overflow-x: hidden;
+}
+
+@supports (overflow: clip) {
+  html {
+    overflow-x: clip;
+  }
 }
 
 [data-theme='dark'] html {
@@ -1914,6 +2017,21 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .theme-hope-content {
   overflow: visible;
 }
 
+/* 路由过渡：html[data-lk-route] 在 client.js beforeEach 已指向目标路径，往往早于 theme-container 的 pageClass 与主体内 VNode 替换。
+   若仍残留上一页 DOM，:has(.lk-proj-hub-fullbleed) 会继续命中 Projects 栅格，造成 /tech → /article 闪一帧左栏。 */
+html[data-lk-route='/article'] .lk-proj-hub-fullbleed,
+html[data-lk-route^='/article/'] .lk-proj-hub-fullbleed,
+html[data-lk-route='/article'] .lk-proj-hub-layout,
+html[data-lk-route^='/article/'] .lk-proj-hub-layout {
+  display: none !important;
+}
+
+/* 反向：进入 /tech 时若主体内仍残留文章列表壳 */
+html[data-lk-route='/tech'] .lk-blog.lk-blog-fullbleed.lk-article-three,
+html[data-lk-route^='/tech/'] .lk-blog.lk-blog-fullbleed.lk-article-three {
+  display: none !important;
+}
+
 .theme-container:has(.lk-proj-hub-fullbleed),
 main.vp-page:has(.lk-proj-hub-fullbleed),
 [vp-content]:has(.lk-proj-hub-fullbleed) {
@@ -1980,10 +2098,9 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   box-shadow: 0 10px 32px rgba(2, 6, 23, 0.22);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  /* 整页向下滚动时固定在视口顶部（导航下方） */
-  position: sticky;
-  top: calc(var(--navbar-height, 3.5rem) + var(--lk-proj-sticky-gap, 0.5rem));
-  z-index: 6;
+  /* 取消吸顶：跟着卡片一起自然滚动，保持「项目分类 / 项目列表」与下方卡片的相对位置 */
+  position: relative;
+  z-index: 1;
 }
 
 [data-theme='light'] .lk-proj-hub-layout__ribbon {
@@ -2246,49 +2363,49 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   --sidebar-width: 14rem;
 }
 
+/* 与 Projects 页一致：主列 flex 子项用 align-items:center，避免子块在宽屏上「贴左」 */
 .page-article-index .vp-page,
 .page-article-index .theme-hope-content {
-  max-width: min(112rem, calc(100vw - 24px));
+  max-width: 100% !important;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-inline: 0;
 }
 
-/* 超宽屏（>1600px）：完整三列 */
-@media (min-width: 1601px) {
-  .page-article-index .vp-page,
-  .page-article-index .theme-hope-content {
-    max-width: min(120rem, calc(100vw - 32px));
-  }
-}
-
-/* 标准（1200-1600px）：隐藏左侧导航 */
-@media (max-width: 1600px) and (min-width: 1200px) {
-  .page-article-index .vp-page,
-  .page-article-index .theme-hope-content {
-    max-width: min(100rem, calc(100vw - 24px));
-  }
-}
-
-/* 小屏（768-1200px）：两列布局 */
-@media (max-width: 1199px) and (min-width: 768px) {
-  .page-article-index .vp-page,
-  .page-article-index .theme-hope-content {
-    max-width: min(90rem, calc(100vw - 20px));
-  }
-}
-
-/* 移动端（<768px）：单列布局 */
+/* 不再用超大 max-width(112rem) 卡外层 —— 与 Projects 一致，外层 100% 全宽，由 .lk-article-three 限 1200 并居中 */
 @media (max-width: 767px) {
   .page-article-index .vp-page,
   .page-article-index .theme-hope-content {
-    max-width: calc(100vw - 16px);
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
 }
 
-:is(html.lk-header-split, main.vp-page:has(.lk-blog-fullbleed)) [vp-content]:not(.custom):has(.lk-blog-fullbleed) {
+:is(html.lk-header-split, main.vp-page:has(.lk-blog-fullbleed)) [vp-content]:not(.custom):has(.lk-blog-fullbleed),
+.page-article-index main.vp-page [vp-content]:not(.custom) {
   max-width: none !important;
+}
+
+/* 文章列表：与 Projects 同策略。用 .page-article-index 不依赖子树，避免从导航进入时 :has(.lk-blog-fullbleed) 首帧不成立、内容先贴左再居中 */
+.page-article-index main.vp-page,
+main.vp-page:has(.lk-blog-fullbleed) {
+  max-width: 100% !important;
+  width: 100%;
+}
+
+.page-article-index main.vp-page [vp-content]:not(.custom),
+main.vp-page:has(.lk-blog-fullbleed) [vp-content]:not(.custom):has(.lk-blog-fullbleed) {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 main.vp-page:has(.lk-blog-fullbleed) .vp-page-title hr,
@@ -3006,9 +3123,11 @@ main.vp-page:has(.lk-about-fullbleed),
   text-shadow: none;
 }
 
-/* ── About v2：整页背景（随内容增高，含页面底部）+ 首屏 Hero + 左下滚动 ─ */
+/* ── About v2 / Home hub：整页背景 + 透明主栏（v2 现在主要在 `/`，关于页 fallback 也兼容） ─ */
 .page-about [vp-content]:not(.custom):has(.lk-about-v2),
-.page-about .theme-hope-content:has(.lk-about-v2) {
+.page-about .theme-hope-content:has(.lk-about-v2),
+.page-home-hub [vp-content]:not(.custom):has(.lk-about-v2),
+.page-home-hub .theme-hope-content:has(.lk-about-v2) {
   overflow-x: visible !important;
 }
 
@@ -3018,23 +3137,25 @@ main.vp-page:has(.lk-about-fullbleed),
   isolation: isolate;
 }
 
-/* About 页 fullbleed wrapper：背景统一由 <body> 的全局 fixed bg 承担，
-   不再单独画一层 ::before（避免和全局背景叠两份相同的图）。 */
+/* fullbleed wrapper：背景统一由 <body> 的全局 fixed bg 承担 */
 .lk-about-v2.lk-about-fullbleed::before {
   content: none;
 }
 
-/* 避免主题容器 / 主栏默认白底挡住 fixed 底图，消除首屏左右「白条」 */
-.theme-container.page-about:has(.lk-about-v2) {
+/* 避免主题容器 / 主栏默认白底挡住 fixed 底图 */
+.theme-container.page-about:has(.lk-about-v2),
+.theme-container.page-home-hub:has(.lk-about-v2) {
   background: transparent !important;
   min-height: 100vh;
 }
 
-.theme-container.page-about:has(.lk-about-v2) main.vp-page {
+.theme-container.page-about:has(.lk-about-v2) main.vp-page,
+.theme-container.page-home-hub:has(.lk-about-v2) main.vp-page {
   background: transparent !important;
 }
 
-.theme-container.page-about:has(.lk-about-v2) [vp-content] {
+.theme-container.page-about:has(.lk-about-v2) [vp-content],
+.theme-container.page-home-hub:has(.lk-about-v2) [vp-content] {
   background: transparent !important;
 }
 
@@ -3044,9 +3165,467 @@ main.vp-page:has(.lk-about-v2) [vp-content] {
   background: transparent !important;
 }
 
-/* 长页面滚到底时兜底色（hangmoon 已是 fixed bg，正常情况下不会露出底色） */
+/* 首页 hub：隐藏主题自带页题（与原 page-about 一致） */
+.page-home-hub .vp-page-title {
+  display: none !important;
+}
+
+.page-home-hub [vp-content]:not(.custom) {
+  padding-top: 0 !important;
+}
+
+.page-home-hub .theme-hope-content {
+  max-width: none !important;
+  padding-inline: 0 !important;
+}
+
+/* 长页面滚到底时兜底色（hangmoon 已是 fixed bg） */
 body:has(.lk-about-v2.lk-about-fullbleed) {
   background-color: transparent;
+}
+
+/* ── 关于我（图 3 风格）：左两张窄卡 + 右大正文卡，整页居中 ───────────────── */
+/* pageClass 是 client 端注入的，SSR 上看不到 .page-about-me；用 :has(.lk-aboutme) 兜底 */
+.page-about-me [vp-content]:not(.custom),
+.page-about-me .theme-hope-content,
+[vp-content]:not(.custom):has(.lk-aboutme),
+.theme-hope-content:has(.lk-aboutme),
+main.vp-page:has(.lk-aboutme),
+main.vp-page:has(.lk-aboutme) [vp-content]:not(.custom),
+main.vp-page:has(.lk-aboutme) .vp-page-content,
+main.vp-page:has(.lk-aboutme) .theme-hope-content {
+  max-width: none !important;
+  width: 100% !important;
+  padding-inline: 0 !important;
+}
+
+/* 隐藏 Hope 自带的页题（关于我大字） */
+.page-about-me .vp-page-title,
+main.vp-page:has(.lk-aboutme) .vp-page-title {
+  display: none !important;
+}
+
+.theme-container.page-about-me,
+.theme-container:has(.lk-aboutme) {
+  background: transparent !important;
+  min-height: 100vh;
+}
+
+.theme-container.page-about-me main.vp-page,
+.theme-container.page-about-me [vp-content],
+.theme-container:has(.lk-aboutme) main.vp-page,
+.theme-container:has(.lk-aboutme) [vp-content] {
+  background: transparent !important;
+}
+
+.lk-aboutme {
+  width: 100%;
+  padding: 1.5rem clamp(0.75rem, 2vw, 1.5rem) 3rem;
+  box-sizing: border-box;
+}
+
+.lk-aboutme__shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.75rem);
+  align-items: start;
+  max-width: 1200px;          /* 与 .lk-article-three 的 1200px 看齐 */
+  width: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 860px) {
+  .lk-aboutme__shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 左侧：两张窄卡纵向叠 ─────────────────────────────────────── */
+.lk-aboutme__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  align-self: start;
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + 1rem);
+}
+
+@media (max-width: 860px) {
+  .lk-aboutme__side {
+    position: static;
+  }
+}
+
+.lk-aboutme__card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* 卡片底部色块统一为白玻璃 + 浅边框（与右侧大卡视觉一致） */
+.lk-aboutme__side .lk-notice--embedded,
+.lk-aboutme__side .lk-stats--embedded {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 14px 38px -18px rgba(15, 23, 42, 0.18) !important;
+  border-radius: 18px !important;
+  color: #0f172a !important;
+}
+
+[data-theme='dark'] .lk-aboutme__side .lk-notice--embedded,
+[data-theme='dark'] .lk-aboutme__side .lk-stats--embedded {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── 右侧：自我介绍大正文 ──────────────────────────────────── */
+.lk-aboutme__main {
+  min-width: 0;
+}
+
+.lk-aboutme__panel {
+  width: 100%;
+  padding: clamp(1.4rem, 2.4vw, 2rem) clamp(1.4rem, 2.6vw, 2.25rem) clamp(1.6rem, 2.6vw, 2.25rem);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(12px) saturate(1.05);
+  -webkit-backdrop-filter: blur(12px) saturate(1.05);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 18px 48px -22px rgba(15, 23, 42, 0.22);
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+[data-theme='dark'] .lk-aboutme__panel {
+  background: rgba(15, 23, 42, 0.86);
+  border-color: rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+}
+
+.lk-aboutme__section + .lk-aboutme__section {
+  margin-top: 1.6rem;
+}
+
+.lk-aboutme__h2 {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: inherit;
+}
+
+.lk-aboutme__bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.lk-aboutme__bullets > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.96rem;
+  line-height: 1.7;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+[data-theme='dark'] .lk-aboutme__bullets > li {
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.lk-aboutme__icon {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.7;
+  filter: saturate(1.1);
+}
+
+/* 整段文本作为单一 flex item，避免 <strong> / <a> 被 flex 切成独立 item 撑窄行 */
+.lk-aboutme__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* 关于我所有链接：永远无下划线（含 hover / focus）；用颜色变化作交互反馈 */
+.lk-aboutme a,
+.lk-aboutme a:link,
+.lk-aboutme a:visited,
+.lk-aboutme a:hover,
+.lk-aboutme a:focus,
+.lk-aboutme a:focus-visible,
+.lk-aboutme a:active,
+.lk-aboutme__text a,
+.lk-aboutme__text a:hover,
+.lk-aboutme__text a:focus-visible {
+  text-decoration: none !important;
+  background-image: none !important;
+  border-bottom: 0 !important;
+}
+
+.lk-aboutme__text a {
+  color: #2563eb;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.lk-aboutme__text a:hover,
+.lk-aboutme__text a:focus-visible {
+  color: #1d4ed8;
+  opacity: 0.85;
+}
+
+[data-theme='dark'] .lk-aboutme__text a {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .lk-aboutme__text a:hover,
+[data-theme='dark'] .lk-aboutme__text a:focus-visible {
+  color: #bfdbfe;
+}
+
+/* 行内 code（联系方式 / 微信号）：单色软背 */
+.lk-aboutme code {
+  padding: 0.05rem 0.4rem;
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 6px;
+  font-size: 0.92em;
+  font-family: var(--lk-font-mono, ui-monospace, monospace);
+  color: #0f172a;
+}
+
+[data-theme='dark'] .lk-aboutme code {
+  background: rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+}
+
+/* ── 去过的地方：城市 chip 行 ───────────────────────────────────────── */
+.lk-aboutme__cities {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.lk-aboutme__city-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+}
+
+.lk-aboutme__city-flag {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.lk-aboutme__city-region {
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.78);
+  margin-right: 0.25rem;
+}
+
+[data-theme='dark'] .lk-aboutme__city-region {
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.lk-aboutme__city {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.65rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(125, 211, 252, 0.18) 0%,
+    rgba(167, 139, 250, 0.16) 100%
+  );
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  color: #1e40af;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+[data-theme='dark'] .lk-aboutme__city {
+  background: rgba(96, 165, 250, 0.14);
+  border-color: rgba(125, 211, 252, 0.32);
+  color: #bfdbfe;
+}
+
+/* ── 左侧第三张：微信 QR 小卡 ───────────────────────────────────────── */
+.lk-aboutme__card--wechat {
+  width: 100%;
+  padding: 14px 16px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 14px 38px -18px rgba(15, 23, 42, 0.18);
+  border-radius: 18px;
+  color: #0f172a;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-theme='dark'] .lk-aboutme__card--wechat {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+}
+
+.lk-aboutme__card-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.lk-aboutme__wechat-qr-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto 0.55rem;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(7, 193, 96, 0.08);
+  border: 1px solid rgba(7, 193, 96, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lk-aboutme__wechat-qr {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.lk-aboutme__wechat-qr-ph {
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: rgba(15, 23, 42, 0.55);
+  padding: 0 0.5rem;
+  text-align: center;
+}
+
+[data-theme='dark'] .lk-aboutme__wechat-qr-ph {
+  color: rgba(226, 232, 240, 0.55);
+}
+
+.lk-aboutme__wechat-id {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.78);
+  text-align: center;
+}
+
+[data-theme='dark'] .lk-aboutme__wechat-id {
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.lk-aboutme__wechat-id code {
+  font-size: 0.92em;
+}
+
+/* 抑制 Hope 主题给联系列表外链追加的 ↗ 箭头（统一视觉） */
+.lk-aboutme a.no-external-link-icon::after,
+.lk-aboutme a.no-external-link-icon::before,
+.lk-aboutme a.no-external-link-icon .external-link-icon {
+  display: none !important;
+  content: none !important;
+}
+
+/* ── 收紧 v2 profile 区域：mini 卡 / 简介卡空白 + mini 卡左对齐 ─────────── */
+/* 父级 grid：左侧栏 240（仅承载 mini 小卡），右侧简介卡吃剩余宽，单元格按内容高 */
+.lk-about-v2 .about-profile.about-profile--vstack {
+  display: grid !important;
+  grid-template-columns: 240px minmax(0, 1fr) !important;
+  align-items: start !important;
+  align-content: start !important;
+  margin-bottom: 0 !important;
+}
+
+/* about-left：彻底脱离 flex 拉伸，直接 block 容器 + 内容高 */
+.lk-about-v2 .about-profile.about-profile--vstack .about-left {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  align-self: start !important;
+}
+
+/* mini 小卡：固定 220px 宽 + 内容自适应高 + 无外边距（贴左缘） */
+.lk-about-v2 .about-profile.about-profile--vstack .about-left .lk-card--mini {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  align-self: start !important;
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 220px !important;
+  /* 头像放大 + 内边距加宽，让 mini 卡自然撑高，与右侧简介卡底部贴齐 */
+  padding: 1.4rem 1.2rem 1.3rem !important;
+  gap: 0.2rem !important;
+}
+
+.lk-about-v2 .about-profile.about-profile--vstack .about-left .lk-card--mini__avatar {
+  width: 144px !important;
+  height: 144px !important;
+  margin-bottom: 0.85rem !important;
+}
+
+.lk-about-v2 .about-profile.about-profile--vstack .about-left .lk-card--mini__name {
+  font-size: 1.08rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.lk-about-v2 .about-profile.about-profile--vstack .about-left .lk-card--mini__dock {
+  margin-top: 0.25rem !important;
+  gap: 0.7rem !important;
+}
+
+/* 简介卡：取消 min-height 100%，按内容收窄 */
+.lk-about-v2 .about-profile.about-profile--vstack .about-right {
+  align-self: start !important;
+}
+.lk-about-v2 .about-card--intro {
+  min-height: 0 !important;
+  padding-top: clamp(1rem, 1.6vw, 1.25rem) !important;
+  padding-bottom: clamp(1rem, 1.8vw, 1.35rem) !important;
+}
+
+/* 兜底：mini 圆钮上的 Hope 外链 ↗ 小箭头不要画 */
+.lk-card--mini a.lk-card--mini__btn::after,
+.lk-card--mini a.lk-card--mini__btn::before,
+.lk-card--mini a.lk-card--mini__btn .external-link-icon,
+.lk-card--mini a.lk-card--mini__btn > .icon {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 860px) {
+  .lk-about-v2 .about-profile.about-profile--vstack {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .lk-about-v2-hero,
@@ -3664,6 +4243,70 @@ main.vp-page:has(.lk-stats-hub) .vp-page-title {
 
 [data-theme='dark'] .about-card--profile .about-name {
   color: #f8fafc;
+}
+
+/* ── Profile 卡片底部「关于我」按钮（替代 3 个联系图标） ─────────────────── */
+.about-card--profile .lk-about-jump-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem auto 0;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff !important;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16);
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1),
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.about-card--profile .lk-about-jump-btn:hover,
+.about-card--profile .lk-about-jump-btn:focus-visible {
+  transform: translateY(-2px);
+  background: #f3b03e;
+  color: #1a1206 !important;
+  box-shadow: 0 8px 22px rgba(243, 176, 62, 0.35);
+  text-decoration: none !important;
+}
+
+.about-card--profile .lk-about-jump-btn__arrow {
+  display: inline-flex;
+  align-items: center;
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.22s ease;
+}
+
+.about-card--profile .lk-about-jump-btn:hover .lk-about-jump-btn__arrow,
+.about-card--profile .lk-about-jump-btn:focus-visible .lk-about-jump-btn__arrow {
+  transform: translateX(3px);
+}
+
+.about-card--profile .lk-about-jump-btn__arrow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+[data-theme='dark'] .about-card--profile .lk-about-jump-btn {
+  background: #f1f5f9;
+  color: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
+}
+
+[data-theme='dark'] .about-card--profile .lk-about-jump-btn:hover,
+[data-theme='dark'] .about-card--profile .lk-about-jump-btn:focus-visible {
+  background: #f3b03e;
+  color: #1a1206 !important;
+  box-shadow: 0 8px 22px rgba(243, 176, 62, 0.45);
 }
 
 .about-card--profile .about-subtitle {
@@ -4369,21 +5012,15 @@ pre,
   box-shadow: none !important;
 }
 
-/* 关闭 Hope 主题给链接加的箭头/下划线装饰；主导航 hover 为琥珀胶囊（见上方 .vp-navbar-item > a） */
-.vp-navbar .vp-navbar-item > a::before,
+/* 关闭 Hope 主题给链接加的箭头装饰（::before），保留 ::after 给我们自己的进度条用 */
 .vp-navbar .vp-nav-item > a::before,
-.vp-navbar .vp-nav-item > a::after,
 .vp-navbar .vp-dropdown-title::before,
-.vp-navbar .vp-dropdown-title::after,
 .vp-navbar .route-link::before,
-.vp-navbar .route-link::after,
-.vp-navbar .auto-link::before,
-.vp-navbar .auto-link::after {
+.vp-navbar .auto-link::before {
   display: none !important;
   content: none !important;
 }
 
-.vp-navbar .vp-navbar-item > a:hover,
 .vp-navbar .vp-nav-item > a:hover,
 .vp-navbar .vp-dropdown-title:hover,
 .vp-navbar .route-link:hover,
@@ -4557,4 +5194,72 @@ body {
 html[data-theme='dark'],
 html[data-theme='dark'] body {
   background-color: #0b1222;
+}
+
+// ── 全局响应式适配：根字号收缩（替代 transform: scale）──────────────────────────
+// 思路：rem 是相对根字号的单位；在 < 1440px 视口降低 :root font-size，
+// 所有用 rem 的字号 / padding / gap 会按比例同步收缩，
+// 既不像 transform: scale 那样留白，也不会让文字模糊。
+// 大屏（>= 1440px）保持 16px 留白，小屏笔记本 100% 缩放也能完整显示。
+
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 1440px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 1280px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* 主内容列宽统一上限 1200px；超大屏靠居中留白而不是无限拉宽 */
+.lk-article-three,
+.lk-proj-hub-fullbleed .lk-proj-hub-layout {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  box-sizing: border-box;
+}
+
+/* About 三列在 < 1440 时收紧 gap / padding，让三列在 14 寸 100% 缩放下完整显示 */
+@media (max-width: 1440px) {
+  .lk-about-v2-main__grid--triple {
+    gap: clamp(0.75rem, 1.6vw, 1.25rem) !important;
+    width: min(100%, calc(100vw - 20px)) !important;
+    max-width: 1200px !important;
+  }
+}
+
+/* < 1200px：把三列右栏（动态时间线）让出主列空间 */
+@media (max-width: 1200px) {
+  .lk-about-v2-main__grid--triple {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 260px) !important;
+  }
+}
+
+/* Flex / Grid 子元素补丁：防止 min-width: auto 导致内容外溢 */
+.lk-proj-hub-layout,
+.lk-article-three__content,
+.lk-about-v2-main__grid--triple > * {
+  min-width: 0;
+}
+
+/* 窄屏防贴边 */
+@media (max-width: 719px) {
+  .lk-article-three,
+  .lk-proj-hub-fullbleed .lk-proj-hub-layout {
+    padding-inline: 0.75rem;
+  }
 }

@@ -1,88 +1,345 @@
 <template>
-  <footer class="lk-footer">
-    <div class="lk-footer__meta-bar">
-      <div class="lk-footer__meta-text">
-        © 2025–{{ year }} Luke's Space
-        <span class="lk-footer__pipe">|</span>
-        <span class="lk-footer__tech">VuePress · vuepress-theme-hope</span>
-        <span class="lk-footer__pipe">|</span>
-        <a href="/privacy" class="lk-footer__link">隐私政策</a>
-        <span class="lk-footer__pipe">|</span>
-        <a href="/license" class="lk-footer__link">版权协议</a>
-        <span class="lk-footer__pipe">|</span>
-        <a href="/sitemap.xml" class="lk-footer__link">站点地图</a>
-        <span class="lk-footer__pipe">|</span>
-        <a href="/rss.xml" class="lk-footer__link">RSS</a>
+  <footer class="lk-footer" aria-label="站点页脚">
+    <div class="lk-footer__bg" aria-hidden="true" />
+
+    <div class="lk-footer__inner">
+      <!-- 仿图 1：单行三列 — 左版权 | 中 badge | 右运行时间 -->
+      <div class="lk-footer__row">
+        <div class="lk-footer__copy">
+          <span class="lk-footer__copy-line">© {{ copyStart }} - {{ year }} By</span>
+          <span class="lk-footer__copy-line lk-footer__copy-line--brand">Luke's Space</span>
+        </div>
+
+        <nav class="lk-footer__badges" aria-label="技术栈与协议">
+          <a
+            v-for="badge in badges"
+            :key="badge.label"
+            :href="badge.href"
+            class="lk-footer__badge"
+            :class="badge.tone"
+            target="_blank"
+            rel="noopener noreferrer"
+            :aria-label="`${badge.label}: ${badge.value}`"
+          >
+            <span class="lk-footer__badge-icon" aria-hidden="true">{{ badge.icon }}</span>
+            <span class="lk-footer__badge-label">{{ badge.label }}</span>
+            <span class="lk-footer__badge-value">{{ badge.value }}</span>
+          </a>
+        </nav>
+
+        <div class="lk-footer__uptime" aria-live="polite">
+          <div class="lk-footer__uptime-inner">
+            <span class="lk-footer__uptime-line lk-footer__uptime-line--label">这个小破站已运行</span>
+            <span class="lk-footer__uptime-line lk-footer__uptime-line--time">{{ uptimeDurationLine }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </footer>
 </template>
 
 <script setup>
-// Build-time constant (vite define); do not use new Date() here — SSR vs client could differ.
+import { onMounted, onUnmounted, ref } from 'vue'
+
 const year = __LK_SITE_YEAR__
+/** 与版权年范围起点一致，仅展示用 */
+const copyStart = 2025
+
+/** 开站起算时间由构建注入，见 `docs/.vuepress/config.js` 的 `lkSiteOnlineSinceIso` 或环境变量 `LK_SITE_ONLINE_SINCE` */
+const SITE_ONLINE_SINCE_ISO = __LK_SITE_ONLINE_SINCE_ISO__
+
+const badges = [
+  { label: 'Frame', value: 'VuePress', icon: '⚡', tone: 'tone-blue', href: 'https://v2.vuepress.vuejs.org/' },
+  { label: 'Theme', value: 'Hope', icon: '✨', tone: 'tone-purple', href: 'https://theme-hope.vuejs.press/' },
+  { label: 'Host', value: 'Vercel', icon: '▲', tone: 'tone-dark', href: 'https://vercel.com/' },
+  { label: 'CDN', value: 'Cloudflare', icon: '🔶', tone: 'tone-orange', href: 'https://cloudflare.com/' },
+  { label: 'Source', value: 'GitHub', icon: '🐙', tone: 'tone-green', href: 'https://github.com/' },
+  {
+    label: 'Copyright',
+    value: 'CC BY-NC 4.0',
+    icon: '©',
+    tone: 'tone-red',
+    href: 'https://creativecommons.org/licenses/by-nc/4.0/',
+  },
+]
+
+/** 仅第二行：年天时分秒，与首行「这个小破站已运行」分离，避免在不当位置换行 */
+const uptimeDurationLine = ref('…')
+
+function formatUptimeDurationLine() {
+  const start = new Date(SITE_ONLINE_SINCE_ISO).getTime()
+  if (Number.isNaN(start)) {
+    return '运行时间计算异常'
+  }
+  const now = Date.now()
+  const diff = Math.max(0, now - start)
+  const totalSec = Math.floor(diff / 1000)
+  const daysAll = Math.floor(totalSec / 86400)
+  const years = Math.floor(daysAll / 365)
+  const remDays = daysAll - years * 365
+  const remSec = totalSec - daysAll * 86400
+  const hours = Math.floor(remSec / 3600)
+  const minutes = Math.floor((remSec % 3600) / 60)
+  const seconds = remSec % 60
+  return `${years} 年 ${remDays} 天 ${hours} 时 ${minutes} 分 ${seconds} 秒`
+}
+
+let timerId
+
+onMounted(() => {
+  const tick = () => {
+    uptimeDurationLine.value = formatUptimeDurationLine()
+  }
+  tick()
+  timerId = window.setInterval(tick, 1000)
+})
+
+onUnmounted(() => {
+  if (timerId) window.clearInterval(timerId)
+})
 </script>
 
 <style scoped>
 .lk-footer {
-  width: 100%;
-  font-family: inherit;
+  /* 在主题主列内 breakout 到整屏：须用 100vw，且不能用 max-width:100%（会等于父级内容宽，黑底拉不满） */
+  position: relative;
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  box-sizing: border-box;
+  overflow: hidden;
   user-select: none;
+  font-family: inherit;
 }
 
-.lk-footer__meta-bar {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  color: rgba(15, 23, 42, 0.66);
-  padding: 8px 20px;
-  text-align: center;
+.lk-footer__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #0a0a0b;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .lk-footer__bg {
+  background: #0a0a0b;
+}
+
+.lk-footer__inner {
   position: relative;
   z-index: 1;
-  /* Isolate compositing to reduce scroll-time global blur artifacts. */
-  transform: translateZ(0);
-  will-change: transform;
-  isolation: isolate;
+  max-width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: 0.9rem 1.25rem 0.85rem;
+  box-sizing: border-box;
 }
 
-.lk-footer__meta-text {
-  font-size: 0.72rem;
-  line-height: 1.65;
-  display: inline-flex;
-  flex-wrap: wrap;
+/* 三列 Grid：左 1fr | 中 auto | 右 1fr，与徽章的 column-gap 左右对称；侧栏内容各自在 1fr 内居中 */
+.lk-footer__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 1.25rem;
+  row-gap: 0.75rem;
+  width: 100%;
+}
+
+.lk-footer__copy {
+  justify-self: center;
+  min-width: 0;
+  max-width: 15rem;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  text-align: center;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  font-weight: 500;
+  color: rgba(163, 163, 163, 0.95);
+  letter-spacing: 0.01em;
 }
 
-.lk-footer__pipe {
-  opacity: 0.45;
-  padding: 0 8px;
+.lk-footer__copy-line {
+  display: block;
+  max-width: 100%;
 }
 
-.lk-footer__tech {
-  opacity: 0.88;
+.lk-footer__copy-line--brand {
+  font-weight: 700;
+  color: #e5e5e5;
+  letter-spacing: 0.02em;
 }
 
-.lk-footer__link {
-  color: rgba(15, 23, 42, 0.72);
+.lk-footer__badges {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  gap: 0.28rem;
+  min-width: 0;
+  max-width: min(56rem, 100%);
+}
+
+.lk-footer__uptime {
+  justify-self: center;
+  min-width: 0;
+  max-width: 15rem;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  font-weight: 500;
+  color: rgba(163, 163, 163, 0.95);
+  letter-spacing: 0.01em;
+}
+
+.lk-footer__uptime-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.22rem;
+  width: max-content;
+  max-width: 100%;
+}
+
+.lk-footer__uptime-line {
+  display: block;
+  max-width: 100%;
+}
+
+.lk-footer__uptime-line--label {
+  color: rgba(180, 180, 180, 0.92);
+  font-size: 0.76rem;
+}
+
+.lk-footer__uptime-line--time {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+/* 双色 pill：略紧凑，配合 nowrap 尽量保持一行六枚 */
+.lk-footer__badge {
+  display: inline-flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 0.62rem;
+  font-weight: 600;
+  font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
   text-decoration: none;
-  transition: opacity 0.2s;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.22s ease;
 }
 
-.lk-footer__link:hover {
-  opacity: 1;
-  text-decoration: underline;
+.lk-footer__badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  text-decoration: none;
 }
 
-[data-theme='dark'] .lk-footer__meta-bar {
-  background: rgba(2, 6, 23, 0.38);
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
-  color: rgba(226, 232, 240, 0.72);
+.lk-footer__badge-icon,
+.lk-footer__badge-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.38rem;
+  background: #3f4449;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
-[data-theme='dark'] .lk-footer__link {
-  color: rgba(226, 232, 240, 0.82);
+.lk-footer__badge-icon {
+  padding-right: 0.2rem;
+  font-size: 0.62rem;
+}
+
+.lk-footer__badge-label {
+  padding-left: 0.08rem;
+  padding-right: 0.42rem;
+}
+
+.lk-footer__badge-value {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.45rem;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.lk-footer__badge.tone-blue .lk-footer__badge-value {
+  background: #1e88e5;
+}
+.lk-footer__badge.tone-purple .lk-footer__badge-value {
+  background: #8e44ad;
+}
+.lk-footer__badge.tone-dark .lk-footer__badge-value {
+  background: #1f2937;
+}
+.lk-footer__badge.tone-orange .lk-footer__badge-value {
+  background: #f56b1a;
+}
+.lk-footer__badge.tone-green .lk-footer__badge-value {
+  background: #2ea44f;
+}
+.lk-footer__badge.tone-red .lk-footer__badge-value {
+  background: #c62828;
+}
+
+/* 窄屏：单列堆叠；徽章可换行 */
+@media (max-width: 1024px) {
+  .lk-footer__row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    row-gap: 0.55rem;
+  }
+
+  .lk-footer__copy {
+    max-width: 100%;
+  }
+
+  .lk-footer__badges {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .lk-footer__uptime {
+    max-width: 100%;
+  }
+
+  .lk-footer__uptime-line--time {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 719px) {
+  .lk-footer__inner {
+    padding: 0.85rem 0.75rem 0.8rem;
+  }
+
+  .lk-footer__copy,
+  .lk-footer__uptime {
+    font-size: 0.74rem;
+  }
+
+  .lk-footer__badge {
+    font-size: 0.64rem;
+  }
 }
 </style>
