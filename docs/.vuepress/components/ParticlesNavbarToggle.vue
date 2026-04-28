@@ -38,27 +38,6 @@
         </svg>
       </button>
       <button
-        type="button"
-        class="lk-particles-toggle"
-        :class="{ 'is-off': !enabled }"
-        :title="hint"
-        :aria-label="hint"
-        :aria-pressed="enabled ? 'true' : 'false'"
-        @click="onClick"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          class="lk-particles-toggle__star"
-          aria-hidden="true"
-        >
-          <path
-            fill="currentColor"
-            d="M12,2.2 15.05,8.38 21.9,9.37 16.92,14.22 18.08,22 12,18.18 5.92,22 7.08,14.22 2.1,9.37 8.95,8.38 Z"
-          />
-        </svg>
-      </button>
-      <button
         v-if="showLive2dToggle"
         ref="live2dBtnRef"
         type="button"
@@ -156,12 +135,6 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useIsLoggedIn } from '../utils/authGate.js'
 import {
-  PARTICLES_PREF_EVENT,
-  PARTICLES_PREF_KEY,
-  readParticlesPref,
-  writeParticlesPref,
-} from '../utils/particlesPref.js'
-import {
   LIVE2D_PREF_EVENT,
   LIVE2D_PREF_KEY,
   readLive2dPref,
@@ -182,7 +155,6 @@ import {
 
 const wrapRef = ref(null)
 const anchored = ref(false)
-const enabled = ref(true)
 const live2dOn = ref(false)
 const blockedAccessIds = ref([])
 const hiddenNavIds = ref([])
@@ -211,10 +183,6 @@ const showLive2dToggle = computed(
   () => isLoggedIn.value && !isLive2dHiddenPath(route.path),
 )
 
-function syncFromStorage() {
-  enabled.value = readParticlesPref()
-}
-
 function syncLive2dFromStorage() {
   live2dOn.value = readLive2dPref()
 }
@@ -228,15 +196,9 @@ function syncHiddenNavFromStorage() {
 }
 
 function onStorage(e) {
-  if (e.key === PARTICLES_PREF_KEY || e.key === null) syncFromStorage()
   if (e.key === LIVE2D_PREF_KEY || e.key === null) syncLive2dFromStorage()
   if (e.key === PROTECTED_ACCESS_ITEMS_PREF_KEY || e.key === null) syncProtectedAccessFromStorage()
   if (e.key === HIDDEN_NAV_ITEMS_PREF_KEY || e.key === null) syncHiddenNavFromStorage()
-}
-
-function onClick() {
-  writeParticlesPref(!enabled.value)
-  enabled.value = readParticlesPref()
 }
 
 function onLive2dClick() {
@@ -286,10 +248,6 @@ function onNavHideOptionClick(id) {
   toggleHiddenNavItem(id)
   syncHiddenNavFromStorage()
 }
-
-const hint = computed(() =>
-  enabled.value ? '关闭粒子背景' : '开启粒子背景（About / Projects / Article）',
-)
 
 const accessHint = computed(() =>
   blockedAccessIds.value.length ? '管理已限制访问的导航页面' : '选择要限制访问的导航页面',
@@ -378,7 +336,6 @@ function tryAnchor() {
 }
 
 onMounted(async () => {
-  syncFromStorage()
   syncLive2dFromStorage()
   syncProtectedAccessFromStorage()
   syncHiddenNavFromStorage()
@@ -397,7 +354,6 @@ onMounted(async () => {
     window.addEventListener('resize', tryAnchor)
   }
   window.addEventListener('storage', onStorage)
-  window.addEventListener(PARTICLES_PREF_EVENT, syncFromStorage)
   window.addEventListener(LIVE2D_PREF_EVENT, syncLive2dFromStorage)
   window.addEventListener(PROTECTED_ACCESS_EVENT, syncProtectedAccessFromStorage)
   window.addEventListener(HIDDEN_NAV_ITEMS_EVENT, syncHiddenNavFromStorage)
@@ -410,7 +366,6 @@ onUnmounted(() => {
     window.removeEventListener('resize', tryAnchor)
   }
   window.removeEventListener('storage', onStorage)
-  window.removeEventListener(PARTICLES_PREF_EVENT, syncFromStorage)
   window.removeEventListener(LIVE2D_PREF_EVENT, syncLive2dFromStorage)
   window.removeEventListener(PROTECTED_ACCESS_EVENT, syncProtectedAccessFromStorage)
   window.removeEventListener(HIDDEN_NAV_ITEMS_EVENT, syncHiddenNavFromStorage)

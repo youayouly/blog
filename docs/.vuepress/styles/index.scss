@@ -1670,8 +1670,8 @@ body {
 }
 
 /*
- * Hope 仍会注册 @vuepress/plugin-back-to-top；自定义为纯箭头 `BackToTopArrow.vue`，
- * 隐藏默认按钮避免重复。
+ * Hope 仍会注册 @vuepress/plugin-back-to-top；自定义为齿轮设置浮层 `SettingsFab.vue`，
+ * 内含进度环 + 回到顶部按钮，隐藏默认按钮避免重复。
  */
 .vp-back-to-top-button {
   display: none !important;
@@ -2201,7 +2201,7 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
 .lk-proj-hub-layout__portfolio,
 .lk-proj-hub-layout__main {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+  scrollbar-color: rgba(167, 139, 250, 0.55) transparent;
 }
 
 .lk-proj-hub-layout__portfolio::-webkit-scrollbar,
@@ -2212,17 +2212,18 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
 .lk-proj-hub-layout__portfolio::-webkit-scrollbar-track,
 .lk-proj-hub-layout__main::-webkit-scrollbar-track {
   background: transparent;
+  margin-block: 12px;
 }
 
 .lk-proj-hub-layout__portfolio::-webkit-scrollbar-thumb,
 .lk-proj-hub-layout__main::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.4);
-  border-radius: 3px;
+  background-color: rgba(167, 139, 250, 0.55);
+  border-radius: 999px;
 }
 
 .lk-proj-hub-layout__portfolio::-webkit-scrollbar-thumb:hover,
 .lk-proj-hub-layout__main::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.6);
+  background-color: rgba(124, 58, 237, 0.75);
 }
 
 .lk-proj-hub-layout__main {
@@ -3692,11 +3693,13 @@ main.vp-page:has(.lk-aboutme) .vp-page-title {
 }
 
 /* ── 收紧 v2 profile 区域：mini 卡 / 简介卡空白 + mini 卡左对齐 ─────────── */
-/* 父级 grid：左侧栏 240（仅承载 mini 小卡），右侧简介卡吃剩余宽，单元格按内容高 */
+/* 父级 grid：左侧栏 240（仅承载 mini 小卡），右侧简介卡吃剩余宽；
+   行高 = 左侧 mini 卡高度（由 .about-left { align-self: start } 决定），
+   右侧 .about-right 用 stretch 拉到同一行高，简介卡底部即与 mini 卡底部对齐。*/
 .lk-about-v2 .about-profile.about-profile--vstack {
   display: grid !important;
   grid-template-columns: 240px minmax(0, 1fr) !important;
-  align-items: start !important;
+  align-items: stretch !important;
   align-content: start !important;
   margin-bottom: 0 !important;
 }
@@ -3746,12 +3749,15 @@ main.vp-page:has(.lk-aboutme) .vp-page-title {
   gap: 0.7rem !important;
 }
 
-/* 简介卡：取消 min-height 100%，按内容收窄 */
+/* 简介卡：拉伸到行高（与左侧 mini 卡同高），让 .about-tags-strip 的 margin-top:auto
+   把标签条沉到底，从而底边与左侧卡底对齐。*/
 .lk-about-v2 .about-profile.about-profile--vstack .about-right {
-  align-self: start !important;
+  align-self: stretch !important;
+  height: 100% !important;
 }
 .lk-about-v2 .about-card--intro {
-  min-height: 0 !important;
+  min-height: 100% !important;
+  height: 100% !important;
   padding-top: clamp(1rem, 1.6vw, 1.25rem) !important;
   padding-bottom: clamp(1rem, 1.8vw, 1.35rem) !important;
 }
@@ -3981,6 +3987,16 @@ button.lk-about-v2-hero__btn {
 .lk-about-v2-main {
   scroll-margin-top: calc(var(--navbar-height, 3.6rem) + 0.8rem);
   padding: clamp(1rem, 2vw, 1.6rem) 0 clamp(2rem, 4vw, 3rem);
+  /* 与 .lk-about-v2-hero 同款 viewport-anchored 反推：
+     父级 .lk-about-fullbleed 的 --lk-about-pull/push 为旧版三栏设计，
+     左 -236 / 右 -276 不对称会把中心推到视口中心右侧 ~20px，
+     导致 V2 grid 用 margin-inline:auto 时右侧时间线被视口裁切。
+     这里把 main 拉回 100vw 并以视口中心居中，子栅格再 margin-inline:auto 即可真正居中。 */
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  box-sizing: border-box;
 }
 
 .lk-about-v2-main__grid--triple {
@@ -4021,6 +4037,12 @@ button.lk-about-v2-hero__btn {
   display: grid;
   gap: 0.95rem;
   align-content: start;
+  /* 强制不超出栅格列右边：列被推得很窄时也能 wrap */
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1180px) {
@@ -5086,30 +5108,37 @@ pre,
 }
 
 /* ── 全局滚动条：灰阶，细一点 ─────────────────────────────────────────── */
+/*
+ * 全站滚动条：淡紫色调 + 变细 (6px)；track 上下留白让 thumb 视觉「变短」一点。
+ * Firefox 用 scrollbar-color/scrollbar-width；Chromium / WebKit 走自定义伪元素。
+ */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(33, 37, 41, 0.32) transparent;
+  scrollbar-color: rgba(167, 139, 250, 0.55) transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 *::-webkit-scrollbar-track {
   background: transparent;
+  /* 上下留白，让 thumb 看起来不顶边、视觉更短 */
+  margin-block: 12px;
+  margin-inline: 12px;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(33, 37, 41, 0.28);
+  background: rgba(167, 139, 250, 0.55);
   border-radius: 999px;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   background-clip: padding-box;
   transition: background 0.18s ease-out;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(33, 37, 41, 0.55);
+  background: rgba(124, 58, 237, 0.75);
   background-clip: padding-box;
 }
 
@@ -5118,19 +5147,18 @@ pre,
 }
 
 [data-theme='dark'] *::-webkit-scrollbar-thumb {
-  background: rgba(226, 232, 240, 0.55);
+  background: rgba(196, 181, 253, 0.6);
   background-clip: padding-box;
-  border: 2px solid rgba(15, 23, 42, 0.45);
+  border: 1px solid transparent;
 }
 
 [data-theme='dark'] *::-webkit-scrollbar-thumb:hover {
-  background: rgba(241, 245, 249, 0.85);
+  background: rgba(196, 181, 253, 0.85);
   background-clip: padding-box;
-  border-color: rgba(15, 23, 42, 0.6);
 }
 
 [data-theme='dark'] * {
-  scrollbar-color: rgba(226, 232, 240, 0.55) transparent;
+  scrollbar-color: rgba(196, 181, 253, 0.6) transparent;
 }
 
 .vp-site-name,
@@ -5404,5 +5432,23 @@ html {
   .lk-article-three,
   .lk-proj-hub-fullbleed .lk-proj-hub-layout {
     padding-inline: 0.75rem;
+  }
+}
+
+/* 关于页 ≤ 820px（含 300% 高缩放下的窄视口）：
+   覆盖上方 (max-width:1200px) 的 `!important` 双列规则，
+   让主列与时间线纵向单列堆叠，时间线随 DOM 顺序自然落到主列下方。
+   推荐卡片(AboutArticleRecommend)本身就是 flex column，因此自动一行一卡。 */
+@media (max-width: 820px) {
+  .lk-about-v2-main__grid--triple {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: clamp(0.85rem, 2.4vw, 1.4rem) !important;
+  }
+
+  .lk-about-v2-main__col--timeline {
+    position: static !important;
+    top: auto !important;
+    width: 100%;
+    max-width: 100%;
   }
 }

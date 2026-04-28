@@ -7,7 +7,7 @@ import ProfileCard from './components/ProfileCard.vue'
 import ProjectNineGrid from './components/ProjectNineGrid.vue'
 import ProjectCardsGrid from './components/ProjectCardsGrid.vue'
 import SiteFooter from './components/SiteFooter.vue'
-import BackToTopArrow from './components/BackToTopArrow.vue'
+import SettingsFab from './components/SettingsFab.vue'
 import LoginGate from './components/LoginGate.vue'
 import ArticleCategoriesAside from './components/ArticleCategoriesAside.vue'
 import AboutTimeline from './components/AboutTimeline.vue'
@@ -43,6 +43,7 @@ import NetworkParticlesBg from './components/NetworkParticlesBg.vue'
 import ParticlesNavbarToggle from './components/ParticlesNavbarToggle.vue'
 import PublishFab from './components/PublishFab.vue'
 import ArticleBatchOps from './components/ArticleBatchOps.vue'
+import RoutePageCurtain from './components/RoutePageCurtain.vue'
 
 /** Canvas + rAF: keep out of SSR to avoid Node rAF spin / heap growth during prerender. */
 const NetworkParticlesBgClient = defineComponent({
@@ -85,6 +86,13 @@ const ArticleBatchOpsClient = defineComponent({
   name: 'ArticleBatchOpsClient',
   setup() {
     return () => h(ClientOnly, null, () => h(ArticleBatchOps))
+  },
+})
+
+const RoutePageCurtainClient = defineComponent({
+  name: 'RoutePageCurtainClient',
+  setup() {
+    return () => h(ClientOnly, null, () => h(RoutePageCurtain))
   },
 })
 
@@ -347,6 +355,16 @@ function nudgeNavbarSidebarRepaint() {
 }
 
 let navbarHideObserver = null
+
+function runWhenIdle(fn, timeout = 800) {
+  if (typeof window === 'undefined') return
+  const ric = window.requestIdleCallback
+  if (typeof ric === 'function') {
+    ric(() => fn(), { timeout })
+    return
+  }
+  setTimeout(() => fn(), 0)
+}
 
 /* ── Live2D：挂 body + fixed 视口右下，避免随首页网格卸载而销毁 ───────────── */
 let live2dLoaded = false
@@ -731,11 +749,12 @@ export default defineClientConfig({
     NetworkParticlesBgClient,
     ParticlesNavbarToggleClient,
     SiteFooter,
-    BackToTopArrow,
+    SettingsFab,
     LoginGateClient,
     ArticleCategoriesAsideClient,
     PublishFabClient,
     ArticleBatchOpsClient,
+    RoutePageCurtainClient,
   ],
 
   enhance({ app, router }) {
@@ -786,9 +805,13 @@ export default defineClientConfig({
       }
     }
 
+    let clientShellInited = false
+
     /** 首屏客户端初始化：模糊层、路由类、导航/侧栏观察器、进度条、Live2D、存储事件。 */
     function initClientShell() {
       if (typeof window === 'undefined') return
+      if (clientShellInited) return
+      clientShellInited = true
       ensureBlurLayer()
       updateBlurLayer(route.path)
       syncSiteNonHomeClass(route.path)
@@ -796,6 +819,8 @@ export default defineClientConfig({
       syncLive2dPref()
       syncSplitPageHeader(route.path)
       syncRouteDataAttr(route.path)
+
+      // Keep critical DOM syncing in the same tick; defer heavier work to idle.
       ensureNavbarHideObserver()
       applyHiddenNavbarItems()
       nextTick(() => {
@@ -803,11 +828,15 @@ export default defineClientConfig({
         applyHiddenNavbarItems()
         applyHiddenHomeEntries()
       })
-      initProgressBar()
-      initLive2DScript()
-      nextTick(() => {
-        tryMountLive2dModel()
+
+      runWhenIdle(() => {
+        initProgressBar()
+        initLive2DScript()
+        nextTick(() => {
+          tryMountLive2dModel()
+        })
       })
+
       void nextTick(() => {
         scheduleHomePageLayout(route.path)
       })

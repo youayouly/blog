@@ -153,12 +153,12 @@ watch(
 
 /* ── 分区标签：小型 uppercase kicker ── */
 .lk-proj-side__section-label {
-  padding: 0.55rem 0.3rem 0.2rem;
-  font-size: 0.67rem;
+  padding: 0.6rem 0.3rem 0.25rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 0.7);
+  color: rgba(148, 163, 184, 0.78);
 }
 
 [data-theme='light'] .lk-proj-side__section-label {
@@ -196,12 +196,12 @@ watch(
 .lk-proj-side__stats-row {
   display: flex;
   align-items: center;
-  gap: 0.42rem;
-  padding: 0.28rem 0.3rem;
+  gap: 0.48rem;
+  padding: 0.32rem 0.32rem;
   border-radius: 7px;
-  font-size: 0.73rem;
-  line-height: 1.35;
-  color: rgba(203, 213, 225, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: rgba(203, 213, 225, 0.9);
 }
 
 [data-theme='light'] .lk-proj-side__stats-row {
@@ -210,15 +210,16 @@ watch(
 
 .lk-proj-side__stats-emoji {
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   line-height: 1;
 }
 
 .lk-proj-side__stats-label {
   flex-shrink: 0;
   font-weight: 700;
-  color: rgba(226, 232, 240, 0.9);
-  min-width: 2rem;
+  font-size: 0.86rem;
+  color: rgba(226, 232, 240, 0.92);
+  min-width: 2.1rem;
 }
 
 [data-theme='light'] .lk-proj-side__stats-label {
@@ -229,9 +230,9 @@ watch(
   flex: 1;
   min-width: 0;
   font-weight: 500;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-family: var(--lk-font-mono, ui-monospace, monospace);
-  color: rgba(148, 163, 184, 0.9);
+  color: rgba(148, 163, 184, 0.92);
 }
 
 .lk-proj-side__stats-value--active {
@@ -251,14 +252,14 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.55rem;
   width: 100%;
-  padding: 0.38rem 0.6rem;
-  border-radius: 8px;
+  padding: 0.46rem 0.68rem;
+  border-radius: 9px;
   border: 1px solid transparent;
   background: transparent;
-  color: rgba(203, 213, 225, 0.82);
-  font-size: 0.78rem;
+  color: rgba(203, 213, 225, 0.86);
+  font-size: 0.92rem;
   font-weight: 500;
   font: inherit;
   cursor: pointer;
@@ -272,8 +273,9 @@ watch(
 .lk-proj-side__pill-text {
   flex: 1;
   min-width: 0;
-  line-height: 1.35;
-  font-size: 0.78rem;
+  line-height: 1.4;
+  font-size: 0.92rem;
+  letter-spacing: 0.005em;
 }
 
 [data-theme='light'] .lk-proj-side__pill {
@@ -311,12 +313,12 @@ watch(
 /* 数量 badge */
 .lk-proj-side__count {
   flex-shrink: 0;
-  min-width: 1.5rem;
+  min-width: 1.6rem;
   text-align: right;
   font-family: var(--lk-font-mono, ui-monospace, monospace);
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  opacity: 0.6;
+  opacity: 0.7;
   line-height: 1.3;
 }
 

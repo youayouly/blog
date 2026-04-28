@@ -2,6 +2,7 @@
 import NoticeCard from './NoticeCard.vue'
 import SiteStatsCard from './SiteStatsCard.vue'
 import VisitedChinaFootprints from './VisitedChinaFootprints.vue'
+import FriendLinks from './FriendLinks.vue'
 
 const wechatQrSrc = '/wechat-qr.png'
 const wechatId = 'youayouly1'
@@ -47,6 +48,7 @@ function openWechatPopup() {
           embedded
           class="lk-aboutme__card lk-aboutme__card--stats"
         />
+        <FriendLinks class="lk-aboutme__card lk-aboutme__card--friends" />
       </aside>
 
       <main class="lk-aboutme__main" aria-label="关于我正文">

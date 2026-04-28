@@ -1,9 +1,15 @@
 <script setup>
 /**
- * 2D 中国足迹图：台州为辐射中心；左侧城市列表展示各地时间/天气；地图支持滚轮缩放与拖拽平移。
+ * 2D 世界足迹图（中国省份描边）：台州为辐射中心；左侧城市列表展示各地时间/天气；
+ * 地图支持滚轮缩放与拖拽平移；列表点击会自动放大并把该城市移到画面中心。
  */
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { CHINA_MAP_BOUNDS, CHINA_SVG_PATH_D } from '../data/chinaMapOutline.generated.js'
+import {
+  WORLD_MAP_BOUNDS,
+  WORLD_VIEWBOX,
+  WORLD_SVG_PATH_D,
+  CHINA_PROVINCES_PATH_D,
+} from '../data/worldMapOutline.generated.js'
 
 /** 虚线辐射起点（家乡坐标） */
 const HUB_ID = 'taizhou'
@@ -16,7 +22,8 @@ const cityList = [
   { id: 'hangzhou', name: '浙江 · 杭州', lat: 30.2741, lng: 120.1551, tz: 'Asia/Shanghai', wttr: 'Hangzhou' },
   { id: 'wenzhou', name: '浙江 · 温州', lat: 27.9938, lng: 120.699, tz: 'Asia/Shanghai', wttr: 'Wenzhou' },
   { id: 'taizhou', name: '浙江 · 台州', lat: 28.6561, lng: 121.4208, tz: 'Asia/Shanghai', wttr: 'Taizhou' },
-  { id: 'fuzhou', name: '福建 · 福州', lat: 26.0745, lng: 119.2965, tz: 'Asia/Shanghai', wttr: 'Fuzhou' },
+  { id: 'xiamen', name: '福建 · 厦门', lat: 24.4798, lng: 118.0894, tz: 'Asia/Shanghai', wttr: 'Xiamen' },
+  { id: 'zhangzhou', name: '福建 · 漳州', lat: 24.5108, lng: 117.647, tz: 'Asia/Shanghai', wttr: 'Zhangzhou' },
   { id: 'xian', name: '陕西 · 西安', lat: 34.3416, lng: 108.9398, tz: 'Asia/Shanghai', wttr: 'Xian' },
   { id: 'changsha', name: '湖南 · 长沙', lat: 28.2278, lng: 112.9388, tz: 'Asia/Shanghai', wttr: 'Changsha' },
   { id: 'guangzhou', name: '广东 · 广州', lat: 23.1291, lng: 113.2644, tz: 'Asia/Shanghai', wttr: 'Guangzhou' },
@@ -25,11 +32,11 @@ const cityList = [
   { id: 'bangkok', name: '🇹🇭 泰国 · 曼谷', lat: 13.7563, lng: 100.5018, tz: 'Asia/Bangkok', wttr: 'Bangkok' },
 ]
 
-/** 与城市标点共用：由 scripts/gen-china-outline.mjs 自 GeoJSON 生成 */
+/** 与城市标点共用：plate carrée 投影到 WORLD_VIEWBOX */
 function llToSvg(lng, lat) {
-  const { L, R, B, T } = CHINA_MAP_BOUNDS
-  const x = ((lng - L) / (R - L)) * 1000
-  const y = 720 - ((lat - B) / (T - B)) * 720
+  const { L, R, B, T } = WORLD_MAP_BOUNDS
+  const x = ((lng - L) / (R - L)) * WORLD_VIEWBOX.w
+  const y = WORLD_VIEWBOX.h - ((lat - B) / (T - B)) * WORLD_VIEWBOX.h
   return { x, y }
 }
 
@@ -40,7 +47,7 @@ function shortMapLabel(name) {
   return s
 }
 
-function curvePath(x0, y0, x1, y1, bulge = 36) {
+function curvePath(x0, y0, x1, y1, bulge = 8) {
   const mx = (x0 + x1) / 2
   const my = (y0 + y1) / 2
   const dx = x1 - x0
@@ -69,51 +76,170 @@ const zoomInnerRef = ref(null)
 const mapZoom = ref(1)
 const mapPanX = ref(0)
 const mapPanY = ref(0)
-const ZOOM_MIN = 0.48
-const ZOOM_MAX = 3.6
+const ZOOM_MIN = 1
+const ZOOM_MAX = 22
+/** 左侧列表点击后聚焦时使用的目标缩放（世界视图下覆盖城市附近 ~40°×16°） */
+const FOCUS_ZOOM = 9
 
 let mapPanPointerId = null
 let mapPanStart = null
 /** 本次按下后若发生过平移，则忽略随后的标点 click */
 let mapDragSuppressClick = false
 
+/** 仅在「聚焦城市 / 复位」时短暂开启的 transform 过渡 */
+const mapTransition = ref(false)
+let mapTransitionTimer = null
+
+function enableMapTransition(durationMs = 420) {
+  mapTransition.value = true
+  if (mapTransitionTimer) clearTimeout(mapTransitionTimer)
+  mapTransitionTimer = setTimeout(() => {
+    mapTransition.value = false
+  }, durationMs)
+}
+
 function selectCity(cityId) {
   activeId.value = cityId
 }
 
-function centerMapInShell() {
+function getShellSize() {
   const shell = zoomShellRef.value
-  const inner = zoomInnerRef.value
-  if (!shell || !inner) return
+  if (!shell) return null
   const sw = shell.clientWidth
   const sh = shell.clientHeight
-  const iw = inner.scrollWidth
-  const ih = inner.scrollHeight
-  const z = mapZoom.value
-  mapPanX.value = (sw - iw * z) / 2
-  mapPanY.value = (sh - ih * z) / 2
+  if (!sw || !sh) return null
+  return { sw, sh }
+}
+
+/**
+ * 计算 inner 内超宽 SVG 的 slice 几何。
+ * inner box = 3*sw × sh，SVG viewBox = 3*W × H，preserveAspectRatio="xMidYMid slice"。
+ * 返回当前 zoom 下「一份地图」对应的 shell 像素宽度（period）以及投影 scale / offset。
+ */
+function computeMapMetrics() {
+  const sz = getShellSize()
+  if (!sz) return null
+  const innerW = sz.sw * 3
+  const innerH = sz.sh
+  const svgW = WORLD_VIEWBOX.w * 3
+  const svgH = WORLD_VIEWBOX.h
+  const innerRatio = innerW / innerH
+  const svgRatio = svgW / svgH
+  // slice = "覆盖 / cover": scale 取 max，铺满 inner，超出方向被裁
+  const scale = innerRatio >= svgRatio ? innerW / svgW : innerH / svgH
+  const drawnW = svgW * scale
+  const drawnH = svgH * scale
+  const offsetX = (innerW - drawnW) / 2
+  const offsetY = (innerH - drawnH) / 2
+  return { sw: sz.sw, sh: sz.sh, innerW, innerH, scale, drawnW, drawnH, offsetX, offsetY }
+}
+
+/**
+ * 把中间地图的 SVG 局部坐标 (svgX∈[0,W], svgY∈[0,H]) 投影到 inner 的物理像素。
+ * 因为中间地图被 transform translate(W 0) 放置在超宽 viewBox 的 [W, 2W] 区段，
+ * 所以全局 viewBox x = W + svgX。
+ */
+function svgToInnerPx(svgX, svgY) {
+  const m = computeMapMetrics()
+  if (!m) return null
+  const px = (WORLD_VIEWBOX.w + svgX) * m.scale + m.offsetX
+  const py = svgY * m.scale + m.offsetY
+  return { px, py }
+}
+
+/**
+ * 横向 wrap：让 panX 始终落在「中间地图覆盖 shell 中心」的 ±半周期范围。
+ * period = 一份地图在 shell 中的像素宽度 = W * slice_scale * zoom。
+ * 因 SVG 内部 3 份地图坐标连续，相邻 ±period 等价于经度 ±360°，视觉无缝。
+ */
+function wrapPanX() {
+  const m = computeMapMetrics()
+  if (!m) return
+  const period = WORLD_VIEWBOX.w * m.scale * mapZoom.value
+  if (!period) return
+  // 中间地图视觉中心（viewBox x = 1.5W）对应的 panX
+  const centerInnerPx = 1.5 * WORLD_VIEWBOX.w * m.scale + m.offsetX
+  const centerPanX = m.sw / 2 - centerInnerPx * mapZoom.value
+  while (mapPanX.value > centerPanX + period * 0.5) mapPanX.value -= period
+  while (mapPanX.value < centerPanX - period * 0.5) mapPanX.value += period
+}
+
+/** 防止纵向露白：纵向不循环，只允许 panY 落在能让 inner 继续覆盖 shell 上下边界的范围 */
+function clampPanY() {
+  const sz = getShellSize()
+  if (!sz) return
+  const scaledH = sz.sh * mapZoom.value
+  if (scaledH <= sz.sh) {
+    mapPanY.value = (sz.sh - scaledH) / 2
+  } else {
+    mapPanY.value = Math.min(0, Math.max(sz.sh - scaledH, mapPanY.value))
+  }
+}
+
+/** 把 (svgX, svgY) 平移到 shell 中心并按指定 zoom 放大 */
+function focusToSvgPoint(svgX, svgY, zoom) {
+  const m = computeMapMetrics()
+  const pt = svgToInnerPx(svgX, svgY)
+  if (!m || !pt) return
+  enableMapTransition()
+  mapZoom.value = zoom
+  mapPanX.value = m.sw / 2 - pt.px * zoom
+  mapPanY.value = m.sh / 2 - pt.py * zoom
+  wrapPanX()
+  clampPanY()
+}
+
+function focusCityOnMap(cityId) {
+  const city = mapCities.value.find((c) => c.id === cityId)
+  if (!city) return
+  focusToSvgPoint(city.mapX, city.mapY, FOCUS_ZOOM)
+}
+
+function selectCityFromList(cityId) {
+  selectCity(cityId)
+  nextTick(() => focusCityOnMap(cityId))
+}
+
+/** 初始视图：把东亚-东南亚区域居中（中国 + 曼谷的"重心"附近） */
+function focusInitialAsia() {
+  const { x, y } = llToSvg(112, 28)
+  focusToSvgPoint(x, y, 3.6)
+}
+
+function centerMapInShell() {
+  const m = computeMapMetrics()
+  if (!m) return
+  // 默认让中间地图视觉中心 (viewBox x=1.5W) 落在 shell 中央
+  const centerInnerPx = 1.5 * WORLD_VIEWBOX.w * m.scale + m.offsetX
+  mapPanX.value = m.sw / 2 - centerInnerPx * mapZoom.value
+  mapPanY.value = 0
+  wrapPanX()
+  clampPanY()
 }
 
 function stepZoom(factor) {
-  const shell = zoomShellRef.value
-  if (!shell) return
-  const mx = shell.clientWidth / 2
-  const my = shell.clientHeight / 2
+  const sz = getShellSize()
+  if (!sz) return
+  const mx = sz.sw / 2
+  const my = sz.sh / 2
   const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, mapZoom.value * factor))
   const k = next / mapZoom.value
   mapPanX.value = mx - (mx - mapPanX.value) * k
   mapPanY.value = my - (my - mapPanY.value) * k
   mapZoom.value = next
+  wrapPanX()
+  clampPanY()
 }
 
 function resetMapView() {
-  mapZoom.value = 1
-  nextTick(() => centerMapInShell())
+  // 「复位」= 回到默认聚焦中国（与首次进入页面一致），而非缩到全球
+  nextTick(() => focusInitialAsia())
 }
 
 function onMapWheel(e) {
   const shell = zoomShellRef.value
   if (!shell) return
+  mapTransition.value = false
   const rect = shell.getBoundingClientRect()
   const mx = e.clientX - rect.left
   const my = e.clientY - rect.top
@@ -123,10 +249,13 @@ function onMapWheel(e) {
   mapPanX.value = mx - (mx - mapPanX.value) * k
   mapPanY.value = my - (my - mapPanY.value) * k
   mapZoom.value = next
+  wrapPanX()
+  clampPanY()
 }
 
 function onMapPointerDown(e) {
   if (e.button !== 0) return
+  mapTransition.value = false
   mapPanPointerId = e.pointerId
   mapDragSuppressClick = false
   try {
@@ -142,6 +271,13 @@ function onMapPointerMove(e) {
   if (Math.hypot(dx, dy) > 4) mapDragSuppressClick = true
   mapPanX.value = mapPanStart.px + dx
   mapPanY.value = mapPanStart.py + dy
+  wrapPanX()
+  clampPanY()
+  // 基线每帧推进到当前点 + 当前(已 wrap)panX，下一帧仅按单帧增量积分，避免 wrap 累积偏移
+  mapPanStart.x = e.clientX
+  mapPanStart.y = e.clientY
+  mapPanStart.px = mapPanX.value
+  mapPanStart.py = mapPanY.value
 }
 
 function onMapPointerUp(e) {
@@ -155,12 +291,10 @@ function onMapPointerUp(e) {
 }
 
 const mapCities = computed(() =>
-  cities.value
-    .filter((c) => c.id !== 'bangkok')
-    .map((c) => {
-      const { x, y } = llToSvg(c.lng, c.lat)
-      return { ...c, mapX: x, mapY: y, mapLabel: shortMapLabel(c.name) }
-    }),
+  cities.value.map((c) => {
+    const { x, y } = llToSvg(c.lng, c.lat)
+    return { ...c, mapX: x, mapY: y, mapLabel: shortMapLabel(c.name) }
+  }),
 )
 
 const hub = computed(() => mapCities.value.find((c) => c.id === HUB_ID))
@@ -182,14 +316,18 @@ function openCityFromMap(cityId) {
 }
 
 function labelOffset(c) {
-  if (c.id === 'shanghai') return { dx: 8, dy: -14 }
-  if (c.id === 'hangzhou') return { dx: 8, dy: 4 }
-  if (c.id === 'wenzhou' || c.id === 'taizhou') return { dx: -36, dy: 4 }
-  if (c.id === 'fuzhou') return { dx: 8, dy: 6 }
-  if (c.id === 'guangzhou' || c.id === 'shenzhen' || c.id === 'hongkong') return { dx: 8, dy: 14 }
-  if (c.id === 'changsha') return { dx: -40, dy: 0 }
-  if (c.id === 'xian') return { dx: -36, dy: -8 }
-  return { dx: 10, dy: -12 }
+  if (c.id === 'shanghai') return { dx: 6, dy: -10 }
+  if (c.id === 'hangzhou') return { dx: 6, dy: 4 }
+  if (c.id === 'wenzhou' || c.id === 'taizhou') return { dx: -28, dy: 4 }
+  if (c.id === 'xiamen') return { dx: 6, dy: 5 }
+  if (c.id === 'zhangzhou') return { dx: -34, dy: 5 }
+  if (c.id === 'guangzhou') return { dx: -34, dy: -2 }
+  if (c.id === 'shenzhen') return { dx: 6, dy: -10 }
+  if (c.id === 'hongkong') return { dx: 6, dy: 12 }
+  if (c.id === 'changsha') return { dx: -30, dy: 0 }
+  if (c.id === 'xian') return { dx: -28, dy: -6 }
+  if (c.id === 'bangkok') return { dx: -32, dy: 12 }
+  return { dx: 8, dy: -10 }
 }
 
 function fmtTime(tz) {
@@ -291,12 +429,13 @@ onMounted(() => {
     Promise.resolve(),
   )
   nextTick(() => {
-    centerMapInShell()
+    focusInitialAsia()
   })
 })
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  if (mapTransitionTimer) clearTimeout(mapTransitionTimer)
 })
 </script>
 
@@ -313,7 +452,7 @@ onUnmounted(() => {
               type="button"
               class="lk-cnfp__city-row"
               :class="{ 'lk-cnfp__city-row--active': c.id === activeId }"
-              @click="selectCity(c.id)"
+              @click="selectCityFromList(c.id)"
             >
               <span class="lk-cnfp__city-row-head">
                 <span class="lk-cnfp__city-row-name">{{ c.name }}</span>
@@ -373,89 +512,99 @@ onUnmounted(() => {
             <div
               ref="zoomInnerRef"
               class="lk-cnfp__zoom-inner"
+              :class="{ 'lk-cnfp__zoom-inner--focused': mapZoom > 1.4 }"
               :style="{
                 transform: `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`,
+                transition: mapTransition
+                  ? 'transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1)'
+                  : 'none',
               }"
             >
-              <div class="lk-cnfp__map-scale">
-                <svg
-                  class="lk-cnfp__svg"
-                  viewBox="0 0 1000 720"
-                  xmlns="http://www.w3.org/2000/svg"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-              <defs>
-                <linearGradient id="lk-cnfp-land" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#eef2ff" />
-                  <stop offset="100%" stop-color="#e0e7ff" />
-                </linearGradient>
-                <filter id="lk-cnfp-glow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b" />
-                  <feMerge>
-                    <feMergeNode in="b" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              <path :d="CHINA_SVG_PATH_D" class="lk-cnfp__china-fill" />
-
-              <g class="lk-cnfp__routes" fill="none" stroke-linecap="round">
-                <path
-                  v-for="seg in connectionPaths"
-                  :key="seg.id"
-                  :d="seg.d"
-                  class="lk-cnfp__route"
-                  stroke-dasharray="4 7"
-                />
-              </g>
-
-              <g
-                v-for="c in mapCities"
-                :key="c.id"
-                class="lk-cnfp__marker-g"
-                :class="{ 'lk-cnfp__marker-g--active': c.id === activeId }"
-                @click="openCityFromMap(c.id)"
+              <!-- 单个超宽 SVG：viewBox 横向 3× (= 3 份地图在 SVG 内部坐标系连续排列)，
+                   slice 裁切只发生在 SVG 最外侧两端虚空，相邻地图无接缝 -->
+              <svg
+                class="lk-cnfp__svg"
+                :viewBox="`0 0 ${WORLD_VIEWBOX.w * 3} ${WORLD_VIEWBOX.h}`"
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="xMidYMid slice"
               >
-                <g :transform="`translate(${c.mapX}, ${c.mapY})`" class="lk-cnfp__marker">
-                  <circle r="7" class="lk-cnfp__ripple lk-cnfp__ripple--3" />
-                  <circle r="7" class="lk-cnfp__ripple lk-cnfp__ripple--2" />
-                  <circle r="7" class="lk-cnfp__ripple lk-cnfp__ripple--1" />
-                  <circle :r="c.id === activeId ? 6.5 : 5.2" class="lk-cnfp__dot" />
-                </g>
-                <text
-                  :x="c.mapX + labelOffset(c).dx"
-                  :y="c.mapY + labelOffset(c).dy"
-                  class="lk-cnfp__label"
-                  :class="{ 'lk-cnfp__label--active': c.id === activeId }"
-                >
-                  {{ c.mapLabel }}
-                </text>
-              </g>
+                <defs>
+                  <linearGradient id="lk-cnfp-land" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#eef2ff" />
+                    <stop offset="100%" stop-color="#e0e7ff" />
+                  </linearGradient>
+                  <filter id="lk-cnfp-glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b" />
+                    <feMerge>
+                      <feMergeNode in="b" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
 
-              <g class="lk-cnfp__inset" transform="translate(818, 548)">
-                <rect x="0" y="0" width="168" height="118" rx="8" class="lk-cnfp__inset-box" />
-                <text x="84" y="68" text-anchor="middle" class="lk-cnfp__inset-cap">南海诸岛</text>
-              </g>
-                </svg>
-              </div>
+                <!-- 海洋背景：占满整个超宽 viewBox -->
+                <rect
+                  class="lk-cnfp__ocean"
+                  x="0"
+                  y="0"
+                  :width="WORLD_VIEWBOX.w * 3"
+                  :height="WORLD_VIEWBOX.h"
+                />
+
+                <!-- 3 份大陆 + 中国省份，左/中/右一字横排在同一 SVG 坐标系内 -->
+                <g
+                  v-for="i in 3"
+                  :key="`tile-${i}`"
+                  :transform="`translate(${(i - 1) * WORLD_VIEWBOX.w} 0)`"
+                >
+                  <path :d="WORLD_SVG_PATH_D" class="lk-cnfp__world-fill" />
+                  <path :d="CHINA_PROVINCES_PATH_D" class="lk-cnfp__provinces" />
+                </g>
+
+                <!-- 辐射线 + 城市标记：只画在中间地图（viewBox x ∈ [W, 2W]） -->
+                <g :transform="`translate(${WORLD_VIEWBOX.w} 0)`">
+                  <g class="lk-cnfp__routes" fill="none" stroke-linecap="round">
+                    <path
+                      v-for="seg in connectionPaths"
+                      :key="seg.id"
+                      :d="seg.d"
+                      class="lk-cnfp__route"
+                      stroke-dasharray="3 5"
+                    />
+                  </g>
+
+                  <g
+                    v-for="c in mapCities"
+                    :key="c.id"
+                    class="lk-cnfp__marker-g"
+                    :class="{ 'lk-cnfp__marker-g--active': c.id === activeId }"
+                    @click="openCityFromMap(c.id)"
+                  >
+                    <g :transform="`translate(${c.mapX}, ${c.mapY})`" class="lk-cnfp__marker">
+                      <circle r="1.4" class="lk-cnfp__ripple lk-cnfp__ripple--3" />
+                      <circle r="1.4" class="lk-cnfp__ripple lk-cnfp__ripple--2" />
+                      <circle r="1.4" class="lk-cnfp__ripple lk-cnfp__ripple--1" />
+                      <circle :r="c.id === activeId ? 1.4 : 1.0" class="lk-cnfp__dot" />
+                    </g>
+                    <text
+                      :x="c.mapX + labelOffset(c).dx"
+                      :y="c.mapY + labelOffset(c).dy"
+                      class="lk-cnfp__label"
+                      :class="{ 'lk-cnfp__label--active': c.id === activeId }"
+                    >
+                      {{ c.mapLabel }}
+                    </text>
+                  </g>
+                </g>
+              </svg>
             </div>
           </div>
-
-          <button
-            type="button"
-            class="lk-cnfp__overseas"
-            :class="{ 'lk-cnfp__overseas--pulse': activeId === 'bangkok' }"
-            @click="openCityFromMap('bangkok')"
-          >
-            海外：泰国 · 曼谷
-          </button>
         </div>
       </div>
     </div>
 
     <div class="lk-cnfp__legend" aria-label="说明">
-      <span class="lk-cnfp__legend-item">虚线自浙江台州向外辐射；紫色标点为到访城市</span>
+      <span class="lk-cnfp__legend-item">虚线自浙江台州向外辐射；青色标点为到访城市，选中后变橙色</span>
       <span class="lk-cnfp__legend-item lk-cnfp__legend-item--hint">左侧列表与地图标点联动；地图可缩放拖拽浏览</span>
     </div>
   </div>
@@ -470,17 +619,21 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: minmax(232px, 280px) minmax(0, 1fr);
   gap: 0.85rem 1rem;
-  align-items: start;
+  /* 关键：左右两栏拉伸到同一行高，由右侧 map-wrap 的 flex 链条决定 */
+  align-items: stretch;
 }
 
 .lk-cnfp__side {
   position: relative;
   min-height: 120px;
-  max-height: min(520px, 62vh);
+  /* 抬高 max-height 上限以容纳右侧地图自然高度；
+     列表内部 flex:1 + overflow-y:auto 仍负责长列表滚动 */
+  max-height: clamp(440px, 64vh, 620px);
   padding: 0.15rem 0.25rem 0 0;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .lk-cnfp__side-intro {
@@ -669,6 +822,10 @@ onUnmounted(() => {
 
 .lk-cnfp__map-panel {
   position: relative;
+  /* 改为 flex 列：让 zoom-shell 通过 flex:1 撑满 map-wrap 行高，
+     从而和左侧 sidebar 底部对齐 */
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: min(340px, 44vh);
   border-radius: 18px;
@@ -752,10 +909,13 @@ onUnmounted(() => {
 }
 
 .lk-cnfp__zoom-shell {
+  position: relative;
   overflow: hidden;
   border-radius: 13px;
-  min-height: min(300px, 38vh);
-  max-height: min(420px, 52vh);
+  /* 由原固定 height 改为 flex 拉伸 + 最小高度，让地图与左侧城市列底部对齐 */
+  flex: 1 1 auto;
+  height: auto;
+  min-height: clamp(340px, 50vh, 420px);
   touch-action: none;
   cursor: grab;
   background: rgba(248, 250, 252, 0.5);
@@ -769,45 +929,64 @@ onUnmounted(() => {
   cursor: grabbing;
 }
 
+// inner 横向 3× shell 宽：内含 1 个超宽 SVG，3 份地图通过 viewBox 内 transform 排列
+// panX wrap 实现经度循环（"3D" 横向滚动），相邻地图视觉无缝
 .lk-cnfp__zoom-inner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 300%;
   transform-origin: 0 0;
   will-change: transform;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.lk-cnfp__map-scale {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .lk-cnfp__svg {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 380px;
+  height: 100%;
+  pointer-events: auto;
 }
 
-.lk-cnfp__china-fill {
+.lk-cnfp__ocean {
+  fill: rgba(224, 231, 255, 0.45);
+}
+
+[data-theme='dark'] .lk-cnfp__ocean {
+  fill: rgba(15, 23, 42, 0.55);
+}
+
+.lk-cnfp__world-fill {
   fill: url(#lk-cnfp-land);
-  stroke: rgba(99, 102, 241, 0.22);
-  stroke-width: 1.2;
+  stroke: rgba(99, 102, 241, 0.32);
+  stroke-width: 0.45;
+  fill-rule: evenodd;
 }
 
-[data-theme='dark'] .lk-cnfp__china-fill {
-  fill: rgba(49, 46, 129, 0.42);
-  stroke: rgba(167, 139, 250, 0.35);
+[data-theme='dark'] .lk-cnfp__world-fill {
+  fill: rgba(49, 46, 129, 0.62);
+  stroke: rgba(167, 139, 250, 0.4);
+}
+
+.lk-cnfp__provinces {
+  fill: none;
+  stroke: rgba(124, 58, 237, 0.42);
+  stroke-width: 0.32;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .lk-cnfp__provinces {
+  stroke: rgba(196, 181, 253, 0.5);
 }
 
 .lk-cnfp__route {
-  stroke: rgba(124, 58, 237, 0.38);
-  stroke-width: 1.15;
+  stroke: rgba(124, 58, 237, 0.55);
+  stroke-width: 0.55;
 }
 
 [data-theme='dark'] .lk-cnfp__route {
-  stroke: rgba(196, 181, 253, 0.45);
+  stroke: rgba(196, 181, 253, 0.6);
 }
 
 .lk-cnfp__marker-g {
@@ -816,8 +995,8 @@ onUnmounted(() => {
 
 .lk-cnfp__ripple {
   fill: none;
-  stroke: rgba(124, 58, 237, 0.45);
-  stroke-width: 1.4;
+  stroke: rgba(14, 165, 233, 0.55);
+  stroke-width: 0.25;
   transform-box: fill-box;
   transform-origin: center;
   animation: lk-cnfp-ripple 2.85s ease-out infinite;
@@ -825,116 +1004,82 @@ onUnmounted(() => {
 
 .lk-cnfp__ripple--2 {
   animation-delay: 0.55s;
-  stroke: rgba(167, 139, 250, 0.38);
+  stroke: rgba(56, 189, 248, 0.45);
 }
 
 .lk-cnfp__ripple--3 {
   animation-delay: 1.1s;
-  stroke: rgba(196, 181, 253, 0.32);
+  stroke: rgba(125, 211, 252, 0.38);
 }
 
 .lk-cnfp__marker-g--active .lk-cnfp__ripple {
-  stroke: rgba(139, 92, 246, 0.85);
-  stroke-width: 1.75;
+  stroke: rgba(249, 115, 22, 0.92);
+  stroke-width: 0.32;
 }
 
 .lk-cnfp__marker-g--active .lk-cnfp__ripple--2 {
-  stroke: rgba(167, 139, 250, 0.75);
+  stroke: rgba(251, 146, 60, 0.8);
 }
 
 .lk-cnfp__marker-g--active .lk-cnfp__ripple--3 {
-  stroke: rgba(221, 214, 254, 0.65);
+  stroke: rgba(254, 215, 170, 0.7);
 }
 
 .lk-cnfp__dot {
-  fill: #7c3aed;
-  stroke: #faf5ff;
-  stroke-width: 1.6;
+  fill: #0284c7;
+  stroke: #f0f9ff;
+  stroke-width: 0.32;
   filter: url(#lk-cnfp-glow);
+  transition: fill 0.25s ease, stroke 0.25s ease;
 }
 
 .lk-cnfp__marker-g--active .lk-cnfp__dot {
-  fill: #6d28d9;
-  stroke: #ede9fe;
+  fill: #ea580c;
+  stroke: #fff7ed;
+  stroke-width: 0.4;
 }
 
 .lk-cnfp__label {
-  font-size: 13px;
+  font-size: 5px;
   font-weight: 600;
   fill: rgba(30, 27, 75, 0.82);
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 0.9px;
+  stroke-linejoin: round;
   pointer-events: none;
+  transition: fill 0.25s ease, opacity 0.25s ease;
 }
 
 [data-theme='dark'] .lk-cnfp__label {
-  fill: rgba(226, 232, 240, 0.88);
+  fill: rgba(226, 232, 240, 0.92);
+  stroke: rgba(15, 23, 42, 0.85);
 }
 
 .lk-cnfp__label--active {
-  fill: #5b21b6;
+  fill: #c2410c;
   font-weight: 800;
+  font-size: 6px;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 1.1px;
 }
 
 [data-theme='dark'] .lk-cnfp__label--active {
-  fill: #e9d5ff;
+  fill: #fdba74;
+  stroke: rgba(15, 23, 42, 0.92);
 }
 
-.lk-cnfp__inset-box {
-  fill: rgba(255, 255, 255, 0.55);
-  stroke: rgba(99, 102, 241, 0.28);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
+/* 聚焦放大状态下，隐藏非选中标签彻底避免重叠；非选中点位保留半透明以便定位 */
+.lk-cnfp__zoom-inner--focused .lk-cnfp__label {
+  opacity: 0;
 }
 
-[data-theme='dark'] .lk-cnfp__inset-box {
-  fill: rgba(15, 23, 42, 0.5);
-  stroke: rgba(167, 139, 250, 0.35);
+.lk-cnfp__zoom-inner--focused .lk-cnfp__label--active {
+  opacity: 1;
 }
 
-.lk-cnfp__inset-cap {
-  font-size: 11px;
-  fill: rgba(71, 85, 105, 0.75);
-  font-weight: 600;
-}
-
-[data-theme='dark'] .lk-cnfp__inset-cap {
-  fill: rgba(203, 213, 225, 0.75);
-}
-
-.lk-cnfp__overseas {
-  appearance: none;
-  position: absolute;
-  right: 0.85rem;
-  bottom: 0.55rem;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  cursor: pointer;
-  text-align: right;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: rgba(91, 33, 182, 0.72);
-  letter-spacing: 0.02em;
-}
-
-.lk-cnfp__overseas:hover {
-  color: #6d28d9;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-[data-theme='dark'] .lk-cnfp__overseas {
-  color: rgba(196, 181, 253, 0.8);
-}
-
-.lk-cnfp__overseas--pulse {
-  color: #7c3aed;
-  text-shadow: 0 0 12px rgba(167, 139, 250, 0.65);
-}
-
-[data-theme='dark'] .lk-cnfp__overseas--pulse {
-  color: #e9d5ff;
+.lk-cnfp__zoom-inner--focused .lk-cnfp__marker-g:not(.lk-cnfp__marker-g--active) .lk-cnfp__dot {
+  opacity: 0.55;
 }
 
 .lk-cnfp__legend {

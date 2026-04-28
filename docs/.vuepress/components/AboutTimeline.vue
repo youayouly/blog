@@ -2,6 +2,30 @@
 import { computed } from 'vue'
 import { timelineItems } from '../data/aboutArticleFeed.js'
 
+/**
+ * 按 category 把节点 dot 染上不同色调，长标题挤一团时颜色就是 readable 的"分类索引"。
+ * 数据里若额外标 `important: true`，dot 升级为金色 + 双层光晕，强调里程碑事件。
+ */
+const CATEGORY_TONE = {
+  projects: 'projects',
+  project: 'projects',
+  article: 'article',
+  docs: 'docs',
+  doc: 'docs',
+  release: 'release',
+  deploy: 'deploy',
+  fix: 'release',
+  feature: 'projects',
+  ml: 'ml',
+  embedded: 'embedded',
+}
+
+function toneOf(category) {
+  if (!category) return 'default'
+  const key = String(category).trim().toLowerCase()
+  return CATEGORY_TONE[key] || 'default'
+}
+
 const sorted = computed(() =>
   [...timelineItems].sort((a, b) => String(b.date).localeCompare(String(a.date))),
 )
@@ -16,7 +40,7 @@ const rows = computed(() => {
     const y = yearOf(item.date)
     const showYear = y !== prevYear
     prevYear = y
-    return { ...item, showYear, year: y }
+    return { ...item, showYear, year: y, tone: toneOf(item.category) }
   })
 })
 </script>
@@ -25,7 +49,12 @@ const rows = computed(() => {
   <div class="lk-about-timeline">
     <h3 class="lk-about-timeline__heading">动态时间线</h3>
     <ul class="lk-about-timeline__list">
-      <li v-for="(row, i) in rows" :key="i" class="lk-about-timeline__item">
+      <li
+        v-for="(row, i) in rows"
+        :key="i"
+        class="lk-about-timeline__item"
+        :class="[`is-tone-${row.tone}`, { 'is-important': row.important }]"
+      >
         <div class="lk-about-timeline__rail" aria-hidden="true">
           <span class="lk-about-timeline__dot" />
         </div>
@@ -34,7 +63,7 @@ const rows = computed(() => {
           <time class="lk-about-timeline__date" :datetime="row.date">{{ row.date }}</time>
           <a v-if="row.href" class="lk-about-timeline__title" :href="row.href">{{ row.title }}</a>
           <span v-else class="lk-about-timeline__title lk-about-timeline__title--plain">{{ row.title }}</span>
-          <span class="lk-about-timeline__cat">{{ row.category }}</span>
+          <span class="lk-about-timeline__cat" :class="`is-tone-${row.tone}`">{{ row.category }}</span>
         </div>
       </li>
     </ul>
@@ -45,11 +74,22 @@ const rows = computed(() => {
 .lk-about-timeline {
   position: relative;
   min-width: 0;
+  width: 100%;
   margin-left: 0;
   margin-right: 0;
   --lk-time-rail: rgba(33, 37, 41, 0.18);
   --lk-time-dot: var(--lk-accent, #343A40);
   --lk-time-year-bg: linear-gradient(135deg, #495057 0%, #212529 100%);
+  /* 各 category 的色板 */
+  --lk-tone-projects: #7c3aed;   /* 紫 */
+  --lk-tone-article: #14b8a6;    /* 青 */
+  --lk-tone-docs: #3b82f6;       /* 蓝 */
+  --lk-tone-release: #ec4899;    /* 玫红 */
+  --lk-tone-deploy: #f59e0b;     /* 橙 */
+  --lk-tone-ml: #10b981;         /* 绿 */
+  --lk-tone-embedded: #06b6d4;   /* 蓝绿 */
+  --lk-tone-default: #64748b;    /* 中性灰 */
+  --lk-tone-important: #f59e0b;  /* 重要：金色 */
 }
 
 .lk-about-timeline__heading {
@@ -87,14 +127,8 @@ const rows = computed(() => {
   align-items: start;
   padding: 0.55rem 0;
   margin-left: 0;
-}
-
-.lk-about-timeline__item:nth-child(odd) .lk-about-timeline__body {
-  transform: translateX(0);
-}
-
-.lk-about-timeline__item:nth-child(even) .lk-about-timeline__body {
-  transform: translateX(18px);
+  /* 单行所有元素都 min-width:0 + 强制断行；防止超长中英混排撑破容器右边 */
+  min-width: 0;
 }
 
 .lk-about-timeline__item:first-child {
@@ -106,14 +140,20 @@ const rows = computed(() => {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  gap: 0.22rem;
+  gap: 0.32rem;
   min-width: 0;
-  padding: 0.55rem 0.7rem 0.62rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.6rem 0.75rem 0.66rem;
   border-radius: 12px;
   border: 1px solid rgba(33, 37, 41, 0.10);
   background: rgba(253, 252, 250, 0.9);
   backdrop-filter: blur(8px) saturate(1.1);
   -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  /* 长标题强制断行（中英文混排 + URL 风格 token 都会 wrap） */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
   transition:
     background 0.22s ease-out,
     border-color 0.22s ease-out,
@@ -158,11 +198,17 @@ const rows = computed(() => {
 }
 
 .lk-about-timeline__title {
-  font-size: 0.8rem;
+  display: block;
+  width: 100%;
+  font-size: 0.84rem;
   font-weight: 700;
   color: #000;
   text-decoration: none;
-  line-height: 1.35;
+  line-height: 1.45;
+  /* 多行允许，长 token 内部断行 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
   transition: color 0.22s ease-out;
 }
 
@@ -183,12 +229,55 @@ const rows = computed(() => {
   cursor: default;
 }
 
+/* 分类标签：按 tone 上色，做"小色块"式的视觉索引 */
 .lk-about-timeline__cat {
-  font-size: 0.65rem;
+  align-self: flex-start;
+  margin-top: 0.05rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #000;
+  color: var(--lk-tone-default);
+  background: color-mix(in srgb, var(--lk-tone-default) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lk-tone-default) 30%, transparent);
+}
+
+.lk-about-timeline__cat.is-tone-projects {
+  color: var(--lk-tone-projects);
+  background: color-mix(in srgb, var(--lk-tone-projects) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-projects) 35%, transparent);
+}
+.lk-about-timeline__cat.is-tone-article {
+  color: var(--lk-tone-article);
+  background: color-mix(in srgb, var(--lk-tone-article) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-article) 35%, transparent);
+}
+.lk-about-timeline__cat.is-tone-docs {
+  color: var(--lk-tone-docs);
+  background: color-mix(in srgb, var(--lk-tone-docs) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-docs) 35%, transparent);
+}
+.lk-about-timeline__cat.is-tone-release {
+  color: var(--lk-tone-release);
+  background: color-mix(in srgb, var(--lk-tone-release) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-release) 35%, transparent);
+}
+.lk-about-timeline__cat.is-tone-deploy {
+  color: var(--lk-tone-deploy);
+  background: color-mix(in srgb, var(--lk-tone-deploy) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-deploy) 35%, transparent);
+}
+.lk-about-timeline__cat.is-tone-ml {
+  color: var(--lk-tone-ml);
+  background: color-mix(in srgb, var(--lk-tone-ml) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-ml) 35%, transparent);
+}
+.lk-about-timeline__cat.is-tone-embedded {
+  color: var(--lk-tone-embedded);
+  background: color-mix(in srgb, var(--lk-tone-embedded) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lk-tone-embedded) 35%, transparent);
 }
 
 .lk-about-timeline__rail {
@@ -203,13 +292,46 @@ const rows = computed(() => {
 }
 
 .lk-about-timeline__dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--vp-c-bg, #fff);
   border: 2px solid var(--lk-time-dot);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--vp-c-bg, #fff) 88%, transparent);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.22s ease;
   z-index: 1;
+}
+
+/* 不同 tone 的 dot：边框 = tone 主色，悬停时 dot 实心 + 同色光晕 */
+.lk-about-timeline__item.is-tone-projects .lk-about-timeline__dot { border-color: var(--lk-tone-projects); }
+.lk-about-timeline__item.is-tone-article  .lk-about-timeline__dot { border-color: var(--lk-tone-article); }
+.lk-about-timeline__item.is-tone-docs     .lk-about-timeline__dot { border-color: var(--lk-tone-docs); }
+.lk-about-timeline__item.is-tone-release  .lk-about-timeline__dot { border-color: var(--lk-tone-release); }
+.lk-about-timeline__item.is-tone-deploy   .lk-about-timeline__dot { border-color: var(--lk-tone-deploy); }
+.lk-about-timeline__item.is-tone-ml       .lk-about-timeline__dot { border-color: var(--lk-tone-ml); }
+.lk-about-timeline__item.is-tone-embedded .lk-about-timeline__dot { border-color: var(--lk-tone-embedded); }
+
+.lk-about-timeline__item.is-tone-projects:hover .lk-about-timeline__dot { background: var(--lk-tone-projects); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-projects) 22%, transparent); }
+.lk-about-timeline__item.is-tone-article:hover  .lk-about-timeline__dot { background: var(--lk-tone-article);  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-article) 22%, transparent); }
+.lk-about-timeline__item.is-tone-docs:hover     .lk-about-timeline__dot { background: var(--lk-tone-docs);     box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-docs) 22%, transparent); }
+.lk-about-timeline__item.is-tone-release:hover  .lk-about-timeline__dot { background: var(--lk-tone-release);  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-release) 22%, transparent); }
+.lk-about-timeline__item.is-tone-deploy:hover   .lk-about-timeline__dot { background: var(--lk-tone-deploy);   box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-deploy) 22%, transparent); }
+.lk-about-timeline__item.is-tone-ml:hover       .lk-about-timeline__dot { background: var(--lk-tone-ml);       box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-ml) 22%, transparent); }
+.lk-about-timeline__item.is-tone-embedded:hover .lk-about-timeline__dot { background: var(--lk-tone-embedded); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lk-tone-embedded) 22%, transparent); }
+
+/* 重要节点：金色双层光晕 + dot 略大，无需 hover 也能一眼看到 */
+.lk-about-timeline__item.is-important .lk-about-timeline__dot {
+  width: 12px;
+  height: 12px;
+  background: var(--lk-tone-important);
+  border-color: var(--lk-tone-important);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--lk-tone-important) 26%, transparent),
+    0 0 0 7px color-mix(in srgb, var(--lk-tone-important) 12%, transparent);
 }
 
 [data-theme='dark'] .lk-about-timeline {
@@ -243,9 +365,8 @@ const rows = computed(() => {
   color: #fff;
 }
 
-@media (max-width: 959px) {
-  .lk-about-timeline__item:nth-child(even) .lk-about-timeline__body {
-    transform: translateX(0);
-  }
+/* 黑暗模式下 cat tag 略提亮（保持可读性） */
+[data-theme='dark'] .lk-about-timeline__cat {
+  filter: brightness(1.15);
 }
 </style>
