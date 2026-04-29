@@ -329,8 +329,31 @@ onUnmounted(() => {
 }
 
 @media (max-width: 719px) {
+  /* 强制 footer 相对视口横向 100vw 居中，避免父级（#app / theme-container）
+     在某些移动浏览器下让 width: 100vw + margin-left: calc(50% - 50vw) 反推不到屏幕边。
+     left:50% + translateX(-50%) 是等价但更稳的「viewport 居中」反推。 */
+  .lk-footer {
+    position: relative !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .lk-footer__bg {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100%;
+  }
+
   .lk-footer__inner {
     padding: 0.85rem 0.75rem 0.8rem;
+    max-width: 100% !important;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .lk-footer__copy,

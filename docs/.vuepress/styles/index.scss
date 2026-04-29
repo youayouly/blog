@@ -2290,7 +2290,7 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
   }
 }
 
-// 手机：调整顺序，主内容在前，恢复正常堆叠
+// 手机：项目分类置顶，再展示项目列表
 @media (max-width: 719px) {
   .lk-proj-hub-layout {
     grid-template-columns: 1fr;
@@ -2298,11 +2298,24 @@ main.vp-page:has(.lk-proj-hub-fullbleed) .vp-page-title {
     overflow: visible;
   }
 
-  .lk-proj-hub-layout__main {
+  /* ribbon 在单列移动端：左右两个标题改为单列竖排，与下方 portfolio / main 顺序一致 */
+  .lk-proj-hub-layout__ribbon {
+    grid-template-columns: 1fr !important;
+    row-gap: 0.35rem;
+  }
+  .lk-proj-hub-layout__ribbon-title--left {
     order: 1;
+  }
+  .lk-proj-hub-layout__ribbon-title--right {
+    order: 2;
+    justify-self: start;
   }
 
   .lk-proj-hub-layout__portfolio {
+    order: 1;
+  }
+
+  .lk-proj-hub-layout__main {
     order: 2;
   }
 
@@ -5465,12 +5478,33 @@ html {
 /* ── 移动端关于页（站点首页 `/`）布局收敛 ──
    1) Hero 高度收紧，避免「了解我 / 查看文章」按钮和下方简介卡之间留下大段空白；
    2) Profile mini 卡水平居中，不再贴左缘；
-   3) main 区改用百分比宽度 + 内边距，避免 100vw 让 ARTICLE 卡片与时间线右侧贴到屏幕边缘。 */
+   3) 根容器 .lk-about-v2.lk-about-fullbleed 取消「pull/push」负 margin，
+      改为 100% + 1rem padding，子元素（ProfileCard、简介卡、短文推荐、动态时间线）
+      天然跟随父级宽度，左右与屏幕边缘保持等距，不再单边贴屏。 */
 @media (max-width: 719px) {
-  /* Hero：进一步降高 + 内边距收紧，让 ProfileCard 自然紧贴在 CTA 之下 */
+  /* 关键根容器：撤掉桌面端的反推宽度，避免 ProfileCard / 简介卡比视口还宽 */
+  .lk-about-v2.lk-about-fullbleed {
+    --lk-about-pull: 0px !important;
+    --lk-about-push: 0px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+    box-sizing: border-box !important;
+    overflow-x: clip;
+  }
+
+  /* Hero：进一步降高 + 内边距收紧，让 ProfileCard 自然紧贴在 CTA 之下；
+     仍保持 100vw 全屏背景视觉，但用 left/right 反推到根容器左侧（含 padding）外。 */
   .lk-about-v2-hero {
     min-height: min(58vh, 460px) !important;
     margin-bottom: 0 !important;
+    /* 反推到根容器 padding 左右两侧之外，让背景仍占满屏宽 */
+    margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 0px))) !important;
+    margin-right: calc(-1 * max(1rem, env(safe-area-inset-right, 0px))) !important;
+    width: auto !important;
   }
 
   .lk-about-v2-hero__overlay {
@@ -5479,15 +5513,13 @@ html {
   }
 
   .lk-about-v2-main {
-    /* 关键：放弃 100vw 反推到视口边，让 main 留出 1rem 侧边距，
-       下方所有卡片（短文推荐、动态时间线）跟着 main 一起内缩，
-       从而左右与屏幕边缘保持等距。 */
+    /* main 跟随父级 100%，不再 100vw 反推；左右内边距由根容器统一提供 */
     width: 100% !important;
     max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
   .lk-about-v2-main__grid--triple {
@@ -5496,17 +5528,27 @@ html {
     padding-inline: 0 !important;
   }
 
-  /* Profile 区：mini 小卡水平居中 + 与下方简介卡距离收紧 */
+  /* Profile 区：单列堆叠 + mini 小卡水平居中 + 与下方简介卡距离收紧 */
   .lk-about-v2 .about-profile.about-profile--vstack {
+    grid-template-columns: 1fr !important;
     gap: 0.85rem !important;
   }
 
   .lk-about-v2 .about-profile.about-profile--vstack .about-left {
     display: flex !important;
     justify-content: center !important;
+    width: 100% !important;
   }
 
   .lk-about-v2 .about-profile.about-profile--vstack .about-left .lk-card--mini {
     margin-inline: auto !important;
+    width: 100% !important;
+    max-width: 240px !important;
+  }
+
+  /* 简介卡 / 短文推荐卡片自然跟随 100% 父宽 */
+  .lk-about-v2 .about-card,
+  .lk-about-articles__card {
+    max-width: 100% !important;
   }
 }
