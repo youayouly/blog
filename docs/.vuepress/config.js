@@ -166,18 +166,13 @@ export default defineUserConfig({
     darkmode: 'toggle',
     pure: false,
     appearance: 'light',
+    // 全局禁用 Hope 主题正文底部的「最近更新 / 贡献者」两行（PC + 移动端均生效）
+    lastUpdated: false,
+    contributors: false,
     navbar: [
       { text: '首页', link: '/' },
       { text: '项目', link: '/tech/' },
       { text: '文章', link: '/article/' },
-      {
-        text: '更多',
-        children: [
-          { text: '留学', link: '/study/' },
-          { text: '相册', link: '/travel/' },
-          { text: '统计', link: '/stats/' },
-        ],
-      },
       { text: '关于我', link: '/about#about-intro' },
     ],
 

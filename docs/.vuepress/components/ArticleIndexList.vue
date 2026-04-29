@@ -694,11 +694,12 @@ function formatDate(value) {
     position: static;
   }
 
-  .lk-article-three__middle {
+  /* 移动端：搜索卡置于最上方，文章列表在下 */
+  .lk-article-three__left {
     order: 1;
   }
 
-  .lk-article-three__left {
+  .lk-article-three__middle {
     order: 2;
   }
 

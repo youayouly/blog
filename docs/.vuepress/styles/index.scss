@@ -5452,3 +5452,61 @@ html {
     max-width: 100%;
   }
 }
+
+/* ── 全站隐藏 Hope 主题正文底部的「最近更新 / 贡献者」两行 ──
+   `lastUpdated: false` + `contributors: false` 已在 hopeTheme 全局关闭，
+   这里再做一道 CSS 兜底，避免某些已构建产物或 git 插件残留依然渲染出来。 */
+.vp-page-meta .update-time,
+.vp-page-meta .contributors,
+.vp-page-meta > .vp-meta-item.git-info {
+  display: none !important;
+}
+
+/* ── 移动端关于页（站点首页 `/`）布局收敛 ──
+   1) Hero 高度收紧，避免「了解我 / 查看文章」按钮和下方简介卡之间留下大段空白；
+   2) Profile mini 卡水平居中，不再贴左缘；
+   3) main 区改用百分比宽度 + 内边距，避免 100vw 让 ARTICLE 卡片与时间线右侧贴到屏幕边缘。 */
+@media (max-width: 719px) {
+  /* Hero：进一步降高 + 内边距收紧，让 ProfileCard 自然紧贴在 CTA 之下 */
+  .lk-about-v2-hero {
+    min-height: min(58vh, 460px) !important;
+    margin-bottom: 0 !important;
+  }
+
+  .lk-about-v2-hero__overlay {
+    padding-top: clamp(1rem, 4vw, 1.6rem) !important;
+    padding-bottom: clamp(0.85rem, 3vw, 1.25rem) !important;
+  }
+
+  .lk-about-v2-main {
+    /* 关键：放弃 100vw 反推到视口边，让 main 留出 1rem 侧边距，
+       下方所有卡片（短文推荐、动态时间线）跟着 main 一起内缩，
+       从而左右与屏幕边缘保持等距。 */
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .lk-about-v2-main__grid--triple {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: 0 !important;
+  }
+
+  /* Profile 区：mini 小卡水平居中 + 与下方简介卡距离收紧 */
+  .lk-about-v2 .about-profile.about-profile--vstack {
+    gap: 0.85rem !important;
+  }
+
+  .lk-about-v2 .about-profile.about-profile--vstack .about-left {
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .lk-about-v2 .about-profile.about-profile--vstack .about-left .lk-card--mini {
+    margin-inline: auto !important;
+  }
+}

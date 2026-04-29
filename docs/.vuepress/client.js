@@ -779,7 +779,7 @@ export default defineClientConfig({
     app.component('SiteAvatar', SiteAvatar)
     router.beforeEach((to) => {
       if (!canAccessPath(to.path)) {
-        return { path: '/about', replace: true }
+        return { path: '/', replace: true }
       }
       // 在首帧 paint 前挂上 lk-header-split，减少切到 About/Projects/文章 时主题布局「晚一拍」
       syncSplitPageHeader(to.path)
@@ -801,7 +801,7 @@ export default defineClientConfig({
     const syncProtectedAccess = () => {
       if (typeof window === 'undefined') return
       if (!canAccessPath(route.path)) {
-        window.location.replace('/about.html')
+        window.location.replace('/')
       }
     }
 
